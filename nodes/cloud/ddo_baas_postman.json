@@ -1,0 +1,87 @@
+{
+	"info": {
+		"_postman_id": "78cc2432-a355-499f-969b-ecd4caf8221e",
+		"name": "DDO BaaS Sovereign Core",
+		"description": "Colección maestra para testear el Brain as a Service V6.0. Incluye autenticación X-DDO-TOKEN.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "01. Health Check",
+			"request": {
+				"method": "GET",
+				"header": [],
+				"url": {
+					"raw": "{{BASE_URL}}/",
+					"host": ["{{BASE_URL}}"],
+					"path": [""]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "02. Ignition (Fase Pre-0)",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "X-DDO-TOKEN",
+						"value": "{{DDO_TOKEN}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{BASE_URL}}/ignite",
+					"host": ["{{BASE_URL}}"],
+					"path": ["ignite"]
+				}
+			},
+			"response": []
+		},
+		{
+			"name": "03. Fetch Skill from Supabase",
+			"request": {
+				"method": "GET",
+				"header": [
+					{
+						"key": "X-DDO-TOKEN",
+						"value": "{{DDO_TOKEN}}",
+						"type": "text"
+					}
+				],
+				"url": {
+					"raw": "{{BASE_URL}}/brain/skills/gws_agents",
+					"host": ["{{BASE_URL}}"],
+					"path": ["brain", "skills", "gws_agents"]
+				}
+			},
+			"response": []
+		}
+	],
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [""]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "BASE_URL",
+			"value": "http://localhost:8000"
+		},
+		{
+			"key": "DDO_TOKEN",
+			"value": "tu_super_secret_token_aqui"
+		}
+	]
+}

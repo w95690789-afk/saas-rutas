@@ -1,0 +1,40 @@
+optimización área logística empresa
+empacan granos y entregan a cliente final mayoristas y autorservicios
+flota de 25 camiones Torton tractocamiones y camionetas
+como optimizar la red logística y reducir los costos vinculados a una mejor utilización de su flota
+mejor ocupacacion
+mejor valor por km
+es manual
+
+rutas 47
+entregas 500 totales
+camiones 50 entre propios y terceros
+
+3 tractos 
+20 Torton de 16 ton propios (25 DIFERENTES capacidades)
+
+varios pedido en el mismo carro
+mayoreo y autoservicio
+
+entrega final no tiene ventanas de tiempo
+Ventanas horarias
+
+restricciones de recepción - citas/ventanas horarias
+
+Cargue y descargue - trabajan un turno para cargas- tiempo de carga (2 horas) - 6 am inicio a 3 pm - 6 pm fin)
+
+pueden haber standby - penalización por descarga únicamente
+
+planeación - lista de pedidos debería estar 24 horas, con que camiones y capacidades para entregar al día siguiente, debería haber una ventana de planeación 4pm del lunes tienes todo el martes para asegurar que el producto este disponible y estar cargado el miércoles y entregar el miercoles, un día de separación
+
+realidad la planeación es la mitad de los pedidos se programan un día antes y la otra mitad durante la operación
+
+los pedidos tienes georreferenciación y sistemas de monitoereo y geocercas, geo por Google, entregan por concoimiento mas no se guían por googlemaps solo cuando hay clientes nuevos
+
+tienen andenes pero restricciones minimas
+
+capacidad de cargue que tiene el generador - ???
+tiempos descargues - ??? --> pueden salir del monitoreo historico
+
+prioridades - debe construirla, hay producto, temas de seguridad - convoy de determinadas empresas para que la escolte (horarios del a guardia nacional), eta, )
+los datos de entrada lleganerp - infosys - diferentes fuentes - hasta manuales se resume en un excel

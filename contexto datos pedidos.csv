@@ -1,0 +1,11 @@
+Campo,Significado
+FechaEmision,Fecha generación de pedido
+Mes,mes del pedido
+Año,año del pedido
+EmbarqueMovMovID,identificador orden de carga
+Peso2,peso pedido
+Cliente,cliente pedido
+Direccion,direccion entrega pedido
+Latitud,latitud entrega de pedido
+Longitud,longitud entrega de pedido
+latLong,coordenada latlong entrega de pedido

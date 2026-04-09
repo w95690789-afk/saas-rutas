@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#3f2600",
+              "on-secondary": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "background": "#f7f9fb",
+              "secondary-fixed": "#d8e2ff",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "surface-container-low": "#f2f4f6",
+              "on-secondary-fixed-variant": "#004395",
+              "primary-fixed-dim": "#b6c6f0",
+              "surface-container-high": "#e6e8ea",
+              "on-tertiary-container": "#b28c5b",
+              "tertiary": "#241300",
+              "primary-fixed": "#d8e2ff",
+              "secondary-container": "#2170e4",
+              "on-background": "#191c1e",
+              "secondary": "#0058be",
+              "surface-dim": "#d8dadc",
+              "on-tertiary-fixed-variant": "#5e4117",
+              "primary": "#031636",
+              "on-surface": "#191c1e",
+              "surface-bright": "#f7f9fb",
+              "surface": "#f7f9fb",
+              "surface-container-highest": "#e0e3e5",
+              "inverse-on-surface": "#eff1f3",
+              "on-secondary-container": "#fefcff",
+              "error-container": "#ffdad6",
+              "on-primary-container": "#8293ba",
+              "tertiary-fixed-dim": "#eabf8a",
+              "secondary-fixed-dim": "#adc6ff",
+              "on-surface-variant": "#44474e",
+              "on-secondary-fixed": "#001a42",
+              "tertiary-fixed": "#ffddb5",
+              "on-primary-fixed": "#071b3b",
+              "surface-variant": "#e0e3e5",
+              "on-tertiary-fixed": "#2a1800",
+              "surface-container": "#eceef0",
+              "inverse-primary": "#b6c6f0",
+              "error": "#ba1a1a",
+              "on-error": "#ffffff",
+              "surface-tint": "#4e5e82",
+              "on-primary-fixed-variant": "#364669",
+              "primary-container": "#1a2b4c",
+              "outline": "#75777f",
+              "inverse-surface": "#2d3133",
+              "on-error-container": "#93000a",
+              "outline-variant": "#c5c6cf"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body { font-family: 'Inter', sans-serif; }
+        .glass-card {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        .industrial-gradient {
+            background: linear-gradient(135deg, #0058be 0%, #2170e4 100%);
+        }
+    </style>
+</head>
+<body class="bg-background text-on-background flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<aside class="flex flex-col h-full p-4 gap-2 bg-[#f2f4f6] dark:bg-slate-950 docked left-0 h-screen w-64 z-50 shadow-2xl shadow-[#031636]/5">
+<div class="mb-8 px-2">
+<h1 class="text-xl font-extrabold tracking-tighter text-[#031636] dark:text-white">Fleet Mind Ops</h1>
+<p class="text-xs text-slate-500 uppercase tracking-widest mt-1">Precision Logistics</p>
+</div>
+<nav class="flex-1 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all hover:translate-x-1 duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="warehouse">warehouse</span>
+<span class="font-sans text-sm font-medium tracking-normal">Configuración CEDIS</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 bg-white dark:bg-slate-800 text-[#0058be] rounded-lg shadow-sm font-semibold hover:translate-x-1 transition-all duration-200" href="#">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+<span class="font-sans text-sm font-medium tracking-normal">Carga de Datos</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all hover:translate-x-1 duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="route">route</span>
+<span class="font-sans text-sm font-medium tracking-normal">Resultados de Ruta</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all hover:translate-x-1 duration-200 rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-sans text-sm font-medium tracking-normal">Itinerario de Conductor</span>
+</a>
+</nav>
+<div class="mt-auto border-t border-slate-200/50 pt-4 flex flex-col gap-1">
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-sans text-sm font-medium tracking-normal">Soporte</span>
+</a>
+<a class="flex items-center gap-3 px-3 py-2 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-sans text-sm font-medium tracking-normal">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Canvas -->
+<main class="flex-1 flex flex-col overflow-y-auto bg-surface relative">
+<!-- TopAppBar Placeholder for Context -->
+<header class="flex justify-between items-center w-full px-8 py-4 border-b border-slate-200/50 bg-[#f7f9fb] dark:bg-slate-900 transition-colors z-40 sticky top-0">
+<div class="flex items-center gap-4">
+<span class="material-symbols-outlined text-secondary" data-icon="cloud_upload">cloud_upload</span>
+<h2 class="font-headline font-bold text-lg tracking-tight text-primary">Consola de Carga de Operaciones</h2>
+</div>
+<div class="flex items-center gap-6">
+<div class="flex items-center gap-2 text-on-surface-variant">
+<span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+</div>
+<div class="w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+<span class="material-symbols-outlined text-on-primary-container text-sm" data-icon="account_circle">account_circle</span>
+</div>
+</div>
+</header>
+<div class="p-8 max-w-7xl mx-auto w-full">
+<!-- Hero Header Section -->
+<div class="mb-12">
+<h1 class="text-4xl font-extrabold text-primary tracking-tight mb-2">Rutas Pro México V4 - Consola de Despacho Industrial</h1>
+<p class="text-on-surface-variant font-medium text-lg">Carga de Flota y Pedidos para Optimización</p>
+</div>
+<!-- Main Layout Grid -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
+<!-- Section 1: Flota (Vehículos) -->
+<section class="flex flex-col gap-4">
+<div class="flex items-center gap-3 mb-2">
+<div class="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">1</div>
+<h3 class="text-xl font-semibold text-primary">Flota (Vehículos)</h3>
+</div>
+<!-- Drag & Drop Area -->
+<div class="border-2 border-dashed border-outline-variant/30 rounded-xl bg-surface-container-low p-8 flex flex-col items-center justify-center group hover:border-secondary transition-colors cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="upload_file">upload_file</span>
+</div>
+<p class="text-primary font-semibold mb-1">Arrastra tu archivo CSV aquí</p>
+<p class="text-on-surface-variant text-sm mb-6">Formatos aceptados: .csv, .xlsx</p>
+<button class="industrial-gradient text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:opacity-90 active:scale-95 transition-all">
+                            Subir CSV de Flota
+                        </button>
+</div>
+<!-- Table Preview -->
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl shadow-primary/5 overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+<span class="text-xs font-bold uppercase tracking-widest text-slate-400">Previsualización de Datos</span>
+<span class="text-xs font-medium text-secondary">3 tipos de flota detectados</span>
+</div>
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-6 py-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant">Tipo Vehículo</th>
+<th class="px-6 py-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant">Capacidad KG</th>
+<th class="px-6 py-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant">Cantidad</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4 text-sm font-semibold text-primary">Camión T3-S2</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">32,000</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">12</td>
+</tr>
+<tr class="bg-surface-container-low/30 hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4 text-sm font-semibold text-primary">Torthon 2E</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">14,000</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">25</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-6 py-4 text-sm font-semibold text-primary">Rabón 7T</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">7,500</td>
+<td class="px-6 py-4 text-sm text-on-surface-variant">18</td>
+</tr>
+</tbody>
+</table>
+</div>
+</section>
+<!-- Section 2: Manifiesto (Órdenes) -->
+<section class="flex flex-col gap-4">
+<div class="flex items-center gap-3 mb-2">
+<div class="bg-primary text-white w-8 h-8 rounded-lg flex items-center justify-center font-bold">2</div>
+<h3 class="text-xl font-semibold text-primary">Manifiesto (Órdenes)</h3>
+</div>
+<!-- Drag & Drop Area -->
+<div class="border-2 border-dashed border-outline-variant/30 rounded-xl bg-surface-container-low p-8 flex flex-col items-center justify-center group hover:border-secondary transition-colors cursor-pointer">
+<div class="w-16 h-16 rounded-full bg-white shadow-sm flex items-center justify-center mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-secondary text-3xl" data-icon="description">description</span>
+</div>
+<p class="text-primary font-semibold mb-1">Cargar base de pedidos para optimizar</p>
+<p class="text-on-surface-variant text-sm mb-6">Mínimo requerido: Lat/Long y Peso</p>
+<button class="industrial-gradient text-white px-6 py-2.5 rounded-lg font-bold text-sm shadow-lg hover:opacity-90 active:scale-95 transition-all">
+                            Subir CSV de Pedidos
+                        </button>
+</div>
+<!-- Table Preview - Data Rich -->
+<div class="bg-surface-container-lowest rounded-xl shadow-2xl shadow-primary/5 overflow-hidden">
+<div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+<span class="text-xs font-bold uppercase tracking-widest text-slate-400">Previsualización de Pedidos</span>
+<span class="text-xs font-medium text-secondary">142 órdenes procesadas</span>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low">
+<th class="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant">ID</th>
+<th class="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant">Cód. Cliente</th>
+<th class="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant text-right">Peso KG</th>
+<th class="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest text-on-surface-variant text-center">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-slate-50">
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-4 py-3 text-xs font-bold text-primary">#MX-9021</td>
+<td class="px-4 py-3 text-xs text-on-surface-variant">C0021-WAL</td>
+<td class="px-4 py-3 text-xs text-right text-primary font-medium">1,240.0</td>
+<td class="px-4 py-3 text-center">
+<div class="flex justify-center gap-1">
+<span class="material-symbols-outlined text-blue-500 text-base" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;" title="Seguridad Requerida">verified_user</span>
+<span class="material-symbols-outlined text-slate-300 text-base" data-icon="groups">groups</span>
+</div>
+</td>
+</tr>
+<tr class="bg-surface-container-low/30 hover:bg-slate-50 transition-colors">
+<td class="px-4 py-3 text-xs font-bold text-primary">#MX-9022</td>
+<td class="px-4 py-3 text-xs text-on-surface-variant">C0045-SOR</td>
+<td class="px-4 py-3 text-xs text-right text-primary font-medium">4,800.5</td>
+<td class="px-4 py-3 text-center">
+<div class="flex justify-center gap-1">
+<span class="material-symbols-outlined text-blue-500 text-base" data-icon="verified_user" style="font-variation-settings: 'FILL' 1;" title="Seguridad Requerida">verified_user</span>
+<span class="material-symbols-outlined text-orange-500 text-base" data-icon="groups" style="font-variation-settings: 'FILL' 1;" title="Convoy Obligatorio">groups</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-slate-50 transition-colors">
+<td class="px-4 py-3 text-xs font-bold text-primary">#MX-9023</td>
+<td class="px-4 py-3 text-xs text-on-surface-variant">C0012-GOM</td>
+<td class="px-4 py-3 text-xs text-right text-primary font-medium">850.0</td>
+<td class="px-4 py-3 text-center">
+<div class="flex justify-center gap-1">
+<span class="material-symbols-outlined text-slate-300 text-base" data-icon="verified_user">verified_user</span>
+<span class="material-symbols-outlined text-slate-300 text-base" data-icon="groups">groups</span>
+</div>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</section>
+</div>
+<!-- Final Action CTA Section -->
+<div class="mt-16 flex flex-col items-center gap-6 pb-12">
+<div class="text-center max-w-lg">
+<p class="text-on-surface-variant text-sm font-medium mb-2">Una vez cargados los datos, el motor de inteligencia artificial generará el plan óptimo para reducir el costo operativo y tiempo de entrega.</p>
+</div>
+<button class="bg-[#3B82F6] hover:bg-[#2563EB] text-white flex items-center gap-3 px-10 py-5 rounded-xl font-extrabold text-lg tracking-tight shadow-2xl shadow-blue-500/30 transition-all active:scale-95 group">
+<span class="material-symbols-outlined text-2xl group-hover:animate-pulse" data-icon="bolt" style="font-variation-settings: 'FILL' 1;">bolt</span>
+                    EJECUTAR OPTIMIZACIÓN INDUSTRIAL DE RUTA
+                </button>
+</div>
+</div>
+<!-- Footer -->
+<footer class="flex justify-between items-center px-8 py-6 w-full mt-auto border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
+<span class="font-sans text-xs text-slate-500 uppercase tracking-widest">© 2024 Fleet Mind Ops. Industrial Intelligence Systems.</span>
+<div class="flex gap-6">
+<a class="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all uppercase tracking-widest" href="#">Soporte Técnico</a>
+<a class="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all uppercase tracking-widest" href="#">Privacidad</a>
+<a class="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all uppercase tracking-widest" href="#">Términos</a>
+</div>
+</footer>
+</main>
+<!-- Visual Decorative Element (Abstract Map Backdrop) -->
+<div class="absolute inset-0 -z-10 pointer-events-none opacity-5 overflow-hidden">
+<img class="w-full h-full object-cover scale-125" data-alt="minimalist architectural map grid of a major industrial hub in Mexico City with subtle lines and geometric shipping nodes" data-location="Mexico City" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBHB_vgdt6P3A6EeJsoY-axU7C3bgJV0vVG2P7EF5JOL1A-KtjuTya1kgNuTdf5DK7eqFXVsCjHTfy3ZyYGnlgLIRTLnQrbL52KVrf-cjyV-shV9PyLnCrDc06fcdSq5uLLTZ1hj8mA5E963StvXWbEhZ7XnS9cJyRLUj37G2Mg1WXv9kIgZj4ZC29QmFF6Y5aJUdhjorELbJU8dNNQSFW3HHQ8mIZ9z4b5wIJsMNqXEomgyNqFPwrwapyuBSqHibNe0ZGLRPMavoY"/>
+</div>
+</body></html>

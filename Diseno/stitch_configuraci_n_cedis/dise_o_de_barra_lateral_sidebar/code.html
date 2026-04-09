@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary": "#241300",
+              "surface-dim": "#d8dadc",
+              "on-error-container": "#93000a",
+              "tertiary-fixed": "#ffddb5",
+              "primary-container": "#1a2b4c",
+              "error-container": "#ffdad6",
+              "on-primary-fixed": "#071b3b",
+              "on-secondary-fixed": "#001a42",
+              "surface-container-lowest": "#ffffff",
+              "on-secondary": "#ffffff",
+              "on-tertiary-fixed-variant": "#5e4117",
+              "on-secondary-container": "#fefcff",
+              "surface-variant": "#e0e3e5",
+              "outline": "#75777f",
+              "inverse-on-surface": "#eff1f3",
+              "surface": "#f7f9fb",
+              "surface-container": "#eceef0",
+              "surface-container-low": "#f2f4f6",
+              "surface-container-high": "#e6e8ea",
+              "surface-bright": "#f7f9fb",
+              "on-primary": "#ffffff",
+              "on-secondary-fixed-variant": "#004395",
+              "surface-tint": "#4e5e82",
+              "on-tertiary-container": "#b28c5b",
+              "secondary-fixed": "#d8e2ff",
+              "error": "#ba1a1a",
+              "inverse-primary": "#b6c6f0",
+              "on-background": "#191c1e",
+              "background": "#f7f9fb",
+              "secondary-container": "#2170e4",
+              "on-surface-variant": "#44474e",
+              "primary": "#031636",
+              "primary-fixed-dim": "#b6c6f0",
+              "on-tertiary-fixed": "#2a1800",
+              "primary-fixed": "#d8e2ff",
+              "on-primary-fixed-variant": "#364669",
+              "on-error": "#ffffff",
+              "surface-container-highest": "#e0e3e5",
+              "secondary": "#0058be",
+              "on-surface": "#191c1e",
+              "inverse-surface": "#2d3133",
+              "secondary-fixed-dim": "#adc6ff",
+              "outline-variant": "#c5c6cf",
+              "on-primary-container": "#8293ba",
+              "tertiary-fixed-dim": "#eabf8a",
+              "on-tertiary": "#ffffff",
+              "tertiary-container": "#3f2600"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .active-nav-gradient {
+            background: linear-gradient(135deg, #0058be 0%, #2170e4 100%);
+        }
+        body { font-family: 'Inter', sans-serif; }
+    </style>
+</head>
+<body class="bg-surface text-on-surface">
+<div class="flex min-h-screen">
+<!-- SideNavBar Component (Implementation of JSON Blueprint) -->
+<!-- style_shell_layout: flex flex-col h-screen py-6 px-4 bg-[#031636] text-white -->
+<!-- style_component_shape: h-full w-64 fixed left-0 top-0 -->
+<aside class="flex flex-col h-screen py-6 px-4 bg-[#031636] text-white h-full w-64 fixed left-0 top-0 shadow-[0_12px_32px_-4px_rgba(3,22,54,0.08)] z-50">
+<!-- Header Section -->
+<div class="flex items-center gap-3 px-2 mb-10">
+<div class="w-10 h-10 rounded-lg bg-secondary flex items-center justify-center">
+<span class="material-symbols-outlined text-white" data-icon="precision_manufacturing">precision_manufacturing</span>
+</div>
+<div>
+<h1 class="text-lg font-bold text-white tracking-tight leading-none">Precision Architect</h1>
+<p class="text-[10px] text-on-primary-container font-medium tracking-wider uppercase opacity-80 mt-1">Industrial Intelligence</p>
+</div>
+</div>
+<!-- Navigation Links -->
+<nav class="flex-1 space-y-2">
+<!-- style_inactive_navigation -->
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all transform active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="settings_input_component">settings_input_component</span>
+<span class="text-sm font-medium">Configuración CEDIS</span>
+</a>
+<!-- style_active_navigation: Mapping 'Carga de Datos' as Active per User Request -->
+<a class="flex items-center gap-3 px-4 py-3 active-nav-gradient text-white rounded-lg transition-all shadow-lg shadow-secondary/20 transform active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="upload_file" data-weight="fill" style="font-variation-settings: 'FILL' 1;">upload_file</span>
+<span class="text-sm font-bold">Carga de Datos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all transform active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="analytics">analytics</span>
+<span class="text-sm font-medium">Resultados de Ruta</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all transform active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined" data-icon="route">route</span>
+<span class="text-sm font-medium">Itinerario de Conductor</span>
+</a>
+</nav>
+<!-- Footer Section -->
+<div class="mt-auto space-y-2 pt-6 border-t border-white/10">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="text-sm font-medium">Support</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-400 hover:text-white hover:bg-slate-800/50 rounded-lg transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+<span class="text-sm font-medium">Settings</span>
+</a>
+<div class="mt-4 px-2 py-3 bg-white/5 rounded-xl flex items-center gap-3">
+<div class="w-8 h-8 rounded-full bg-slate-700 flex-shrink-0 overflow-hidden">
+<img class="w-full h-full object-cover" data-alt="professional headshot of a logistics manager in a modern office setting with soft natural light" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBRA6zX0EXzcw9I1m4x6DNKVNYHmI3ojWqXirzKGN8QCke1FoSRm79ZYnQFPgYWnkzd6Wz_-LUbFC-3PwB-lFUFFy8Oqr3tLkmQdXnqxCH-jy1NdUv65RG7Nf-KUFzlNBsvN0P9uKE0-vkqeahlq_EWNKObv-vW3MD0LPEAiiQ5_l1TxrnIjBPD71wVRZ0ZILgYL5DFgJkE3b5ugJUtU9K5LYQi9_Tp32aebSr0kPbveXr57uBPrJVCroKto8dkQDvmrxG1mzaI-sg"/>
+</div>
+<div class="flex-1 min-w-0">
+<p class="text-xs font-bold truncate">Alex Chen</p>
+<p class="text-[10px] text-slate-400 truncate">Ops Manager</p>
+</div>
+<button class="text-slate-400 hover:text-white">
+<span class="material-symbols-outlined text-lg" data-icon="logout">logout</span>
+</button>
+</div>
+</div>
+</aside>
+<!-- Main Content Area (Sidebar Design System Showcase) -->
+<main class="ml-64 flex-1 p-12 bg-surface">
+<!-- Editorial Header -->
+<header class="mb-16">
+<div class="flex items-center gap-2 mb-2">
+<span class="h-[2px] w-8 bg-secondary"></span>
+<span class="text-secondary font-bold tracking-widest text-xs uppercase">Design System Specification</span>
+</div>
+<h2 class="text-5xl font-extrabold text-primary tracking-tight mb-4">Sidebar Design System</h2>
+<p class="text-on-surface-variant max-w-2xl leading-relaxed text-lg">
+                    The navigation shell for Fleet Mind Ops utilizes tonal hierarchy and intentional asymmetry to maintain an industrial editorial feel.
+                </p>
+</header>
+<!-- Bento Grid Visualization of Design Logic -->
+<div class="grid grid-cols-12 gap-8">
+<!-- Color Tones Block -->
+<div class="col-span-12 lg:col-span-8 bg-surface-container-lowest rounded-xl p-8 shadow-[0_12px_32px_-4px_rgba(3,22,54,0.05)] border border-outline-variant/10">
+<h3 class="text-xl font-bold mb-6 text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="palette">palette</span>
+                        Tonal Surface Theory
+                    </h3>
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+<div class="space-y-3">
+<div class="h-24 w-full bg-[#031636] rounded-lg flex items-end p-3">
+<span class="text-white text-[10px] font-bold">PRIMARY (NAVY)</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-snug">The anchor for global navigation elements.</p>
+</div>
+<div class="space-y-3">
+<div class="h-24 w-full active-nav-gradient rounded-lg flex items-end p-3">
+<span class="text-white text-[10px] font-bold">INTERACTIVE GRADIENT</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-snug">Used for focus states and primary actions.</p>
+</div>
+<div class="space-y-3">
+<div class="h-24 w-full bg-surface-container-low rounded-lg flex items-end p-3 border border-outline-variant/20">
+<span class="text-on-surface text-[10px] font-bold">SURFACE LOW</span>
+</div>
+<p class="text-xs text-on-surface-variant leading-snug">Base canvas color for structural contrast.</p>
+</div>
+</div>
+</div>
+<!-- Interaction Guidelines -->
+<div class="col-span-12 lg:col-span-4 bg-primary text-white rounded-xl p-8 overflow-hidden relative">
+<div class="absolute -right-12 -top-12 w-48 h-48 bg-secondary/20 blur-3xl rounded-full"></div>
+<h3 class="text-xl font-bold mb-6 relative z-10 flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary-fixed-dim" data-icon="ads_click">ads_click</span>
+                        Interactions
+                    </h3>
+<ul class="space-y-6 relative z-10">
+<li class="flex gap-4">
+<div class="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[10px] font-bold">01</div>
+<p class="text-sm text-slate-300"><span class="text-white font-bold">Active States:</span> 135° Linear Gradient with 0.98x scale transition on tap.</p>
+</li>
+<li class="flex gap-4">
+<div class="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[10px] font-bold">02</div>
+<p class="text-sm text-slate-300"><span class="text-white font-bold">Hover Behavior:</span> Tonal shift to Slate-800/50 without layout shift.</p>
+</li>
+<li class="flex gap-4">
+<div class="w-6 h-6 rounded bg-white/10 flex items-center justify-center text-[10px] font-bold">03</div>
+<p class="text-sm text-slate-300"><span class="text-white font-bold">No-Line Rule:</span> Borders are prohibited. Elevation is implied through dark-on-light shifts.</p>
+</li>
+</ul>
+</div>
+<!-- Typography & Icons -->
+<div class="col-span-12 lg:col-span-5 bg-surface-container-low rounded-xl p-8 border border-outline-variant/10">
+<h3 class="text-xl font-bold mb-6 text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="font_download">font_download</span>
+                        Typography Specs
+                    </h3>
+<div class="space-y-8">
+<div>
+<span class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant block mb-2">Nav Labels</span>
+<div class="flex items-baseline justify-between border-b border-outline-variant/20 pb-2">
+<span class="text-sm font-medium">Inter Medium</span>
+<span class="text-sm text-on-surface-variant">14px / 1.5</span>
+</div>
+</div>
+<div>
+<span class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant block mb-2">Active State</span>
+<div class="flex items-baseline justify-between border-b border-outline-variant/20 pb-2">
+<span class="text-sm font-bold">Inter Bold</span>
+<span class="text-sm text-on-surface-variant">14px / 1.5</span>
+</div>
+</div>
+<div>
+<span class="text-[10px] uppercase font-bold tracking-widest text-on-surface-variant block mb-2">Iconography</span>
+<div class="flex items-baseline justify-between">
+<span class="text-sm font-medium">Material Symbols</span>
+<span class="text-sm text-on-surface-variant">24px / Outlined</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Live State Example -->
+<div class="col-span-12 lg:col-span-7 bg-surface-container-lowest rounded-xl p-8 shadow-[0_12px_32px_-4px_rgba(3,22,54,0.05)] border border-outline-variant/10 overflow-hidden">
+<h3 class="text-xl font-bold mb-6 text-primary flex items-center gap-2">
+<span class="material-symbols-outlined text-secondary" data-icon="visibility">visibility</span>
+                        State Demonstration
+                    </h3>
+<div class="flex flex-col md:flex-row gap-8 items-center justify-center p-8 bg-surface rounded-lg">
+<!-- Inactive State -->
+<div class="flex flex-col items-center gap-3">
+<div class="flex items-center gap-3 px-4 py-3 text-slate-500 bg-[#031636] rounded-lg w-48 shadow-lg">
+<span class="material-symbols-outlined" data-icon="warehouse">warehouse</span>
+<span class="text-sm font-medium">Warehouse</span>
+</div>
+<span class="text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">Inactive State</span>
+</div>
+<span class="material-symbols-outlined text-outline-variant" data-icon="arrow_forward">arrow_forward</span>
+<!-- Active State -->
+<div class="flex flex-col items-center gap-3">
+<div class="flex items-center gap-3 px-4 py-3 active-nav-gradient text-white rounded-lg w-48 shadow-xl shadow-secondary/30">
+<span class="material-symbols-outlined" data-icon="cloud_upload" style="font-variation-settings: 'FILL' 1;">cloud_upload</span>
+<span class="text-sm font-bold">Cloud Upload</span>
+</div>
+<span class="text-[10px] font-bold text-secondary uppercase tracking-tighter">Selected State</span>
+</div>
+</div>
+<div class="mt-8 grid grid-cols-2 gap-4">
+<div class="p-4 bg-surface rounded-lg">
+<span class="material-symbols-outlined text-secondary block mb-2" data-icon="local_shipping">local_shipping</span>
+<p class="text-[10px] font-bold text-primary">LOCAL SHIPPING</p>
+<p class="text-[10px] text-on-surface-variant">Icon weight: 400</p>
+</div>
+<div class="p-4 bg-surface rounded-lg">
+<span class="material-symbols-outlined text-secondary block mb-2" data-icon="route">route</span>
+<p class="text-[10px] font-bold text-primary">ROUTE MAPPING</p>
+<p class="text-[10px] text-on-surface-variant">Icon weight: 400</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Footer Details -->
+<footer class="mt-16 flex items-center justify-between text-on-surface-variant">
+<p class="text-xs">© 2024 Industrial Intelligence Platform. Precision Architect Design System v1.4.2</p>
+<div class="flex gap-4">
+<span class="text-xs hover:text-secondary cursor-pointer">Documentation</span>
+<span class="text-xs hover:text-secondary cursor-pointer">Components Lib</span>
+<span class="text-xs hover:text-secondary cursor-pointer">Brand Guidelines</span>
+</div>
+</footer>
+</main>
+</div>
+</body></html>

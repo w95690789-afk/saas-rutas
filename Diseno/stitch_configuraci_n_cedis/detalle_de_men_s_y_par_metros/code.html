@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "secondary-container": "#2170e4",
+              "primary-container": "#1a2b4c",
+              "tertiary-fixed-dim": "#eabf8a",
+              "tertiary-fixed": "#ffddb5",
+              "inverse-surface": "#2d3133",
+              "surface-container-lowest": "#ffffff",
+              "surface": "#f7f9fb",
+              "on-secondary-fixed": "#001a42",
+              "on-tertiary-fixed": "#2a1800",
+              "outline-variant": "#c5c6cf",
+              "on-secondary-container": "#fefcff",
+              "on-tertiary": "#ffffff",
+              "on-error-container": "#93000a",
+              "tertiary-container": "#3f2600",
+              "on-primary-fixed": "#071b3b",
+              "surface-bright": "#f7f9fb",
+              "on-surface": "#191c1e",
+              "on-background": "#191c1e",
+              "on-primary-container": "#8293ba",
+              "surface-tint": "#4e5e82",
+              "secondary-fixed-dim": "#adc6ff",
+              "secondary-fixed": "#d8e2ff",
+              "on-primary": "#ffffff",
+              "surface-container-highest": "#e0e3e5",
+              "background": "#f7f9fb",
+              "surface-container-high": "#e6e8ea",
+              "surface-container-low": "#f2f4f6",
+              "primary-fixed": "#d8e2ff",
+              "surface-dim": "#d8dadc",
+              "primary": "#031636",
+              "primary-fixed-dim": "#b6c6f0",
+              "inverse-primary": "#b6c6f0",
+              "inverse-on-surface": "#eff1f3",
+              "secondary": "#0058be",
+              "on-tertiary-fixed-variant": "#5e4117",
+              "error-container": "#ffdad6",
+              "on-secondary-fixed-variant": "#004395",
+              "surface-container": "#eceef0",
+              "on-surface-variant": "#44474e",
+              "on-primary-fixed-variant": "#364669",
+              "on-secondary": "#ffffff",
+              "on-error": "#ffffff",
+              "error": "#ba1a1a",
+              "outline": "#75777f",
+              "on-tertiary-container": "#b28c5b",
+              "tertiary": "#241300",
+              "surface-variant": "#e0e3e5"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(12px);
+        }
+        input[type="number"]::-webkit-inner-spin-button,
+        input[type="number"]::-webkit-outer-spin-button {
+            -webkit-appearance: none;
+            margin: 0;
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-surface antialiased">
+<!-- SideNavBar Integration -->
+<aside class="h-screen w-64 fixed left-0 top-0 bg-[#031636] flex flex-col py-6 shadow-[12px_0_32px_-4px_rgba(3,22,54,0.08)] z-50">
+<div class="px-6 mb-8">
+<h1 class="text-xl font-bold text-white tracking-tighter">Precision Architect</h1>
+<p class="text-[10px] text-on-primary-container font-medium uppercase tracking-[0.2em]">Logistics Intelligence</p>
+</div>
+<nav class="flex-1 space-y-1">
+<a class="flex items-center text-slate-400 hover:text-white transition-colors duration-200 px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined mr-3">dashboard</span>
+<span class="text-sm font-medium">Dashboard</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors duration-200 px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined mr-3">hub</span>
+<span class="text-sm font-medium">Distribución</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors duration-200 px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined mr-3">local_shipping</span>
+<span class="text-sm font-medium">Operaciones</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors duration-200 px-4 py-3 mx-2" href="#">
+<span class="material-symbols-outlined mr-3">analytics</span>
+<span class="text-sm font-medium">Métricas</span>
+</a>
+<!-- ACTIVE TAB: Ajustes -->
+<a class="flex items-center text-white bg-[#0058be] rounded-lg mx-2 px-4 py-3" href="#">
+<span class="material-symbols-outlined mr-3">settings</span>
+<span class="text-sm font-medium">Ajustes</span>
+</a>
+</nav>
+<div class="mt-auto px-4 space-y-1">
+<button class="w-full bg-gradient-to-br from-secondary to-secondary-container text-white py-3 rounded-xl font-semibold text-sm mb-6 flex items-center justify-center gap-2 hover:opacity-90 transition-all shadow-lg shadow-secondary/20">
+<span class="material-symbols-outlined text-sm">add</span>
+                Nuevo Reporte
+            </button>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors duration-200 px-4 py-3" href="#">
+<span class="material-symbols-outlined mr-3">help</span>
+<span class="text-sm font-medium">Ayuda</span>
+</a>
+<a class="flex items-center text-slate-400 hover:text-white transition-colors duration-200 px-4 py-3" href="#">
+<span class="material-symbols-outlined mr-3">logout</span>
+<span class="text-sm font-medium">Cerrar Sesión</span>
+</a>
+</div>
+</aside>
+<!-- TopAppBar Integration -->
+<header class="w-full h-16 sticky top-0 z-40 flex justify-between items-center px-8 ml-64 bg-[#f7f9fb] border-none">
+<div class="flex items-center gap-6">
+<span class="text-lg font-black text-[#031636] tracking-tight">Industrial Intelligence</span>
+<div class="hidden md:flex gap-6 items-center ml-4">
+<a class="text-slate-500 hover:text-[#031636] text-sm font-semibold tracking-normal transition-opacity" href="#">Flota</a>
+<a class="text-slate-500 hover:text-[#031636] text-sm font-semibold tracking-normal transition-opacity" href="#">Rutas</a>
+<a class="text-slate-500 hover:text-[#031636] text-sm font-semibold tracking-normal transition-opacity" href="#">Inventario</a>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="p-2 text-[#031636] hover:opacity-80"><span class="material-symbols-outlined">notifications</span></button>
+<button class="p-2 text-[#031636] hover:opacity-80"><span class="material-symbols-outlined">account_circle</span></button>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 p-8 min-h-[calc(100vh-64px)] bg-surface">
+<div class="max-w-5xl mx-auto">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="text-3xl font-bold text-primary tracking-tight mb-1">Configuración de Parámetros</h2>
+<p class="text-on-surface-variant text-sm">Gestión técnica y operativa de la arquitectura de red logística.</p>
+</div>
+<div class="flex gap-3">
+<button class="px-6 py-2.5 rounded-xl text-sm font-semibold text-secondary hover:bg-secondary/5 transition-colors border border-outline-variant/20">
+                        Descartar
+                    </button>
+<button class="px-6 py-2.5 rounded-xl text-sm font-semibold text-white bg-gradient-to-br from-secondary to-secondary-container shadow-md">
+                        Guardar Cambios
+                    </button>
+</div>
+</div>
+<!-- Bento Grid Layout -->
+<div class="grid grid-cols-12 gap-6">
+<!-- Section 1: Centro de Distribución (6 columns) -->
+<section class="col-span-12 lg:col-span-7 bg-surface-container-lowest rounded-xl p-8 shadow-[0_12px_32px_-4px_rgba(3,22,54,0.04)]">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">hub</span>
+</div>
+<h3 class="text-lg font-bold text-primary">Centro de Distribución</h3>
+</div>
+<div class="space-y-6">
+<div class="group">
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">Nombre del CEDIS</label>
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-sm focus:ring-0 focus:border-b-2 focus:border-secondary transition-all outline-none" placeholder="Ingrese nombre del centro" type="text" value="CEDIS - Valle de México Norte"/>
+</div>
+<div class="grid grid-cols-2 gap-4">
+<div class="group">
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">Latitud CD</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-sm focus:ring-0 focus:border-b-2 focus:border-secondary outline-none" step="0.000001" type="number" value="19.432608"/>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col">
+<button class="text-slate-400 hover:text-secondary"><span class="material-symbols-outlined text-[18px]">keyboard_arrow_up</span></button>
+<button class="text-slate-400 hover:text-secondary"><span class="material-symbols-outlined text-[18px]">keyboard_arrow_down</span></button>
+</div>
+</div>
+</div>
+<div class="group">
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">Longitud CD</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-sm focus:ring-0 focus:border-b-2 focus:border-secondary outline-none" step="0.000001" type="number" value="-99.133209"/>
+<div class="absolute right-3 top-1/2 -translate-y-1/2 flex flex-col">
+<button class="text-slate-400 hover:text-secondary"><span class="material-symbols-outlined text-[18px]">keyboard_arrow_up</span></button>
+<button class="text-slate-400 hover:text-secondary"><span class="material-symbols-outlined text-[18px]">keyboard_arrow_down</span></button>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="mt-10 pt-6 border-t border-surface-container-low flex items-center justify-between">
+<span class="text-xs text-on-surface-variant font-medium">Última actualización: hace 2 horas</span>
+<div class="flex items-center gap-2 text-secondary text-sm font-semibold cursor-pointer hover:underline">
+<span class="material-symbols-outlined text-lg">map</span>
+                            Ver en mapa
+                        </div>
+</div>
+</section>
+<!-- Section 2: Horarios y Tiempos (5 columns) -->
+<section class="col-span-12 lg:col-span-5 bg-surface-container-lowest rounded-xl p-8 shadow-[0_12px_32px_-4px_rgba(3,22,54,0.04)] flex flex-col">
+<div class="flex items-center gap-3 mb-8">
+<div class="w-10 h-10 rounded-lg bg-primary/5 flex items-center justify-center text-primary">
+<span class="material-symbols-outlined">schedule</span>
+</div>
+<h3 class="text-lg font-bold text-primary">Horarios y Tiempos</h3>
+</div>
+<div class="space-y-6 flex-1">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">Apertura de Puertas</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-sm focus:ring-0 focus:border-b-2 focus:border-secondary outline-none" type="time" value="06:00"/>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">Cierre de Puertas</label>
+<div class="relative">
+<input class="w-full bg-surface-container-low border-none rounded-xl px-4 py-3.5 text-sm focus:ring-0 focus:border-b-2 focus:border-secondary outline-none" type="time" value="22:00"/>
+</div>
+</div>
+</div>
+<div class="mt-8 bg-surface-container rounded-xl p-4 flex items-start gap-3">
+<span class="material-symbols-outlined text-secondary-container mt-0.5" style="font-variation-settings: 'FILL' 1;">info</span>
+<p class="text-xs font-medium text-primary-container leading-relaxed">Configuración ajustada a zona horaria de México (UTC-6)</p>
+</div>
+</section>
+<!-- Section 3: Métricas de Servicio (Full width bottom or secondary panel) -->
+<section class="col-span-12 bg-surface-container-lowest rounded-xl p-8 shadow-[0_12px_32px_-4px_rgba(3,22,54,0.04)] border-l-4 border-secondary">
+<div class="flex flex-col md:flex-row md:items-center gap-6">
+<div class="flex items-center gap-3 flex-1">
+<div class="w-10 h-10 rounded-lg bg-secondary/5 flex items-center justify-center text-secondary">
+<span class="material-symbols-outlined">speed</span>
+</div>
+<div>
+<h3 class="text-lg font-bold text-primary">Métricas de Servicio</h3>
+<p class="text-xs text-on-surface-variant">Parámetros base para el cálculo de eficiencia de ruta</p>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-8 md:w-2/3">
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">Tiempo Carga Promedio (min)</label>
+<div class="flex items-center bg-surface-container-low rounded-xl overflow-hidden">
+<button class="w-12 h-12 flex items-center justify-center hover:bg-surface-container-high transition-colors text-primary"><span class="material-symbols-outlined">remove</span></button>
+<input class="flex-1 bg-transparent border-none text-center font-bold text-primary focus:ring-0" type="number" value="45"/>
+<button class="w-12 h-12 flex items-center justify-center hover:bg-surface-container-high transition-colors text-primary"><span class="material-symbols-outlined">add</span></button>
+</div>
+</div>
+<div>
+<label class="block text-xs font-bold uppercase tracking-wider text-on-surface-variant mb-2 ml-1">Tiempo Descarga Cliente (min)</label>
+<div class="flex items-center bg-surface-container-low rounded-xl overflow-hidden">
+<button class="w-12 h-12 flex items-center justify-center hover:bg-surface-container-high transition-colors text-primary"><span class="material-symbols-outlined">remove</span></button>
+<input class="flex-1 bg-transparent border-none text-center font-bold text-primary focus:ring-0" type="number" value="30"/>
+<button class="w-12 h-12 flex items-center justify-center hover:bg-surface-container-high transition-colors text-primary"><span class="material-symbols-outlined">add</span></button>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Visualization Card (Right side small context) -->
+<div class="col-span-12 grid grid-cols-1 md:grid-cols-3 gap-6 mt-4">
+<div class="bg-primary p-6 rounded-xl text-white flex flex-col justify-between">
+<span class="text-xs font-bold uppercase tracking-widest text-on-primary-container">Capacidad CEDIS</span>
+<div class="mt-4">
+<span class="text-4xl font-extrabold tracking-tight">84%</span>
+<div class="w-full h-1.5 bg-white/10 rounded-full mt-3 overflow-hidden">
+<div class="w-4/5 h-full bg-secondary"></div>
+</div>
+</div>
+</div>
+<div class="bg-surface-container-highest p-6 rounded-xl flex flex-col justify-between border border-outline-variant/10">
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Rutas Activas</span>
+<div class="mt-4 flex items-baseline gap-2">
+<span class="text-4xl font-extrabold tracking-tight text-primary">124</span>
+<span class="text-sm font-bold text-emerald-600">+12%</span>
+</div>
+</div>
+<div class="bg-surface-container-highest p-6 rounded-xl flex flex-col justify-between border border-outline-variant/10">
+<span class="text-xs font-bold uppercase tracking-widest text-on-surface-variant">Costo Promedio Km</span>
+<div class="mt-4">
+<span class="text-4xl font-extrabold tracking-tight text-primary">$18.42</span>
+<p class="text-[10px] font-medium text-on-surface-variant mt-2 uppercase tracking-wide">MXN / Kilómetro</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

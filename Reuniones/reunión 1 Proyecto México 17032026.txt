@@ -1,0 +1,1044 @@
+Froylan Campos
+Froylan Campos
+00:53
+Lourdes.
+Hola, Wilson.
+Wilson Pinto
+Wilson Pinto
+00:56
+Hola, buenas tardes ¿Cómo estás.
+Froylan Campos
+Froylan Campos
+00:59
+Muy bien. Tú.
+Wilson Pinto
+Wilson Pinto
+01:01
+Muy bien. Gracias.
+Froylan Campos
+Froylan Campos
+01:03
+Súper oye, tengo a mi equipo que está. Lo subí en Tips porque no no supe cómo lo podíamos unir a a esta llamada.
+pero espero que que aquí podamos ir
+medio interactuando con con el equipo. No.
+Wilson Pinto
+Wilson Pinto
+01:20
+Perfecto.
+Froylan Campos
+Froylan Campos
+01:22
+Te platico lo que estamos buscando.
+Y ya tú me dirás qué es lo que tú puedes hacer para
+para proponernos alguna solución, si es que si si es que no ves viable.
+mira actualmente estamos haciendo un proyecto de optimización de todo el área de logística de una empresa que distribuye granos.
+Ellos empacan granos y lo distribuyen a al cliente final.
+a mayoristas y a autoservicios no
+tienen diferentes rutas. Tienen una flotilla no muy grande, la verdad como de 25. Este camiones entre torton, este tractocamiones y y camionetas.
+y, pues, lo que estamos es buscando. ¿cómo optimizar la red logística que tiene actualmente. El objetivo del proyecto al final es reducir los costos
+de la operación logística de este de este cliente.
+sobre todo vinculados a una mejor utilización de su flota para que haya un mejor filmrate una mejor ocupación de sus camiones
+y que haya un mejor rendimiento de
+de kilómetro por el costo de combustible por kilómetro
+con base en esta optimización de rutas.
+actualmente lo hacen mucho por historia.
+por inercia y porque ya la gente que administra las rutas, pues históricamente ha venido manejando estos esta estas estas rutas. Pero en realidad no hay ninguna herramienta que les ayude a optimizar
+toda esta parte de roteo ni de ni de capacidades, Y todo este este tema que va involucrado, Entonces ellos están implementando un sistema, un módulo, digamos, de manejo logístico.
+pero todavía va a tardar más de lo que originalmente habíamos pensado, y nosotros habíamos propuesto hacer un modelo optimizado de la mejor transitorio en lo que su módulo final queda implementado.
+Entonces, la verdad es que nos pusimos un poco nosotros aquí a investigar qué podíamos hacer, pero nos está ganando el tiempo. Y, bueno, yo he utilizado los servicios de F, I, G, E, R, para otros temas.
+y entonces de ahí se me ocurrió que a lo mejor podíamos encontrar ayuda en la plataforma, y es como como llegamos contigo, vale este, entonces lo que queremos es, pues, evaluar una.
+Si es algo que tú ves viable, que se puede hacer ahorita, Te doy algunos datos este adicionales, pero digamos es algo que quiero hacer: un modelito de optimización de rutas
+que nos sirva ahorita de manera transitoria en lo que su módulo final queda implementado. Nosotros originalmente habíamos pensado en hacer ahí un modelo, este, pues digamos más básico.
+pero me parece que podemos hacer algo un poquito mejor con con un especialista como como tú, No te te doy un poco de parámetros y ya ahorita. Tú me dices que otra información necesitas.
+Este. Y aquí tengo a mi equipo, como te decía al lado, le voy a pedir, si me da información, quique, cuántos cuántas rutas tenemos.
+Hay 47, 47 rutas con cuántos puntos de entrega
+dice, tenemos destinos.
+Lo más cercano que tenemos es el destino a ver aquí. Serían
+500 aproximadamente 47 rutas como con 500 puntos de entrega aproximadamente es.
+Wilson Pinto
+Wilson Pinto
+05:52
+Vale totales, o sea.
+Froylan Campos
+Froylan Campos
+05:54
+Total.
+Wilson Pinto
+Wilson Pinto
+05:54
+Rutas. Ok.
+Froylan Campos
+Froylan Campos
+05:56
+Sí totales, este camiones.
+50, pero son porque son como 10 catas. Dieciséis toneladas como 4 o 3 totalmente de 30 toneladas
+y cerca de de 25, 30, 11, 16 toneladas.
+Vamos a ver otra vez. Entonces, 25 tortos de 16 toneladas.
+Wilson Pinto
+Wilson Pinto
+06:26
+No.
+Froylan Campos
+Froylan Campos
+06:28
+Cuatro.
+Wilson Pinto
+Wilson Pinto
+06:29
+Abstractos.
+Froylan Campos
+Froylan Campos
+06:30
+Son 3 tratos, no nada más.
+Mhm: Y son como 19 es que yo, 20 020 tortos.
+y luego también. Bueno, ese es un dato importante. También hay esto que te decimos que son como veintitantos camiones. Son camiones propios de la empresa.
+pero también se hace uso de de permisionarios o de externos.
+y más o menos los externos que se usan, pues debe ser otro tanto igual. Por eso Enrique hablaba como de 50, no. O sea, tenemos, digamos, como 25 camiones propios de diferentes capacidades
+y.
+Wilson Pinto
+Wilson Pinto
+07:21
+En el.
+Froylan Campos
+Froylan Campos
+07:21
+Eso se hace uso de externos para la entrega adicional y serán otros 50 recursos extras que se utilizan. Digo perdón, otros 25, entonces en total estaban agarrados a 50 vehículos
+que se pueden utilizar. La ventaja de los externos, pues al final es que, pues no son son recursos variantes de uso variable, no que solamente utilizan o se requiere. El tema es cómo los optimizamos para que las rutas también nos salgan más baratas con ellos. No.
+Wilson Pinto
+Wilson Pinto
+07:56
+Okay, en no sé qué otro dato tengas.
+Froylan Campos
+Froylan Campos
+08:00
+Este, pues creo que nada más ahorita. No tenemos algún otro dato ahí adicional relevante.
+La verdad, Bueno, te diría que eso es lo básico. Y obviamente, pues obviamente, si tú necesitas algo más, me vas diciendo.
+Wilson Pinto
+Wilson Pinto
+08:16
+Okay. Bueno, perfecto.
+Bueno, gracias Primero por la por el contacto y por el tiempo. Aquí tengo varias preguntas.
+Normalmente las operaciones de este estilo y por la capacidad de los vehículos.
+Entendería que esto es como como una, como un transporte de primera milla. Pero como decías al principio, con esos mismos camiones, haces entregas a mayoristas y clientes final y autoservicios, entonces seguramente van varios pedidos dentro del mismo vehículo. ¿verdad?
+Froylan Campos
+Froylan Campos
+08:48
+¿correcto? ¿correcto?
+Wilson Pinto
+Wilson Pinto
+08:50
+Esos pedidos
+tienen algún tema de ventanas horarias, es decir, pedido a las 8 de la mañana, el segundo a las 12 y el tercero a las 4.
+Froylan Campos
+Froylan Campos
+09:01
+Para para Autoservicio y para Mayoreo: Sí,
+para el resto de clientes, ¿no? Porque es una combinación, en realidad autoservicio y mayoreo, pues has se quedan en las entregas en los Edis.
+Pero todo lo que no es autoservicio y mayoreo. Si es entrega final al cliente.
+No, Esa entrega final, al cliente de lo que no es autoservicio de mayoreo, no necesariamente tiene ventanas de tiempo. Los que sí tienen ventanas son autoservicio y mayoreo, porque ellos nos definen los horarios de entrega. No.
+Wilson Pinto
+Wilson Pinto
+09:36
+Okay. Perfecto a ver.
+Froylan Campos
+Froylan Campos
+09:39
+Espérame tantito. Lo estoy aquí diciendo tóxico en un segundo.
+Wilson Pinto
+Wilson Pinto
+09:41
+Dale, Dale.
+Froylan Campos
+Froylan Campos
+09:44
+Anda más que ventanas, tienen restricciones de recepción, que no son fijas
+o que no son necesariamente fijas todo el tiempo. Esto es y van entre
+un cliente en en donde zongolica, por ejemplo.
+oye, pues aquí lo traigo. Vamos a preparar, o está programada. La este cliente no te recibe
+de las 12 o no te refieres.
+No solamente hay no solamente los autoservicios, también hay algunos mayoristas que tienen restricciones. Sí, Sí, de hecho, decía que hay mayorista, mayoreo y y
+y autoservicio, No, los que sí tienen ciertas restricciones de entrega.
+Wilson Pinto
+Wilson Pinto
+10:34
+Perfecto.
+Froylan Campos
+Froylan Campos
+10:35
+Mhm.
+Wilson Pinto
+Wilson Pinto
+10:36
+Ese ese proceso de
+de carga y descargue cargue en el centro de distribución de donde sale la materia prima, pues, lo que van a entregar.
+Froylan Campos
+Froylan Campos
+10:47
+Mhm.
+Wilson Pinto
+Wilson Pinto
+10:47
+Ese proceso de carga lo tienen medido, es decir, tienen un horario para cargar y cuál.
+Froylan Campos
+Froylan Campos
+10:55
+No se.
+Wilson Pinto
+Wilson Pinto
+10:55
+Demoran en el carding.
+Froylan Campos
+Froylan Campos
+10:57
+O sea, no necesariamente. Si trabajan prácticamente un turno normalmente para las cargas.
+El tiempo de carga más o menos de cuánto es Enrique. Tipo de carga de un camión promedio
+par de horas, digamos, son todos compra.
+Ok, Ese es, yo creo que es este alrededor de 2 h para cargar un camión, No, lo que se tardan, y normalmente empiezan desde las creo que 6 de la mañana A
+es cuando empiezan la carga y se puede llevar todo el día hasta las 6 de la tarde, No, pero eso de que se puede llevar todo el día hasta las 6 de la tarde, es muy probable que es más por ineficiencias que porque
+sea la capacidad que se tenga de carga, no algo que pasa mucho es que de repente los las cargas se detienen por una mala planeación.
+Y entonces está parado el camión ahí un rato. Y ya cuando les liberan documentación, etcétera, empiezan a cargar, pero te diría que realmente lo que se busca es que durante el primer turno se hagan las cargas de los camiones, y el primer turno es de 6 de la mañana
+a 2, 3 de la tarde. No, Ese sería como el objetivo a lograr si se puede optimizar, pues todo este proceso de
+de optimización de rutas.
+Wilson Pinto
+Wilson Pinto
+12:28
+Perfecto, esas esos procesos que yo los llamo stand by cuando ellos se quedan quietos.
+Froylan Campos
+Froylan Campos
+12:34
+Mhm.
+Wilson Pinto
+Wilson Pinto
+12:35
+Día. Hoy día están concertados con los dueños de los vehículos, o me explico, cuando es flota propia, pues no hay lío porque tú tienes.
+Froylan Campos
+Froylan Campos
+12:43
+Exacto.
+Wilson Pinto
+Wilson Pinto
+12:43
+Gente ahí. Y les dices, pues, espérate porque no hay.
+Froylan Campos
+Froylan Campos
+12:47
+De lo.
+Wilson Pinto
+Wilson Pinto
+12:47
+Con los terceros, con los terceros, esos contratados
+tienen algún modelo, en especial de pago. Digo lo pregunto para saber si más adelante tenemos que crear una penalización
+en el modelo para que sepa que en teoría un vehículo tercero debería ser cargado con prioridad. Sí, Entonces la pregunta es si existe algún acuerdo o simplemente los terceros se esperan o llegan después como funcionaría. Eso.
+Froylan Campos
+Froylan Campos
+13:16
+A ver. Déjame, Déjame confirmarlo. Yo tengo una una teoría, pero dejo, flor no, no nos cobran instancias, ¿verdad? Penalización por instancia, cuando se carga, nos los cobran cuando descargan, no.
+Wilson Pinto
+Wilson Pinto
+13:29
+Que que.
+Froylan Campos
+Froylan Campos
+13:30
+Sí solo solamente cuando cargan. No hay este, no hay cobra cobro por estancia adicional o por
+o por llevarnos más tiempo por estadía. Si no los cobran, cuando se entrega, ¿no? Y si se entrega a destiempo, entonces sí cobran este tiempo de de estancia, le llaman.
+Wilson Pinto
+Wilson Pinto
+13:52
+Perfecto.
+Otra pregunta. Cuando s Cuando programan los pedidos, o sea, salieron los pedidos para entregar
+esos pedidos, salen a qué horas.
+o sea, cuando se tiene esa programación de pedidos. La lista de pedidos para entregar y cuánto tiempo tienen para ejecutar esa planeación que están haciendo hoy día.
+Froylan Campos
+Froylan Campos
+14:17
+Bueno a ver a ahí. Yo te diría hoy como está ocurriendo, que está mal es que, en teoría, en la lista de pedidos para preparación debería estar un día antes
+y un día antes debería de programarse. ¿cómo van a salir estos pedidos, en qué camiones, con qué capacidades, a qué hora, etcétera.
+Para que al otro día se ejecute ese plan.
+Eso es, digamos, la teoría. La realidad es que hoy no se está respetando eso, y yo te diría a priori, la mitad de los pedidos se programan un día antes, y la otra mitad se programan durante el mismo día de salida. Eso, obviamente tiene implicaciones de que.
+pues de repente no no se pueden llenar los camiones porque el pedido solicita cierto producto, que no hay en existencia y entonces tiene que esperar el camión a que lo produzcan para que se vaya por toda la carga completa. ¿no? Entonces
+yo te diría que el la ventana de tiempo de planeación hoy es muy corta, pero porque está mal el modelo, que es lo que estamos tratando de de de corregir de que, al menos
+en una primera etapa, tengamos por lo menos un corte 24 h antes, no es decir que no más allá de la una de la tarde de hoy se reciban cualquier pedido que se va a enviar el día de mañana
+para que durante la tarde de hoy se haga la planeación para mañana.
+Ok, Eso es lo que buscamos en una primera fase. Obviamente, en una siguiente fase, lo que buscaríamos que al menos sea con 48 h. Ahora, ¿por qué no se hace hoy con 24 h antes? Porque hay muchos vicios en el proceso de pedidos
+de parte del área comercial que está impidiendo que se logre tener una ventana más más amplia. Pero eso estamos tratando de corregirlos.
+corregirlo dentro del proyecto que estamos desarrollando, que va más allá de la del modelo de optimización de rutas. Entonces yo te diría que, como parámetros, tendría que utilizar
+el que no se reciba más bien que tenga una ventana de planeación de una de la tarde a las 10 de la mañana del siguiente día, a más tardar, no.
+Wilson Pinto
+Wilson Pinto
+16:43
+Sí.
+Froylan Campos
+Froylan Campos
+16:43
+A ver tanta pimienta.
+Wilson Pinto
+Wilson Pinto
+16:45
+Vale.
+Froylan Campos
+Froylan Campos
+16:48
+Hablando. Lo último, corrígeme, Enrique si me quedé en mal estado
+en la última reunión que tuvimos después de la presentación del viernes
+estábamos hablando de la posibilidad de que
+los pedidos cierran por ahí de las 4 de la tarde de un de un día, el lunes, digamos.
+tienes todo el martes para para
+asegurar que el producto esté disponible, para
+a que los camiones sean cargados el miércoles y empieza el reparto el miércoles. Entonces ahí es donde las 24 h, o sea, es dar un día completo de de de carga, no
+solamente observar un día y al día siguiente ya
+eso es lo que pasa hoy. Nos estamos estamos buscando. ¿qué hacemos allá un día de separación completa.
+Así son la entrega de los pedidos
+y la carga de los de los mismos. Entonces pudiste escuchar Wilson, o te lo repito.
+Wilson Pinto
+Wilson Pinto
+17:57
+Sí, Sí, no está perfecto. Está perfecto. Hoy un día, la la la, la operación ideal.
+Froylan Campos
+Froylan Campos
+18:03
+Mhm.
+Wilson Pinto
+Wilson Pinto
+18:04
+Debería ser con un día entre alistamiento y cargue para que al siguiente día salgan todos a hacer sus entregas.
+Froylan Campos
+Froylan Campos
+18:13
+¿correcto?
+Wilson Pinto
+Wilson Pinto
+18:13
+Perfecto Okay. Hoy día, estos pedidos que salen tienen una dirección
+únicamente o tienen algún tema de georeferenciación ya desarrollado allá al interior.
+Froylan Campos
+Froylan Campos
+18:28
+Sí Sí, Hoy todos tienen que referenciación. De hecho, están. Hay un esquema de monitoreo, hay geocercas, no para la entrega del producto y hay monitoreo a lo largo de toda la ruta para cada 1 de los de los camiones.
+Wilson Pinto
+Wilson Pinto
+18:44
+De casualidad.
+Froylan Campos
+Froylan Campos
+18:46
+Dime.
+Wilson Pinto
+Wilson Pinto
+18:47
+No, no, no.
+Froylan Campos
+Froylan Campos
+18:48
+Para todos. Pero estaba pensando que los externos no, Pero sí es un requisito que también los puede monitorear.
+Wilson Pinto
+Wilson Pinto
+18:54
+Okay perfecto. ¿sabes cuál fue el método que utilizaron para georreferenciarlos. Utilizaron Google lo hicieron de manera manual como para entender la calidad.
+Froylan Campos
+Froylan Campos
+19:07
+Lo tienen. Creo que a través de Google, Led.
+Wilson Pinto
+Wilson Pinto
+19:10
+Perfecto
+listo Y en la experiencia que tienen hoy día de las entregas, el conductor o el chofer, es capaz de entregar o se le se le hace fácil entregar con esa con esa indicación, o es por ellos, ya saben, donde quedan los clientes y no necesitan una indicación.
+Froylan Campos
+Froylan Campos
+19:31
+Mira, yo te diría que ya tienen las 2 opciones, ¿no? O sea, van obviamente con la dirección y y y tienen claro a dónde tienen que llegar la mayoría, como no son como son los mismos clientes.
+en su mayoría. Entonces ya muchos con este conductores y rutas, pues son las mismas, no, pues ya saben a donde tienen que entregar.
+obviamente cuando haya clientes nuevos, pues es cuando tienen que estar pendientes de a dónde a dónde va a llegar un punto nuevo adicional, pero te diría que es. Esos son los menús, no.
+Wilson Pinto
+Wilson Pinto
+20:05
+Perfecto.
+Bueno, yo digo que con toda esta información que tenemos acá.
+Froylan Campos
+Froylan Campos
+20:11
+Y ya está.
+Wilson Pinto
+Wilson Pinto
+20:12
+Georreferenciado, pues como tienen un sistema monitoreo, obviamente ya hay unas condiciones propias para establecer un un modelo de enrutamiento
+aquí. Lo más importante es entender, digamos.
+los modelos de enrutamiento. Se pueden hacer desde diferentes soluciones. Hay soluciones.
+Froylan Campos
+Froylan Campos
+20:30
+Mhm.
+Wilson Pinto
+Wilson Pinto
+20:31
+Open Source está Google Maps está here Girard. Es muy famoso, por ejemplo, en México, porque identifica vías, sí, pero digamos no está tan fresco. El tema de del tráfico tiene un delay importante con.
+Froylan Campos
+Froylan Campos
+20:48
+Sí.
+Wilson Pinto
+Wilson Pinto
+20:48
+A Google que Google, pues no reconoce muy bien las las calles para los camiones y de pronto puede colocar un camión en una ruta que físicamente, el camión no puede.
+Froylan Campos
+Froylan Campos
+20:59
+De las y.
+Wilson Pinto
+Wilson Pinto
+20:59
+Por ahí o no.
+Froylan Campos
+Froylan Campos
+21:00
+Lo que.
+Wilson Pinto
+Wilson Pinto
+21:02
+Lo ideal para estas operaciones, pues es sacrificar un poco el tema del tráfico. Al modelo se le puede colocar un pequeño delay en mi experiencia a los procesos de camiones. Yo le pongo sin importar en qué ciudad sea Yo le pongo un Delay de 25 min
+en el Eta por el tema del peso y el desplazamiento que eso debería ser dinámico, pero con se vuelve un conflicto para el modelo, entonces simplemente se le coloca un delay de 25 min por ser un camión.
+además de lo que entregué Google o en la o el a P I que sea. Y además de eso, si se utiliza entre hero o Google, yo le coloco si utilizo Girard otros 25 min, o sea, 50 min en total de delay.
+para poder compensar esa parte del tráfico que sí lo tiene muy claro Hugo
+Ok. Dicho esto, entonces, si existen apis tanto de parte de Google como de parte de here que pueden, digamos, generar un B, R, P, o sea, un sistema que solucione el problema de vehículos y la asignación de pedidos basados en
+ventanas, horarias, desplazamiento o Eta, que llamamos que es el tiempo.
+Froylan Campos
+Froylan Campos
+22:13
+Mhm.
+Wilson Pinto
+Wilson Pinto
+22:13
+De arriba sus capacidades, incluso sus especialidades. Es decir.
+puede ser que el cliente, el originador de la carga, el generador de la carga tenga limitantes dentro de sus instalaciones y diga, bueno, yo para cargar en un vehículo grande. Solo tengo un andén grande. El resto son pequeños, entonces esa parte de andenes
+también es importante tenerlas en cuenta para poder determinar si, por ejemplo, el modelo le dice: cárgame, 5 camiones grandes.
+Froylan Campos
+Froylan Campos
+22:43
+No, no.
+Wilson Pinto
+Wilson Pinto
+22:44
+En un andén, sí.
+Froylan Campos
+Froylan Campos
+22:45
+Mhm Mhm.
+Wilson Pinto
+Wilson Pinto
+22:46
+Esa programación de andenes que se me pasó preguntarla si la tenían o no la tenían, o es un cargue normal en un patio donde no hay restricciones de cargue. Eso no sé si si lo tienen.
+Froylan Campos
+Froylan Campos
+22:57
+Mira si tiene, tienen andenes.
+pero creo que la restricción es mínima, no de los andenes. La verdad es que no hay. No, Eso no representa un juego de botella para las mujeres.
+Wilson Pinto
+Wilson Pinto
+23:12
+Perfecto. Entonces, viendo que esto no es una limitante para para el modelo, entonces 1 podría mandar a cargar todo.
+Hay que validar es, digamos, nosotros. Le Yo le digo tandas. Entonces hay que mirar. Es cuántas tandas pueden cargar al mismo tiempo. Es decir, yo tengo un un patio sin restricción, pero yo solamente tengo, por ejemplo, 5 montacargas. Entonces solamente.
+Froylan Campos
+Froylan Campos
+23:33
+Sí. Correcto.
+Wilson Pinto
+Wilson Pinto
+23:34
+Cinco carros al tiempo. Entonces sería bueno tener en cuenta esa capacidad de cargue.
+Froylan Campos
+Froylan Campos
+23:40
+Mhm Mhm Mhm Mhm.
+Wilson Pinto
+Wilson Pinto
+23:41
+Que puede tener, que tiene que tiene el el generador de carga.
+Froylan Campos
+Froylan Campos
+23:47
+Mhm: Sí.
+Wilson Pinto
+Wilson Pinto
+23:48
+Sí, Sí.
+Froylan Campos
+Froylan Campos
+23:49
+No, no.
+Wilson Pinto
+Wilson Pinto
+23:50
+Y me.
+Froylan Campos
+Froylan Campos
+23:51
+Es el Sabemos cuántos pueden cargar al mismo tiempo, cuántos canales
+te diría hasta 2 que dependiendo si son más chatas o
+pero al mismo tiempo, no, no si no más. Son 5,
+No, no, no, no. Al mismo tiempo. Al mismo tiempo.
+No, lo que lo averiguamos eso. Wilson, porque no lo tenemos.
+Wilson Pinto
+Wilson Pinto
+24:13
+Perfecto. Eso es importante para medir la capacidad del cargue, porque yo puedo programarlos todos a las 7 de la mañana.
+Froylan Campos
+Froylan Campos
+24:21
+De de.
+Wilson Pinto
+Wilson Pinto
+24:21
+Cargarlas ahora.
+listo. Entonces, si existe la forma de hacer un modelo, lo típico para utilizar en este estilo de de soluciones es utilizar
+Apis. Pues porque, digamos, yo puedo construir un backend muy rápido.
+Para poder hacer el el ejercicio. Se necesitan variables importantes, como, por ejemplo, los tiempos de carga que ya me los dijeron las restricciones. Nos faltaría la cantidad de camiones que pueden cargar al mismo tiempo.
+Froylan Campos
+Froylan Campos
+24:51
+Mhm.
+Wilson Pinto
+Wilson Pinto
+24:51
+Y ya con eso se puede diseñar. O sea, se puede hacer un consumo de una app.
+Ese backend se construye y no hay ningún problema. El tema es
+dónde va a vivir ese a P I que debe ser en la nube, con todas las medidas de seguridad posible.
+no necesarias y que se tienen que implementar.
+Y lo otro que normalmente dificulta el proyecto es cómo le traigo yo la información a ese modelo.
+Froylan Campos
+Froylan Campos
+25:21
+Mhm.
+Wilson Pinto
+Wilson Pinto
+25:21
+Explico, puede ser que él tenga Sap o tenga oracon, o simplemente tenga un excel.
+Froylan Campos
+Froylan Campos
+25:26
+Mhm.
+Wilson Pinto
+Wilson Pinto
+25:26
+Determinar. Entonces es una pregunta que no sé si tienen la respuesta en este momento, ¿cómo se integrarían las fuentes de la información. Esa fuente, la información
+pueden ser 3 que yo reconozco. En este momento una lista de pedidos con todas sus variables, una lista de camiones con todas sus variables que asumimos que si un camión está ahí, es porque tiene conductor.
+Froylan Campos
+Froylan Campos
+25:48
+Mhm.
+Wilson Pinto
+Wilson Pinto
+25:49
+Tendríamos que tener una lista de conductores y una lista de
+de los posibles horarios de cargue que tengan, como lo determinamos, que es el dato pendiente. ¿cuál es la capacidad que tienen entonces, normalmente estas empresas que hacen. Y ahí nace una palabra que se llama prioridad. Si yo tengo para entregar 500 pedidos en un día, pero mi capacidad de cargue al mismo tiempo es de 10.
+Seguramente yo tengo que cargar primero unos con prioridad
+Si no hay una prioridad nombrada en el pedido, es decir, este señor necesita el pedido sí o sí hoy a las 10 de la mañana.
+Froylan Campos
+Froylan Campos
+26:25
+De colocar un.
+Wilson Pinto
+Wilson Pinto
+26:26
+Prioridad, 1, normalmente la prioridad la da el desplazamiento. Entonces, en la primera tanda cargo, los vehículos que van más lejos
+y en las últimas tandas cargo los que estén más cerca. Sí, eso en el caso de que esté completa la mercancía para cargar. Y si no ahí cambia la prioridad, ese ese sistema de prioridades lo reconocen. Podríamos tener alguna información de esa.
+Froylan Campos
+Froylan Campos
+26:49
+Yo creo que tendríamos que que construirla.
+Este, yo creo que sí. Va a ser medio dinámica, no porque ahí depende de los clientes.
+Aquí en México hay un tema de seguridad que hay que tomar en consideración, que te digo ¿a qué se ¿A qué me refiero con eso?
+Hay en las rutas algunas de las rutas que se ejecutan. Hay un tema de inseguridad importante. Lo que se hace es que se generan
+un un convoys de diferentes empresas que van todos los convoyes juntos custodiados por la Guardia Nacional en México.
+y eso tiene ventanas específicas. No todos los días, a las 10 de la mañana va a salir el convoy del punto A y va a ir al punto B,
+entonces hay que estar con la carga lista antes de las 10 de la mañana para que salga con el convoy. Si queremos que vaya seguro, no por decirte, una de las restricciones que puede haber, me parece que las prioridades. Sí, hay que irlas construyendo y probablemente van a ser dinámicas.
+pero sí, efectivamente, ha hay ese tema de de prioridades este para ir desarrollando las la, la, la los temas de carga.
+Wilson Pinto
+Wilson Pinto
+28:11
+Perfecto
+listo. Entonces, digamos que con toda esta información, si se puede construir un modelo, como les digo, tiene que ser.
+Froylan Campos
+Froylan Campos
+28:19
+Mhm.
+Wilson Pinto
+Wilson Pinto
+28:20
+Toca reconocer es la fuente de información. Ellos generan eso en algún sistema de.
+Froylan Campos
+Froylan Campos
+28:24
+Pua.
+Wilson Pinto
+Wilson Pinto
+28:24
+Saab Orako la Excel. ¿cómo lo hacen?
+Froylan Campos
+Froylan Campos
+28:27
+Tienen un Rp que éste que se llama infosis.
+Este, en el cual se cargan todos los pedidos.
+Hay Yo tenía diferentes fuentes que seguramente vamos a utilizar para eso, no porque hoy descargan los pedidos de los de los Este.
+de los autoservicios de los diferentes portales de los autoservicios y lo ponen en un excel y reciben pedidos de los vendedores que van a a
+a mayoreo y a a este a clientes finales
+y todo lo juntan. Y hasta donde entienden, lo corrigen en equipo, todos lo manejan en un excel para definir a partir de ahí, cómo van a armar las las cargas? No, independientemente de que eso lo suban al R P, para que contablemente lo pueda descargar de los inventarios.
+Pero antes de eso, me parece que el modelo lo hacen en Excel para definir cómo se van a ir las cargas.
+Entonces, si vas a tener información, yo te diría de excel, no este seguramente como prioridad y información del R P también para, seguramente, validar temas de inventarios. No.
+Wilson Pinto
+Wilson Pinto
+29:47
+Sí. Yo creo que al final esto va a ser una lista de pedidos en Excel, una lista de vehículos en excel, seguramente con algunas variables. Es como yo me lo imagino, Okay, perfecto.
+Como les decía, entonces, definidas estas fuentes lo mismo saldrá en Excel, digamos hasta el momento. Es como yo lo veo.
+Froylan Campos
+Froylan Campos
+30:07
+Mhm.
+Wilson Pinto
+Wilson Pinto
+30:07
+Crear este tipo de modelo. Realmente no es difícil, pues porque tenemos muchas cosas a favor hoy día. Y una de ellas es que todo está tipificado. Entonces no sería nada difícil crear algo que yo llamo una caja negra en la nube.
+entren unos pedidos y salgan unos pedidos asignados a unos camiones con unos horarios de carga. Eso es lo que al final saldría. ¿qué hace, digamos, la premisa más importante de ustedes es optimizar las cargas.
+optimizar la productividad de los camiones. Ojalá seguramente que un vehículo propio pueda ir y volver a hacer varios viajes y no tener.
+Froylan Campos
+Froylan Campos
+30:43
+Qué brutal.
+Wilson Pinto
+Wilson Pinto
+30:43
+Un tercero, ¿Sí? ¿correcto? ¿por.
+Froylan Campos
+Froylan Campos
+30:45
+No.
+Wilson Pinto
+Wilson Pinto
+30:46
+Entonces, para eso es muy importante. Dos cosas: una que nos debe que nos debe, y es la capacidad de carga que tiene el generador. Esa es una que que que es importante y la otra que no la escuche, y no sé si la tengan es
+si tienen los tiempos de descarga o si estos están inmersos en las variables de los pedidos.
+Me explico.
+Froylan Campos
+Froylan Campos
+31:08
+Y en.
+Wilson Pinto
+Wilson Pinto
+31:08
+Wilson tiene una tienda y Elmer recibe rápido y me demoro una hora. Pero José tiene una tienda, la misma can puede ser una tienda muy similar, pero él se me demora 3 h porque yo tengo que subir el pedido hasta el tercer piso. Un ejemplo. Sí, esas particularidades las tienen por por por por destino. Sabe.
+Froylan Campos
+Froylan Campos
+31:27
+Creo que no habrá. Déjame que le pregunto al equipo.
+¿es eso, no ¿verdad? ¿no está definido? ¿existen definidos los tiempos de descarga
+momento, y eso es una buena pregunta. No sé cómo juega
+en la decisión de los tiempos
+que en realidad sabemos que no lo manejan con con con precisión
+para los para los tiempos del siglo.
+Bueno, pero sí tienen información de cuánto puede tomar la descarga, en algunos casos en algunos clientes particulares
+y en los otros, aunque no los detenga, se puede estimar con con
+con cierta rapidez. Okay. Sí, Exacto. Ellos.
+por de manera pragmática. Cuáles pueden ser los puntos de entrega que demoran un poco más, pero digamos que su principal variable que sí está registrada es lo que ellos llaman la cantidad de repartos.
+que simplemente es cuántos clientes distintos tienen, pero a veces pasa que si no
+de manera pragmática, ellos saben que algún cliente les demora un poco más que otro, digamos que hay como una. Digamos que, de forma general habría como 2 pasos no entrega
+entrega demoral. Tendremos que hacer una tipificación doble, pero principalmente lo que lo que aumenta y es parte también de lo que queremos optimizar y buscar esas variables, pues es eso la cantidad de días que toma toda la ruta que va directamente a proporcionar a la cantidad de repartos
+y, bueno, evidentemente, la distancia, el tipo de camión, la ocupación de ese camión Bueno.
+días que tarda en total el viaje, no que también va directamente a proporcionarle de cuántas de cuántos repartos pueda tener y de la vida de la ruta. Además, estoy pensando que si
+no no sé qué tan documentado tengamos esos esos tiempos, pero sí se puede sacar
+porque, como está el sistema en el de monitoreo, el sistema de monitoreo ahí registra cuando llega y cuándo sale. Entonces se puede saber cuánto tiempo de descarga hay entre que llega un punto, se queda ahí detenido para la descarga y sale nuevamente.
+Entonces creo que que que con eso también podemos sacar punto por punto. ¿cuál es el tiempo real que se les está tomando la descarga.
+Y eso a través de.
+Wilson Pinto
+Wilson Pinto
+34:03
+Sí. Correcto.
+Froylan Campos
+Froylan Campos
+34:04
+El monitoreo. Sí.
+Wilson Pinto
+Wilson Pinto
+Jus justo. Iba a decir que los reportes históricos del sistema de monitoreo.
+
+Wilson Pinto
+Wilson Pinto
+Hola, ¿Me escucha un D, N, I.
+Froylan Campos
+Froylan Campos
+00:35
+Ya aquí estamos aquí, estamos.
+Wilson Pinto
+Wilson Pinto
+00:37
+No sé si acabó la llamada. Bueno, entonces listo. Perfecto. No, no, no hay problema. Entonces
+podemos generar esos históricos Okay. Entonces, como les comentaba, tenemos esos datos, seguramente lo que viene es poder entender
+que que disponibili, o sea, qué tiempo necesitan ustedes tener esta solución, o sea, la solución de
+de varias cosas, pero se pueden tener nosotros. Normalmente. Lo que hacemos es que hacemos envíos.
+Froylan Campos
+Froylan Campos
+01:12
+Un E, M, P.
+Wilson Pinto
+Wilson Pinto
+01:14
+Para poder salir con algo.
+Froylan Campos
+Froylan Campos
+01:16
+De se.
+Wilson Pinto
+Wilson Pinto
+01:17
+Mide por la cantidad de flota, otras veces por la cantidad de destinos. Si 1 quiere optimizar definitivamente, toca hacerlo con toda la operación. Creo que una de las de las variables importantes para tener en cuenta en el M. V P.
+Es la la ventana de programación que tienen hoy día, que, como lo decía tu equipo, hay un ideal, pero que seguramente no
+no se cumple toca llevarlo hacia allá, y eso también lo hace la efectividad de la programación. Entonces digamos que respuesta corta
+pero certera es que si sé con todos los atributos y todas las cantidades, información que ustedes tienen y variables. Sí, se puede construir 1. Un backend se puede construir con una subida de un archivo en en Excel y con una salida en Excel. Si
+incluso se puede pensar un poco más allá. Y es que este excel salga con alguna información.
+digamos, georreferenciada. ¿qué quiere decir que una entrega salga de una vez con un link para que la persona sepa cómo guiarse a través de Google Maps, y se puede hacer desde un P. D, F, O sea.
+no necesitamos inmediatamente integrarnos, sino que se puede crear ese ese modelo que entre un excel, lo procese, lo entregue y esa entrega puede ser un P. D, F, un Excel, lo que quieran para podérselo entregar a alguien, incluso hasta manual o digitalmente.
+si es que en primera instancia, el M V. P. Puede trabajar sin tener integración. Y ya luego allá por los medios manuales, como tú lo decías hace un momento suban eso al E. R, P,
+que que porque las integraciones son lo que más demoran el proyecto.
+Froylan Campos
+Froylan Campos
+02:53
+Mhm.
+Wilson Pinto
+Wilson Pinto
+02:54
+Claro, perdóname.
+Froylan Campos
+Froylan Campos
+02:56
+O sea, esto quiere decir.
+Wilson Pinto
+Wilson Pinto
+02:57
+Aparece yo. Voy a llevar todos estos datos.
+Froylan Campos
+Froylan Campos
+03:01
+No nada más. Lo que estaba pensando es la idea es que el modelo te entregue
+una como deberían ir cargados, los los camiones, qué capacidades, la secuencia de entrega, me imagino, y es.
+Wilson Pinto
+Wilson Pinto
+03:17
+Sí.
+Froylan Campos
+Froylan Campos
+03:18
+Y la ruta que deberían de seguir, no.
+Wilson Pinto
+Wilson Pinto
+03:21
+Así es Así es.
+Froylan Campos
+Froylan Campos
+03:23
+Vale. Entonces.
+Wilson Pinto
+Wilson Pinto
+03:24
+Tú entregas una lista de pedidos. Entonces, ve.
+Froylan Campos
+Froylan Campos
+03:26
+Que me.
+Wilson Pinto
+Wilson Pinto
+03:26
+Del 1 al 20 y yo, y y lo que te devolvería el sistema es el primero, el segundo y el tercero van con el carro A y se carga a las 8 de la mañana, entregaría el segundo a las 10, el tercero a las y estaría terminando a las 2 de la tarde. Un ejemplo.
+Froylan Campos
+Froylan Campos
+03:42
+Claro.
+Wilson Pinto
+Wilson Pinto
+03:43
+Los otros 3 pedidos van con el carro B y así saldría la asignación y se crea un en caso de que sean más pedidos Ent y siempre se va a entregar un itinerario por vehículo
+que diría el orden, el orden de esa secuencia y un link para que se puedan guiar por Google Maps. Lo que hemos hecho en algunos casos es que se su se les entregue un P D F digitalmente, se le envía incluso hasta su Whatsap.
+La persona lo abre y va dando clic, y él lo va llevando hacia el punto que nosotros recomendamos.
+Esto se hace porque seguramente la apli. El monitoreo tiene alguna aplicación. No sé si tengan algún.
+Froylan Campos
+Froylan Campos
+04:20
+Sí.
+Wilson Pinto
+Wilson Pinto
+04:21
+Del monitoreo. Entonces, en ese envite nos vamos a
+a poner a crear otra aplicación o un s d K, que se llama para colocarle a la a la aplicación actual.
+Entonces yo creo que que esa sería la mejor manera, subimos un excel, Ponemos en la mitad.
+Froylan Campos
+Froylan Campos
+04:37
+Modelo.
+Wilson Pinto
+Wilson Pinto
+04:37
+Y les entrega un P, D, F o un excel con unos links para poder llegar a cada 1 de los puntos.
+Eso sería. ¿ No sé cómo lo.
+Froylan Campos
+Froylan Campos
+04:47
+Y yo creo que eso es lo que necesitamos este principio y.
+Wilson Pinto
+Wilson Pinto
+04:54
+Okay? Bueno.
+Froylan Campos
+Froylan Campos
+04:55
+Aquí. Lo que estoy pensando es, claro.
+tú que necesitarías como de información
+para que tú nos puedas estimar tiempos y costos de lo que de lo que sería este este modelito.
+Wilson Pinto
+Wilson Pinto
+05:11
+No, Pues ya con esos, digamos, esas
+esas 500 entregas que entendí que son diarias totales.
+Lo que más yo no puedo multiplicar, digamos, 30 días por 500 porque seguramente estas entregas duran más de un día. ¿sí? Entonces.
+Froylan Campos
+Froylan Campos
+05:30
+Sí, Sí.
+Wilson Pinto
+Wilson Pinto
+05:31
+Abuelo tener como un listado de los destinos. Ojalá si.
+Froylan Campos
+Froylan Campos
+05:35
+No es.
+Wilson Pinto
+Wilson Pinto
+05:35
+Golpe y.
+Froylan Campos
+Froylan Campos
+05:36
+Lo de.
+Wilson Pinto
+Wilson Pinto
+05:36
+Ves.
+Si tienen un estado de todo un mes perfecto, lo pueden anonimizar pedido. Uno, 2, 3, 4. A mí, lo que me interesa son los destinos para hacer una simulación y decirte: ah, bueno, al final, no son 500 por 30 días, sino son 200 por 30 días. Un ejemplo sí, pero
+esa sería inicialmente un listado de los pedidos, y ya con eso nosotros podemos empezar a a entender cuál sería, si por algo llego a necesitar alguna información adicional. Pero con esa inicialmente, para poder entender cuál sería el flujo
+de peticiones que le haríamos a las Apis y a los diferentes servicios en la nube. Creo que con eso ya estaría bien.
+Froylan Campos
+Froylan Campos
+06:20
+A ver Dame un segundo. ¿qué pasó? Enrique? ¿dices qué?
+Ya que esos 500 son 500 puntos de entrega distintos, pero en cantidad de viajes son como 4 500 al año.
+viajes diferentes, viajes.
+Wilson Pinto
+Wilson Pinto
+06:34
+Cuatro 1 500 viajes.
+Froylan Campos
+Froylan Campos
+06:36
+Al año, no al año en el año
+al año, No, pero ajá, pero cada pero cada viaje puede tener varios puntos de entrega. No.
+Wilson Pinto
+Wilson Pinto
+06:43
+Así es exactamente eso es lo que creemos. Entonces sería bueno. Sería bueno tener esa lista de un mes, una muestra de un mes como para entender o sea, normalmente esa lista debería decir día 1 salieron estos 20 pedidos que van para.
+Froylan Campos
+Froylan Campos
+06:59
+El es.
+Wilson Pinto
+Wilson Pinto
+06:59
+Día, 2, día, 3, día, 4.
+Entonces yo creo que esa sería la mejor manera Fronilán.
+Froylan Campos
+Froylan Campos
+07:08
+Sí, Sí, Sí,
+sí a ver. Yo yo creo que te puedes entregar la verdad. Este creo que mucha más información, no para que definas, bien el el el lo que se requiere, sobre todo porque hay temas también que que hoy.
+más bien que hay que considerar el modelo que en ese momento tenemos que.
+Wilson Pinto
+Wilson Pinto
+07:28
+Por ejemplo, un programa de comunicación.
+Froylan Campos
+Froylan Campos
+07:32
+De aciertos, productos.
+Wilson Pinto
+Wilson Pinto
+07:34
+Bueno.
+Froylan Campos
+Froylan Campos
+07:34
+De ciertos. Más bien, el cubicaje de ciertos pedidos
+que varían entre cliente y cliente dejar ponerte un ejemplo. Hay clientes que te dicen oye. Yo necesito que me mandes tarimas
+del producto a que no pasen de 80 cm.
+Y ese mismo cliente te dice para el producto. Be puedes mandar tarimas de 1, 20, ¿no? Entonces depende del no solamente del del tonelaje, sino del cubicaje que requieran esos pedidos.
+Esa parte del cubicaje la verdad es que la estamos desarrollando, pero es que va a ser importante, porque hay cosas
+que dependen de esos parámetros para poder decir, pues, mira este camión en esta ruta dado estas restricciones del cliente, pues se va a ir al 80 por 100 de de de de capacidad, porque no se puede mandar
+al 100 por un tema de restricción de cubica por decirte algo que son estos temas. Me parece que son más a lo mejor, más finos.
+pero que hay que tomar en consideración también.
+Wilson Pinto
+Wilson Pinto
+08:44
+De acuerdo, de acuerdo? Y esa parte de capacidades son muy importantes.
+porque si el modelo necesita calcular diferentes capacidades, debemos tenerlo en cuenta.
+Froylan Campos
+Froylan Campos
+08:58
+Que si son diferentes.
+Wilson Pinto
+Wilson Pinto
+08:59
+Normalmente los Ah Okay. Perfecto. Entonces lo lo tengo en cuenta para colocarlo aquí, que son diferentes capacidades. Ok.
+Entonces quedaría pendiente algo Fernando.
+Y es que me enviaras ahí por el chat de de.
+Froylan Campos
+Froylan Campos
+09:15
+Mhm.
+Wilson Pinto
+Wilson Pinto
+09:16
+De fiverr, me enviarás una muestra anónima de los.
+Froylan Campos
+Froylan Campos
+09:20
+Por el.
+Wilson Pinto
+Wilson Pinto
+09:21
+De los pedidos de un mes.
+Froylan Campos
+Froylan Campos
+09:23
+Mhm.
+Wilson Pinto
+Wilson Pinto
+09:24
+Como para entender cómo salen con una fecha de emisión del pedido.
+Froylan Campos
+Froylan Campos
+09:28
+Mhm.
+Wilson Pinto
+Wilson Pinto
+09:29
+Si pudieran llegar a tener el carro, pues perfecto como para poder entender principalmente no es para copiarme del diseño, porque esto lo hace de otra manera, sino para poder entender cuántas peticiones realmente le tenemos que hacer a toda la infraestructura y a las Apis. ¿realmente es eso que es el secreto? Pues para darte un precio.
+Froylan Campos
+Froylan Campos
+09:48
+Okay.
+Vale este a ver. Déjame preguntarte aquí el equipo algo algo más que tengamos que considerar.
+Evidentemente, como es un proyecto en donde estamos basados en la rentabilidad, pues el va a haber ciertas reglas
+de o políticas que vale la pena implementar.
+como pues, no sé máximo de repartos el pedido mínimo, entonces no esto. Si si hubiera un poquito ahí adentro de su experiencia, de cuáles deberían de ser normalmente estas reglas, como colocar estas reglas, no ya llámale política, acuerdos de nivel de servicio interno que van a determinar, pues, la cantidad de pedidos.
+el porcentaje mínimo de utilización, el pedido mínimo por cliente, el
+los pedidos fuera de ruta, que son ciertas reglas que hoy estamos trabajando para
+para entregarlas, principalmente al área comercial al área de producción que es igual, tenía por ahí, como algún tipo de benchmark
+de cuáles deberían ser las principales redes.
+Nosotros tenemos muy claro eso a mayor reparto, mayor costo, no
+utilización. Pues mayor gusto porque lo entregado a mayor distancia, pues evidentemente es una tarifa más alta, no está muy clara y a mayor
+a mayor pedido que su papel pedido mínimo, mientras más grande es el pedido, pues se eficientan bastantes usos de la del volumen, etcétera, no un pedido parcial o un pedido pequeño, pues aceptarían más
+tarima incompleta y con eso apoyar
+imposible a veces la utilización de este transporte, sea como si si hubiera alguna sugerencia
+vale si, al final lo que lo que dice Enrique este Wilson es
+lo el el indicador que queremos impactar es el costo por kilómetro de producto entregado. No entre Puede ser que el el el haya más entregas.
+pero si va mejor, o el fillrate es mejor del camión. La capacidad de utilizar es mejor, pues el costo por kilómetro recorrido va a ser menor
+que eso es lo que queremos impactar, porque hoy hay una utilización, en algunos casos, de los vehículos que van al 70 por 100 de su capacidad. No. ¿por qué? Porque los pedidos
+nos no llenan el camión Porque se tienen que entregar en 2 días. Entonces, si tuviéramos un día adicional de entrega. A lo mejor podemos llenarlo más, pero son políticas del proceso que tenemos que ir afinando y modificando.
+Y la otra es que los si tú lo que quieres es el histórico para ver los puntos de entrega, eso no hay ningún tema te lo podemos enviar.
+Lo único es que, obviamente, lo que esperamos del modelo es que lo optimicen, No, porque hoy el las rutas y los puntos de entrega por pedido no es justamente lo que está provocando es que tengamos un costo por kilómetro de entrega
+más alto del que deberíamos, entonces tenemos un objetivo de reducir ese costo de un 8 en un 8 por 100
+y creemos que si se optimiza mejor el uso de los camiones y se optimiza mejor las rutas, pues el costo por por kilómetro recorrido va a ser menor, no.
+Wilson Pinto
+Wilson Pinto
+13:11
+¿de acuerdo, De acuerdo, Entonces, si les parece, me envían ese listado.
+Froylan Campos
+Froylan Campos
+13:18
+Mhm.
+Wilson Pinto
+Wilson Pinto
+13:18
+Yo con ese listado entonces, hago como el cálculo
+para saber cuál va a ser el consumo de de esta solución y qué componentes.
+Froylan Campos
+Froylan Campos
+13:29
+También.
+Wilson Pinto
+Wilson Pinto
+13:29
+Se utiliza, sí mide la Ca: la capacidad que tenga la infraestructura de responder al a los A la
+Por otro lado, yo les puedo devolver entonces algunas
+algunos. K. P. Is que podemos medir por medio de los resultados que se entreguen Al final. Lo que tú dices los podemos traducir en lo que querramos. Puede ser lo que preguntaba tu equipo, por ejemplo, si hay un pedido mínimo. Si yo tengo algunas
+reglas y políticas que manejamos o que manejan la experiencia, como, por ejemplo, yo tengo un proyecto con Coca Cola ya en en México hace un año y y tengo otros proyectos en los que tengo experiencia, pues, y se trabajan algunos
+valores propios de la operación, entonces yo creo que se los puedo compartir. No hay ningún inconveniente.
+Froylan Campos
+Froylan Campos
+14:17
+Toca.
+Wilson Pinto
+Wilson Pinto
+14:18
+Entonces equipos. Si les parece
+yo quedo pendiente del informe del listado y ya con ese listado, entonces yo les les envío, Les puedo, si alcanzo a hacer un demo muy rápido para mostrarles cómo podría funcionar.
+Froylan Campos
+Froylan Campos
+14:34
+Mhm.
+Wilson Pinto
+Wilson Pinto
+14:35
+Y una propuesta de cuánto tiempo, cuánto costo hay unos costos aquí? Uno es el costo de desarrollo y otro es el costo de consumo. El de desarrollo es un cápex.
+Froylan Campos
+Froylan Campos
+14:46
+Ajá.
+Wilson Pinto
+Wilson Pinto
+14:47
+De consumo. Es un Opix. Así es.
+Froylan Campos
+Froylan Campos
+14:49
+Mhm.
+Wilson Pinto
+Wilson Pinto
+14:49
+Entonces, yo creo que con eso, con esa lista estaríamos perfectos.
+Froylan Campos
+Froylan Campos
+14:54
+Vale, listo? Bueno, pues yo te te buscamos preparar esto lo antes posible para hacértelo llegar y que nos puedas dar ahí una propuesta de vuelta. No.
+Wilson Pinto
+Wilson Pinto
+15:07
+Perfecto.
+Froylan Campos
+Froylan Campos
+15:08
+Pues listo.
+pues así quedamos entonces Wilson: Yo espero que, pues, a más tardar si no mañana pasado mañana, te podemos entregar esta esta lista y si podemos recibir de vuelta, pues la semana que entra más tardar, una propuesta estaría estaría genial.
+Wilson Pinto
+Wilson Pinto
+15:29
+Perfecto. Perfecto. Muchas gracias por el tiempo. Gracias a tu equipo por compartir toda la información. Y entonces, una vez tenga listado de una vez por el chat, te confirmo para cuándo tenemos la propuesta y un posible de.
+Froylan Campos
+Froylan Campos
+15:41
+Vale, listo. Muchas gracias. Gulson.
+Wilson Pinto
+Wilson Pinto
+15:44
+Bueno, un abrazo a todos.
+Froylan Campos
+Froylan Campos
+15:45
+Igual. Hay.
+

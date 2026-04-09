@@ -1,0 +1,179 @@
+{
+    "configuration": {
+        "termination": {
+            "maxTime": 300,
+            "stagnationTime": 60
+        },
+        "routeDetails": [
+            "polyline"
+        ],
+        "experimentalFeatures": [
+            "recharges",
+            "parkingIds"
+        ]
+    },
+    "fleet": {
+        "types": [
+            {
+                "id": "Torton_propio",
+                "profile": "perfil_camion_estandar",
+                "costs": {
+                    "fixed": 100,
+                    "distance": 0.0001,
+                    "time": 0.0048
+                },
+                "shifts": [
+                    {
+                        "start": {
+                            "time": "2026-07-04T13:00:00Z",
+                            "location": {
+                                "lat": 52.5256,
+                                "lng": 13.4542
+                            }
+                        },
+                        "end": {
+                            "time": "2026-07-04T22:00:00Z",
+                            "location": {
+                                "lat": 52.5256,
+                                "lng": 13.4542
+                            }
+                        },
+                        "recharges": {
+                            "maxDistance": 100000,
+                            "stations": [
+                                {
+                                    "duration": 7200,
+                                    "location": {
+                                        "lat": 52.5256,
+                                        "lng": 13.4542
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "capacity": [
+                    18000
+                ],
+                "skills": [
+                    "convoy_10am"
+                ],
+                "amount": 1
+            },
+            {
+                "id": "Truck_tercero",
+                "profile": "perfil_camion_estandar",
+                "costs": {
+                    "fixed": 1000,
+                    "distance": 0.0001,
+                    "time": 0.0048
+                },
+                "shifts": [
+                    {
+                        "start": {
+                            "time": "2026-07-04T13:00:00Z",
+                            "location": {
+                                "lat": 52.5256,
+                                "lng": 13.4542
+                            }
+                        },
+                        "end": {
+                            "time": "2026-07-04T22:00:00Z",
+                            "location": {
+                                "lat": 52.5256,
+                                "lng": 13.4542
+                            }
+                        },
+                        "recharges": {
+                            "maxDistance": 100000,
+                            "stations": [
+                                {
+                                    "duration": 7200,
+                                    "location": {
+                                        "lat": 52.5256,
+                                        "lng": 13.4542
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ],
+                "capacity": [
+                    6000
+                ],
+                "amount": 1
+            }
+        ],
+        "profiles": [
+            {
+                "type": "truck",
+                "name": "perfil_camion_estandar"
+            }
+        ],
+        "traffic": "liveOrHistorical"
+    },
+    "plan": {
+        "jobs": [
+            {
+                "id": "4bbc206d-1583-4266-bac9-d1580f412ac0",
+                "tasks": {
+                    "deliveries": [
+                        {
+                            "places": [
+                                {
+                                    "times": [
+                                        [
+                                            "2026-07-04T18:00:00Z",
+                                            "2026-07-04T22:00:00Z"
+                                        ]
+                                    ],
+                                    "location": {
+                                        "lat": 52.54016,
+                                        "lng": 13.40241
+                                    },
+                                    "duration": 1800
+                                }
+                            ],
+                            "demand": [
+                                10
+                            ]
+                        }
+                    ]
+                },
+                "skills": [
+                    "convoy_10am"
+                ],
+                "priority": 1
+            }
+        ],
+        "clustering": {
+            "serviceTimeStrategy": {
+                "type": "maxDurationStrategy"
+            }
+        },
+        "shared": {
+            "parking": [
+                {
+                    "id": "andenes_cedi",
+                    "places": [
+                        {
+                            "duration": 7200,
+                            "vehicleTypeIds": [
+                                "Torton_propio",
+                                "Truck_tercero"
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    },
+    "objectives": [
+        {
+            "type": "minimizeUnassigned"
+        },
+        {
+            "type": "minimizeCost"
+        }
+    ]
+}

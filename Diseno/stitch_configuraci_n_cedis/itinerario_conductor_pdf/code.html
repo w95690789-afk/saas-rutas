@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Itinerario de Conductor - Fleet Mind Ops</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            colors: {
+              "tertiary-container": "#3f2600",
+              "on-secondary": "#ffffff",
+              "on-tertiary": "#ffffff",
+              "background": "#f7f9fb",
+              "secondary-fixed": "#d8e2ff",
+              "surface-container-lowest": "#ffffff",
+              "on-primary": "#ffffff",
+              "surface-container-low": "#f2f4f6",
+              "on-secondary-fixed-variant": "#004395",
+              "primary-fixed-dim": "#b6c6f0",
+              "surface-container-high": "#e6e8ea",
+              "on-tertiary-container": "#b28c5b",
+              "tertiary": "#241300",
+              "primary-fixed": "#d8e2ff",
+              "secondary-container": "#2170e4",
+              "on-background": "#191c1e",
+              "secondary": "#0058be",
+              "surface-dim": "#d8dadc",
+              "on-tertiary-fixed-variant": "#5e4117",
+              "primary": "#031636",
+              "on-surface": "#191c1e",
+              "surface-bright": "#f7f9fb",
+              "surface": "#f7f9fb",
+              "surface-container-highest": "#e0e3e5",
+              "inverse-on-surface": "#eff1f3",
+              "on-secondary-container": "#fefcff",
+              "error-container": "#ffdad6",
+              "on-primary-container": "#8293ba",
+              "tertiary-fixed-dim": "#eabf8a",
+              "secondary-fixed-dim": "#adc6ff",
+              "on-surface-variant": "#44474e",
+              "on-secondary-fixed": "#001a42",
+              "tertiary-fixed": "#ffddb5",
+              "on-primary-fixed": "#071b3b",
+              "surface-variant": "#e0e3e5",
+              "on-tertiary-fixed": "#2a1800",
+              "surface-container": "#eceef0",
+              "inverse-primary": "#b6c6f0",
+              "error": "#ba1a1a",
+              "on-error": "#ffffff",
+              "surface-tint": "#4e5e82",
+              "on-primary-fixed-variant": "#364669",
+              "primary-container": "#1a2b4c",
+              "outline": "#75777f",
+              "inverse-surface": "#2d3133",
+              "on-error-container": "#93000a",
+              "outline-variant": "#c5c6cf"
+            },
+            fontFamily: {
+              "headline": ["Inter"],
+              "body": ["Inter"],
+              "label": ["Inter"]
+            },
+            borderRadius: {"DEFAULT": "0.125rem", "lg": "0.25rem", "xl": "0.5rem", "full": "0.75rem"},
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        @media print {
+            .no-print { display: none; }
+            body { background: white; }
+            .pdf-container { width: 100%; max-width: none; margin: 0; box-shadow: none; border-radius: 0; }
+        }
+    </style>
+</head>
+<body class="bg-surface font-body text-on-background antialiased flex flex-col min-h-screen">
+<!-- TopNavBar Simulation (Suppressed in Print) -->
+<header class="no-print bg-slate-50 dark:bg-slate-900 transition-colors flex justify-between items-center w-full px-6 py-3 border-b border-slate-200/50 dark:border-slate-800/50 docked full-width top-0 z-40">
+<div class="flex items-center gap-4">
+<span class="text-xl font-bold tracking-tighter text-[#031636] dark:text-white">Fleet Mind Ops</span>
+<span class="text-xs font-medium text-secondary uppercase tracking-widest bg-secondary-fixed/30 px-2 py-0.5 rounded">Itinerario de Conductor</span>
+</div>
+<div class="flex items-center gap-3">
+<button class="bg-primary text-white px-4 py-1.5 rounded-lg text-sm font-semibold flex items-center gap-2 hover:opacity-90 transition-all active:scale-95" onclick="window.print()">
+<span class="material-symbols-outlined text-sm">download</span>
+                EXPORTAR PDF
+            </button>
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-slate-500">notifications</span>
+<span class="material-symbols-outlined text-slate-500">account_circle</span>
+</div>
+</div>
+</header>
+<div class="flex-1 flex w-full">
+<!-- SideNavBar Simulation (Suppressed in Print) -->
+<nav class="no-print flex flex-col h-screen w-64 p-4 gap-2 bg-[#f2f4f6] dark:bg-slate-950 shadow-2xl shadow-[#031636]/5 docked left-0 z-50">
+<div class="mb-6 px-2">
+<h2 class="text-xs font-bold text-slate-400 uppercase tracking-widest">Menú Principal</h2>
+</div>
+<div class="space-y-1">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="warehouse">warehouse</span>
+<span class="font-sans text-sm font-medium tracking-normal">Configuración CEDIS</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+<span class="font-sans text-sm font-medium tracking-normal">Carga de Datos</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all rounded-lg" href="#">
+<span class="material-symbols-outlined" data-icon="route">route</span>
+<span class="font-sans text-sm font-medium tracking-normal">Resultados de Ruta</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 bg-white dark:bg-slate-800 text-[#0058be] rounded-lg shadow-sm font-semibold" href="#">
+<span class="material-symbols-outlined" data-icon="local_shipping">local_shipping</span>
+<span class="font-sans text-sm font-medium tracking-normal">Itinerario de Conductor</span>
+</a>
+</div>
+<div class="mt-auto pt-6 space-y-1 border-t border-slate-200">
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="support_agent">support_agent</span>
+<span class="font-sans text-sm font-medium tracking-normal">Soporte</span>
+</a>
+<a class="flex items-center gap-3 px-4 py-3 text-slate-600 dark:text-slate-400 hover:bg-slate-200/50 dark:hover:bg-slate-900 transition-all" href="#">
+<span class="material-symbols-outlined" data-icon="logout">logout</span>
+<span class="font-sans text-sm font-medium tracking-normal">Cerrar Sesión</span>
+</a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<main class="flex-1 overflow-y-auto bg-surface-container-low p-4 md:p-8 flex justify-center">
+<!-- Mobile-Optimized PDF Paper Layout -->
+<div class="pdf-container w-full max-w-[375px] md:max-w-2xl bg-white shadow-2xl rounded-xl overflow-hidden border border-slate-100">
+<!-- PDF Header -->
+<div class="bg-primary p-6 text-white text-center">
+<h1 class="text-sm font-bold tracking-widest uppercase">FLEET MIND - CENTRO DE CONTROL LOGÍSTICO</h1>
+<div class="mt-2 h-1 w-16 bg-secondary mx-auto"></div>
+</div>
+<!-- Route Identity Banner -->
+<div class="bg-secondary-container p-4 grid grid-cols-2 gap-y-3 gap-x-4 border-b border-white/10">
+<div class="flex flex-col">
+<span class="text-[10px] text-white/70 font-semibold uppercase tracking-wider">Unidad</span>
+<span class="text-lg font-bold text-white">R-01</span>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-[10px] text-white/70 font-semibold uppercase tracking-wider">Vehículo</span>
+<span class="text-lg font-bold text-white">TORTON_MX</span>
+</div>
+<div class="flex flex-col">
+<span class="text-[10px] text-white/70 font-semibold uppercase tracking-wider">Fecha</span>
+<span class="text-md font-bold text-white">24/03/2026</span>
+</div>
+<div class="flex flex-col text-right">
+<span class="text-[10px] text-white/70 font-semibold uppercase tracking-wider">Salida</span>
+<span class="text-md font-bold text-white">10:00 HRS</span>
+</div>
+</div>
+<!-- Itinerary Grid/Table (Mobile Focus) -->
+<div class="p-0">
+<div class="grid grid-cols-[3rem_1fr_1fr] bg-surface-container-highest px-4 py-2 border-b border-surface-variant">
+<span class="text-[9px] font-extrabold text-primary uppercase">#</span>
+<span class="text-[9px] font-extrabold text-primary uppercase">Cliente / Destino</span>
+<span class="text-[9px] font-extrabold text-primary uppercase text-right">Acceso GPS</span>
+</div>
+<!-- Row 1 -->
+<div class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+<div class="grid grid-cols-[3rem_1fr] p-4 items-start">
+<span class="text-xl font-bold text-secondary">01</span>
+<div class="flex flex-col gap-1">
+<span class="font-bold text-primary leading-tight">CEDIS NORTE - CARGA INICIAL</span>
+<span class="text-xs text-on-surface-variant leading-snug">Industrial Vallejo 145, Ciudad de México, CP 02300</span>
+<div class="mt-1 flex items-center gap-1.5 bg-surface-container text-[10px] w-fit px-2 py-0.5 rounded font-bold text-primary uppercase">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                                    10:00 - 10:45
+                                </div>
+</div>
+</div>
+<div class="px-4 pb-4 flex gap-2">
+<a class="flex-1 flex items-center justify-center gap-2 bg-[#EA4335] text-white py-2 rounded-lg text-xs font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">map</span>
+                                G-MAPS
+                            </a>
+<a class="flex-1 flex items-center justify-center gap-2 bg-[#0058be] text-white py-2 rounded-lg text-xs font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">explore</span>
+                                HERE
+                            </a>
+</div>
+</div>
+<!-- Row 2 -->
+<div class="border-b border-slate-100 bg-surface-container-lowest hover:bg-slate-50 transition-colors">
+<div class="grid grid-cols-[3rem_1fr] p-4 items-start">
+<span class="text-xl font-bold text-secondary">02</span>
+<div class="flex flex-col gap-1">
+<span class="font-bold text-primary leading-tight">SUPERMERCADO CENTRAL DEL SUR</span>
+<span class="text-xs text-on-surface-variant leading-snug">Av. Insurgentes Sur 2450, Ciudad Universitaria, CDMX</span>
+<div class="mt-1 flex items-center gap-1.5 bg-surface-container text-[10px] w-fit px-2 py-0.5 rounded font-bold text-primary uppercase">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                                    11:30 - 12:15
+                                </div>
+</div>
+</div>
+<div class="px-4 pb-4 flex gap-2">
+<a class="flex-1 flex items-center justify-center gap-2 bg-[#EA4335] text-white py-2 rounded-lg text-xs font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">map</span>
+                                G-MAPS
+                            </a>
+<a class="flex-1 flex items-center justify-center gap-2 bg-[#0058be] text-white py-2 rounded-lg text-xs font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">explore</span>
+                                HERE
+                            </a>
+</div>
+</div>
+<!-- Row 3 -->
+<div class="border-b border-slate-100 hover:bg-slate-50 transition-colors">
+<div class="grid grid-cols-[3rem_1fr] p-4 items-start">
+<span class="text-xl font-bold text-secondary">03</span>
+<div class="flex flex-col gap-1">
+<span class="font-bold text-primary leading-tight">BODEGA EXPRESS SANTA FE</span>
+<span class="text-xs text-on-surface-variant leading-snug">Vasco de Quiroga 3800, Lomas de Santa Fe, CDMX</span>
+<div class="mt-1 flex items-center gap-1.5 bg-surface-container text-[10px] w-fit px-2 py-0.5 rounded font-bold text-primary uppercase">
+<span class="material-symbols-outlined text-[14px]">schedule</span>
+                                    13:00 - 13:45
+                                </div>
+</div>
+</div>
+<div class="px-4 pb-4 flex gap-2">
+<a class="flex-1 flex items-center justify-center gap-2 bg-[#EA4335] text-white py-2 rounded-lg text-xs font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">map</span>
+                                G-MAPS
+                            </a>
+<a class="flex-1 flex items-center justify-center gap-2 bg-[#0058be] text-white py-2 rounded-lg text-xs font-bold shadow-sm" href="#">
+<span class="material-symbols-outlined text-sm" style="font-variation-settings: 'FILL' 1;">explore</span>
+                                HERE
+                            </a>
+</div>
+</div>
+<!-- Visual Divider / Map Context -->
+<div class="relative h-32 w-full">
+<img alt="Mapa de Ruta" class="w-full h-full object-cover" data-alt="stylized vector map of Mexico City metropolitan area with glowing blue navigation routes and marker pins on a dark background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBqYwhQPdB0vj823gSDeFoxpchmccsBgrpvaL_3OkhmmiZDVV_OR3rLjfLg9Nsp0k8KSazFMQWKmltzxJ29gTDzayOk8WOCSMbLwcYjN_ogNgjlIyVfVXTGThoZFIdyUVQTXWs6QvlP8PxTjqmysSMGN4Lhgi6COoMCwilrwKM568GummKlsnYmLfMcD2V6cMvx3ImWa_jngHikN3vFkO3E3kKITR62de9bWJjlW6m4Om2C1A2Sh4uUdCviwG5DXwZ9kHOV2JWJDKs"/>
+<div class="absolute inset-0 bg-gradient-to-t from-primary/80 to-transparent"></div>
+<div class="absolute bottom-3 left-4">
+<span class="text-white text-[10px] font-bold uppercase tracking-widest bg-secondary px-2 py-0.5 rounded">Vista General de Itinerario</span>
+</div>
+</div>
+</div>
+<!-- Route Summary Footer -->
+<div class="p-6 bg-surface-container-highest">
+<h3 class="text-xs font-extrabold text-primary tracking-widest uppercase mb-4 text-center">RESUMEN DE RUTA OPTIMIZADA</h3>
+<div class="flex flex-col gap-3">
+<a class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm group hover:border-secondary transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-error" style="font-variation-settings: 'FILL' 1;">navigation</span>
+<span class="text-[11px] font-bold text-primary uppercase">Abrir ruta completa en Google Maps</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-secondary">open_in_new</span>
+</a>
+<a class="flex items-center justify-between bg-white p-3 rounded-lg border border-slate-200 shadow-sm group hover:border-secondary transition-all" href="#">
+<div class="flex items-center gap-3">
+<span class="material-symbols-outlined text-secondary" style="font-variation-settings: 'FILL' 1;">directions_car</span>
+<span class="text-[11px] font-bold text-primary uppercase">Abrir ruta completa en HERE WeGo</span>
+</div>
+<span class="material-symbols-outlined text-slate-300 group-hover:text-secondary">open_in_new</span>
+</a>
+</div>
+<!-- Compliance Info -->
+<div class="mt-6 flex flex-col gap-2 items-center opacity-60">
+<p class="text-[9px] text-center font-medium leading-tight">
+                            © 2024 Fleet Mind Ops. Industrial Intelligence Systems.<br/>
+                            Uso exclusivo para conductores autorizados. No manipular el dispositivo en movimiento.
+                        </p>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Final Footer Simulation -->
+<footer class="no-print flex justify-between items-center px-8 py-6 w-full mt-auto bg-white dark:bg-slate-900 border-t border-slate-100 dark:border-slate-800">
+<p class="font-sans text-xs text-slate-500 uppercase tracking-widest">© 2024 Fleet Mind Ops. Industrial Intelligence Systems.</p>
+<div class="flex gap-6">
+<a class="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all uppercase tracking-widest" href="#">Soporte Técnico</a>
+<a class="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all uppercase tracking-widest" href="#">Privacidad</a>
+<a class="font-sans text-xs text-slate-400 hover:text-slate-600 hover:underline transition-all uppercase tracking-widest" href="#">Términos</a>
+</div>
+</footer>
+</body></html>
