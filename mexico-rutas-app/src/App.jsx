@@ -15,7 +15,7 @@ function App() {
   const [showAudit, setShowAudit] = useState(false);
   const [cediAddress, setCediAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
-  const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
+  const API_KEY = import.meta.env.VITE_HERE_API_KEY;
 
   const [cediConfig, setCediConfig] = useState({
     name: 'CEDI Principal México',
@@ -293,7 +293,7 @@ function App() {
           if (state === 'success' || state === 'completed') {
             clearInterval(interval);
             setStatus('fetching_solution');
-            fetch(`https://tourplanning.hereapi.com/v3/problems/${id}/solution?apiKey=ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg`)
+            fetch(`https://tourplanning.hereapi.com/v3/problems/${id}/solution?apiKey=${API_KEY}`)
               .then(res => res.json())
               .then(solutionData => {
                 setResult({ solution: solutionData, problem: currentProblem });
