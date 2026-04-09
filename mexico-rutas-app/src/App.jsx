@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
-import { Upload, Database, Settings, ArrowRight, Route, CheckCircle, AlertTriangle, Terminal } from 'lucide-react';
+import { Upload, Database, Settings, ArrowRight, Route, CheckCircle, AlertTriangle, Terminal, Truck, MapPin } from 'lucide-react';
 import AuditPanel from './components/AuditPanel';
 import LogisticAnalyst from './components/LogisticAnalyst';
 import './index.css';
@@ -15,6 +15,11 @@ function App() {
   const [showAudit, setShowAudit] = useState(false);
   const [cediAddress, setCediAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [activeTab, setActiveTab] = useState('cedi'); // 'cedi', 'fleet', 'audit'
+  const [fleet, setFleet] = useState([
+    { id: 'Tracto_31t', costs: { fixed: 10000 }, capacity: [31000], skills: ['tracto'], amount: 5 },
+    { id: 'Torton_propio', costs: { fixed: 100 }, capacity: [18000], skills: ['torton'], amount: 10 }
+  ]);
   const API_KEY = import.meta.env.VITE_HERE_API_KEY;
 
   const [cediConfig, setCediConfig] = useState({
@@ -99,6 +104,22 @@ function App() {
         cediLoc = { lat: firstCoords[0], lng: firstCoords[1] };
       }
     }
+
+    const fleetList = fleet.flatMap(type => {
+      return Array.from({ length: type.amount }).map((_, i) => ({
+        id: `${type.id}_${i + 1}`,
+        type: "vehicle",
+        costs: type.costs,
+        profile: "truck_fast",
+        capacities: type.capacity,
+        capabilities: type.skills,
+        shifts: [{
+          id: "shift_1",
+          start: { time: formatTime(cediConfig.startTime), location: "cedi" },
+          end: { time: formatTime(cediConfig.endTime), location: "cedi" }
+        }]
+      }));
+    });
 
     // 2. Definir turnos comunes
     const commonShifts = [{
@@ -335,96 +356,185 @@ function App() {
         </div>
         
         <nav className="side-nav">
-          {/* SECCIÓN 1: CEDI */}
-          <div className="nav-group">
-            <label className="nav-label">SECCIÓN 1: CEDI</label>
-            <div className="nav-card">
-              <div className="mini-form">
-                <div className="form-item">
-                  <label>Tiempo de cargue (min)</label>
-                  <input type="number" value={cediConfig.loadDuration} onChange={(e) => setCediConfig({ ...cediConfig, loadDuration: e.target.value })} />
-                </div>
-                <div className="form-item">
-                  <label>Inicio de servicio</label>
-                  <input type="time" value={cediConfig.startTime} onChange={(e) => setCediConfig({ ...cediConfig, startTime: e.target.value })} />
-                </div>
-                <div className="form-item">
-                  <label>Fin de servicio</label>
-                  <input type="time" value={cediConfig.endTime} onChange={(e) => setCediConfig({ ...cediConfig, endTime: e.target.value })} />
-                </div>
-                <div className="form-item" style={{ marginTop: '1rem' }}>
-                  <label>Coordenadas Manuales</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
-                    <input type="text" placeholder="Lat" value={cediConfig.lat} onChange={(e) => setCediConfig({ ...cediConfig, lat: e.target.value })} style={{ padding: '8px' }} />
-                    <input type="text" placeholder="Lng" value={cediConfig.lng} onChange={(e) => setCediConfig({ ...cediConfig, lng: e.target.value })} style={{ padding: '8px' }} />
-                  </div>
-                </div>
-                <div className="form-item" style={{ marginTop: '0.75rem' }}>
-                  <label>Dirección del CEDI</label>
-                  <div style={{ position: 'relative' }}>
-                    <input 
-                      type="text" 
-                      placeholder="Busca dirección..." 
-                      value={cediAddress} 
-                      onChange={e => handleAddressSearch(e.target.value)}
-                      style={{ width: '100%', padding: '10px' }}
-                    />
-                    {suggestions.length > 0 && (
-                      <div className="suggestions-dropdown">
-                        {suggestions.map((s, i) => (
-                          <div key={i} className="suggestion-item" onClick={() => selectSuggestion(s)}>
-                            <MapPin size={12} />
-                            <span>{s.title}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }}>
-                  <input type="checkbox" checked={cediConfig.useFileLocation} onChange={(e) => setCediConfig({ ...cediConfig, useFileLocation: e.target.checked })} />
-                  <span style={{ fontSize: '0.7rem', color: '#8293ba' }}>Tomar CEDI del archivo (1ra fila)</span>
-                </label>
-              </div>
-            </div>
-          </div>
-
-          {/* SECCIÓN 2: VENTANAS HORARIAS CLIENTES */}
-          <div className="nav-group">
-            <label className="nav-label">SECCIÓN 2: VENTANAS CLIENTES</label>
-            <div className="nav-card">
-              <div className="mini-form">
-                <div className="form-item">
-                  <label>Horario Global (Inicio - Fin)</label>
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
-                    <input type="time" value={cediConfig.globalJobStart} onChange={(e) => setCediConfig({ ...cediConfig, globalJobStart: e.target.value })} style={{ padding: '8px' }} />
-                    <input type="time" value={cediConfig.globalJobEnd} onChange={(e) => setCediConfig({ ...cediConfig, globalJobEnd: e.target.value })} style={{ padding: '8px' }} />
-                  </div>
-                </div>
-                <div className="form-checkbox-group">
-                  <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '8px' }}>
-                    <input type="checkbox" checked={cediConfig.useGlobalForAll} onChange={(e) => setCediConfig({ ...cediConfig, useGlobalForAll: e.target.checked, useGlobalForMissing: false })} />
-                    <span style={{ fontSize: '0.7rem', color: '#8293ba' }}>Utilizar esta hora para todos</span>
-                  </label>
-                  <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                    <input type="checkbox" checked={cediConfig.useGlobalForMissing} onChange={(e) => setCediConfig({ ...cediConfig, useGlobalForMissing: e.target.checked, useGlobalForAll: false })} />
-                    <span style={{ fontSize: '0.7rem', color: '#8293ba' }}>Colocar solo a los que no tengan</span>
-                  </label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className={`status-indicator ${status}`} style={{ marginTop: '1rem' }}>
-            <div className="pulse"></div>
-            <span>{status.toUpperCase()}</span>
-          </div>
-
-          <div className="nav-group" style={{ marginTop: 'auto', paddingTop: '1rem' }}>
-            <button className="btn-secondary" onClick={() => setShowAudit(true)}>
-              <Terminal size={18} style={{ marginRight: '8px' }} />
-              <span>Inspección Técnica</span>
+          {/* TAB SELECTOR */}
+          <div className="tab-selector">
+            <button className={activeTab === 'cedi' ? 'active' : ''} onClick={() => setActiveTab('cedi')} title="Configuración Base">
+              <Settings size={20} />
+              <span>CORE</span>
             </button>
+            <button className={activeTab === 'fleet' ? 'active' : ''} onClick={() => setActiveTab('fleet')} title="Gestión de Flota">
+              <Truck size={20} />
+              <span>FLOTA</span>
+            </button>
+            <button className={activeTab === 'audit' ? 'active' : ''} onClick={() => setActiveTab('audit')} title="Auditoría">
+              <Terminal size={20} />
+              <span>AUDIT</span>
+            </button>
+          </div>
+
+          <div className="tab-content">
+            {activeTab === 'cedi' && (
+              <div className="nav-group animate-fade-in">
+                <label className="nav-label">SECCIÓN 1: CEDI</label>
+                <div className="nav-card">
+                  <div className="mini-form">
+                    <div className="form-item">
+                      <label>Tiempo de cargue (min)</label>
+                      <input type="number" value={cediConfig.loadDuration} onChange={(e) => setCediConfig({ ...cediConfig, loadDuration: e.target.value })} />
+                    </div>
+                    <div className="form-item">
+                      <label>Inicio de servicio</label>
+                      <input type="time" value={cediConfig.startTime} onChange={(e) => setCediConfig({ ...cediConfig, startTime: e.target.value })} />
+                    </div>
+                    <div className="form-item">
+                      <label>Fin de servicio</label>
+                      <input type="time" value={cediConfig.endTime} onChange={(e) => setCediConfig({ ...cediConfig, endTime: e.target.value })} />
+                    </div>
+                    <div className="form-item" style={{ marginTop: '1rem' }}>
+                      <label>Coordenadas Manuales</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
+                        <input type="text" placeholder="Lat" value={cediConfig.lat} onChange={(e) => setCediConfig({ ...cediConfig, lat: e.target.value })} style={{ padding: '8px' }} />
+                        <input type="text" placeholder="Lng" value={cediConfig.lng} onChange={(e) => setCediConfig({ ...cediConfig, lng: e.target.value })} style={{ padding: '8px' }} />
+                      </div>
+                    </div>
+                    <div className="form-item" style={{ marginTop: '0.75rem' }}>
+                      <label>Dirección del CEDI</label>
+                      <div style={{ position: 'relative' }}>
+                        <input 
+                          type="text" 
+                          placeholder="Busca dirección..." 
+                          value={cediAddress} 
+                          onChange={e => handleAddressSearch(e.target.value)}
+                          style={{ width: '100%', padding: '10px' }}
+                        />
+                        {suggestions.length > 0 && (
+                          <div className="suggestions-dropdown">
+                            {suggestions.map((s, i) => (
+                              <div key={i} className="suggestion-item" onClick={() => selectSuggestion(s)}>
+                                <MapPin size={12} />
+                                <span>{s.title}</span>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginTop: '10px' }}>
+                      <input type="checkbox" checked={cediConfig.useFileLocation} onChange={(e) => setCediConfig({ ...cediConfig, useFileLocation: e.target.checked })} />
+                      <span style={{ fontSize: '0.7rem', color: '#8293ba' }}>Tomar CEDI del archivo (1ra fila)</span>
+                    </label>
+                  </div>
+                </div>
+
+                <label className="nav-label" style={{ marginTop: '20px' }}>SECCIÓN 2: VENTANAS CLIENTES</label>
+                <div className="nav-card">
+                  <div className="mini-form">
+                    <div className="form-item">
+                      <label>Horario Global (Inicio - Fin)</label>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '5px' }}>
+                        <input type="time" value={cediConfig.globalJobStart} onChange={(e) => setCediConfig({ ...cediConfig, globalJobStart: e.target.value })} style={{ padding: '8px' }} />
+                        <input type="time" value={cediConfig.globalJobEnd} onChange={(e) => setCediConfig({ ...cediConfig, globalJobEnd: e.target.value })} style={{ padding: '8px' }} />
+                      </div>
+                    </div>
+                    <div className="form-checkbox-group">
+                      <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer', marginBottom: '8px' }}>
+                        <input type="checkbox" checked={cediConfig.useGlobalForAll} onChange={(e) => setCediConfig({ ...cediConfig, useGlobalForAll: e.target.checked, useGlobalForMissing: false })} />
+                        <span style={{ fontSize: '0.7rem', color: '#8293ba' }}>Utilizar esta hora para todos</span>
+                      </label>
+                      <label className="checkbox-item" style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <input type="checkbox" checked={cediConfig.useGlobalForMissing} onChange={(e) => setCediConfig({ ...cediConfig, useGlobalForMissing: e.target.checked, useGlobalForAll: false })} />
+                        <span style={{ fontSize: '0.7rem', color: '#8293ba' }}>Colocar solo a los que no tengan</span>
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {activeTab === 'fleet' && (
+              <div className="nav-group animate-fade-in">
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '15px' }}>
+                  <label className="nav-label">TIPOS DE VEHÍCULO</label>
+                  <button className="btn-mini" onClick={() => setFleet([...fleet, { id: 'Nuevo_Tipo', costs: { fixed: 100 }, capacity: [18000], skills: ['nuevo'], amount: 1 }])}>
+                    + Add
+                  </button>
+                </div>
+                
+                {fleet.map((v, idx) => (
+                  <div key={idx} className="nav-card" style={{ marginBottom: '12px', borderLeft: '3px solid #0058be' }}>
+                    <div className="mini-form">
+                      <div className="form-item">
+                        <label>ID del Tipo</label>
+                        <input type="text" value={v.id} onChange={(e) => {
+                          const newFleet = [...fleet];
+                          newFleet[idx].id = e.target.value;
+                          setFleet(newFleet);
+                        }} />
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                        <div className="form-item">
+                          <label>Costo Fijo ($)</label>
+                          <input type="number" value={v.costs.fixed} onChange={(e) => {
+                            const newFleet = [...fleet];
+                            newFleet[idx].costs.fixed = parseInt(e.target.value);
+                            setFleet(newFleet);
+                          }} />
+                        </div>
+                        <div className="form-item">
+                          <label>Capacidad (Kg)</label>
+                          <input type="number" value={v.capacity[0]} onChange={(e) => {
+                            const newFleet = [...fleet];
+                            newFleet[idx].capacity[0] = parseInt(e.target.value);
+                            setFleet(newFleet);
+                          }} />
+                        </div>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1.5fr 1fr', gap: '10px' }}>
+                        <div className="form-item">
+                          <label>Especialidad (Skill)</label>
+                          <input type="text" value={v.skills[0]} onChange={(e) => {
+                            const newFleet = [...fleet];
+                            newFleet[idx].skills[0] = e.target.value;
+                            setFleet(newFleet);
+                          }} />
+                        </div>
+                        <div className="form-item">
+                          <label>Cantidad</label>
+                          <input type="number" value={v.amount} onChange={(e) => {
+                            const newFleet = [...fleet];
+                            newFleet[idx].amount = parseInt(e.target.value);
+                            setFleet(newFleet);
+                          }} />
+                        </div>
+                      </div>
+                      <button className="btn-text-danger" onClick={() => setFleet(fleet.filter((_, i) => i !== idx))}>Eliminar este tipo</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {activeTab === 'audit' && (
+              <div className="nav-group animate-fade-in">
+                <label className="nav-label">INSPECCIÓN TÉCNICA</label>
+                <div className="nav-card">
+                  <p style={{ fontSize: '0.75rem', color: '#8293ba', lineHeight: '1.5' }}>
+                    Utilice este panel para diagnosticar el estado del motor híbrido y la auditoría de paquetes.
+                  </p>
+                  <button className="btn-secondary" style={{ marginTop: '15px' }} onClick={() => setShowAudit(true)}>
+                    <Terminal size={18} style={{ marginRight: '8px' }} />
+                    <span>Abrir Consola de Auditoría</span>
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
+          <div style={{ marginTop: 'auto' }}>
+            <div className={`status-indicator ${status}`}>
+              <div className="pulse"></div>
+              <span>{status.toUpperCase()}</span>
+            </div>
           </div>
         </nav>
       </aside>
