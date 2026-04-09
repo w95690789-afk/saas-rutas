@@ -314,7 +314,7 @@ function App() {
           if (state === 'success' || state === 'completed') {
             clearInterval(interval);
             setStatus('fetching_solution');
-            fetch(`https://tourplanning.hereapi.com/v3/problems/${id}/solution?apiKey=${API_KEY}`)
+            fetch(`https://tourplanning.hereapi.com/v3/problems/async/${id}/solution?apiKey=${API_KEY}`)
               .then(res => res.json())
               .then(solutionData => {
                 setResult({ solution: solutionData, problem: currentProblem });
