@@ -13,7 +13,10 @@ function App() {
   const [result, setResult] = useState(null);
   const [lastProblem, setLastProblem] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
+  const [showAudit, setShowAudit] = useState(false);
   const [configTab, setConfigTab] = useState('cedi'); // Internal modal navigation
+  const [cediAddress, setCediAddress] = useState('');
+  const [suggestions, setSuggestions] = useState([]);
   const [fleet, setFleet] = useState([
     { id: 'Tracto_31t', costs: { fixed: 10000 }, capacity: [31000], skills: ['tracto'], amount: 5 },
     { id: 'Torton_propio', costs: { fixed: 100 }, capacity: [18000], skills: ['torton'], amount: 10 }
