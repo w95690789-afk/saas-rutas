@@ -150,74 +150,72 @@ body {
   gap: 4px;
 }
 
-.tab-selector button {
-  flex: 1;
-  background: transparent;
-  border: none;
-  padding: 10px;
-  border-radius: 6px;
-  color: var(--text-muted);
-  font-size: 0.6rem;
-  font-weight: 800;
+/* Sidebar Navigation Item */
+.nav-item-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: white;
+  border: 1px solid var(--border-light);
+  border-radius: 12px;
   cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  margin-bottom: 8px;
+}
+
+.nav-item-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border-color: var(--primary-electric);
+}
+
+.nav-item-btn .icon-wrap {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  background: var(--surface-low);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #5c6c8c;
+  transition: all 0.2s;
+}
+
+.nav-item-btn:hover .icon-wrap {
+  background: #eef4ff;
+  color: var(--primary-electric);
+}
+
+.nav-item-btn .text-wrap {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  gap: 4px;
-  transition: all 0.2s;
-  text-transform: uppercase;
 }
 
-.tab-selector button.active {
-  background: white;
-  color: var(--primary-electric);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-}
-
-.tab-content {
-  flex: 1;
-  overflow-y: auto;
-}
-
-.btn-mini {
-  background: var(--primary-electric);
-  color: white;
-  border: none;
-  padding: 6px 12px;
-  border-radius: 4px;
-  font-size: 0.65rem;
-  font-weight: 800;
-  cursor: pointer;
-  text-transform: uppercase;
-}
-
-.btn-text-danger {
-  background: transparent;
-  border: none;
-  color: var(--accent-error);
+.nav-item-btn .label {
   font-size: 0.6rem;
   font-weight: 800;
+  color: #8293ba;
   text-transform: uppercase;
-  cursor: pointer;
-  margin-top: 10px;
-  text-align: right;
-  width: 100%;
-  opacity: 0.8;
+  letter-spacing: 0.05em;
 }
 
-.btn-text-danger:hover {
-  opacity: 1;
-  text-decoration: underline;
+.nav-item-btn .title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
-/* Modal Overlay & Container */
+/* Modal Layout */
 .modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(10, 15, 30, 0.7);
+  background: rgba(10, 15, 30, 0.6);
   backdrop-filter: blur(8px);
   display: flex;
   align-items: center;
@@ -228,9 +226,9 @@ body {
 
 .modal-content {
   background: white;
-  width: 90%;
-  max-width: 900px;
-  max-height: 85vh;
+  width: 95%;
+  max-width: 1100px;
+  height: 85vh;
   border-radius: var(--radius-lg);
   box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   display: flex;
@@ -241,7 +239,7 @@ body {
 
 .modal-header {
   padding: 24px 32px;
-  background: var(--surface-low);
+  background: white;
   border-bottom: 1px solid var(--border-light);
   display: flex;
   justify-content: space-between;
@@ -249,19 +247,119 @@ body {
 }
 
 .modal-header h2 {
-  font-size: 1.25rem;
+  font-size: 1.5rem;
   font-weight: 800;
   color: var(--text-main);
   margin: 0;
   letter-spacing: -0.02em;
 }
 
+/* Modal Tabs */
+.modal-tabs {
+  display: flex;
+  gap: 8px;
+  padding: 0 32px;
+  background: white;
+  border-bottom: 1px solid var(--border-light);
+}
+
+.modal-tab-btn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 16px 20px;
+  background: transparent;
+  border: none;
+  border-bottom: 3px solid transparent;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.modal-tab-btn:hover {
+  color: var(--text-main);
+  background: rgba(0, 0, 0, 0.02);
+}
+
+.modal-tab-btn.active {
+  color: var(--primary-electric);
+  border-bottom-color: var(--primary-electric);
+}
+
+/* Modal Body & Content */
 .modal-body {
   padding: 32px;
   overflow-y: auto;
+  flex: 1;
+}
+
+.modal-sub-section {
+  width: 100%;
+}
+
+.modal-section-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: var(--text-main);
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.modal-section-title::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: var(--border-light);
+}
+
+/* Utils */
+.btn-mini {
+  background: var(--primary-electric);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  font-size: 0.7rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-mini:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.1);
+}
+
+.btn-text-danger {
+  background: transparent;
+  border: none;
+  color: var(--accent-error);
+  font-size: 0.7rem;
+  font-weight: 700;
+  cursor: pointer;
+  opacity: 0.7;
+}
+
+.btn-text-danger:hover {
+  opacity: 1;
+  text-decoration: underline;
+}
+
+/* Forms in Modal */
+.modal-grid {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 32px;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.modal-full-width {
+  grid-column: span 2;
 }
 
 .modal-footer {
@@ -304,6 +402,39 @@ body {
 @keyframes slideUp {
   from { transform: translateY(20px); opacity: 0; }
   to { transform: translateY(0); opacity: 1; }
+}
+
+/* Modal Tabs */
+.modal-tabs {
+  display: flex;
+  background: var(--surface-low);
+  padding: 0 32px;
+  border-bottom: 1px solid var(--border-light);
+  gap: 32px;
+}
+
+.modal-tab-btn {
+  padding: 16px 0;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: #8293ba;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.modal-tab-btn.active {
+  color: var(--primary-electric);
+  border-bottom-color: var(--primary-electric);
+}
+
+.modal-tab-btn:hover:not(.active) {
+  color: var(--text-main);
 }
 
 /* Buttons - Kinetic Energy */
@@ -1305,6 +1436,24 @@ body {
   font-size: 0.75rem;
   font-weight: 600;
   color: var(--primary-deep);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(20px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .count-bubble {
