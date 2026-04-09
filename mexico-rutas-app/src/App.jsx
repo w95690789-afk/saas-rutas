@@ -171,44 +171,19 @@ function App() {
       },
       fleet: {
         traffic: "historicalOnly",
-        types: [
-          {
-            id: "Torton_propio",
-            profile: "perfil_camion_estandar",
-            costs: { fixed: 100, distance: 0.0001, time: 0.0048 },
-            shifts: commonShifts,
-            capacity: [18000],
-            skills: ["convoy_10am"],
-            amount: 10
+        types: fleet.map(v => ({
+          id: v.id,
+          profile: "perfil_camion_estandar",
+          costs: { 
+            fixed: parseFloat(v.costs?.fixed) || 0, 
+            distance: 0.0001, 
+            time: 0.0048 
           },
-          {
-            id: "Truck_tercero",
-            profile: "perfil_camion_estandar",
-            costs: { fixed: 1000, distance: 0.0001, time: 0.0048 },
-            shifts: commonShifts,
-            capacity: [6000],
-            skills: ["normal"],
-            amount: 10
-          },
-          {
-            id: "Tracto",
-            profile: "perfil_camion_estandar",
-            costs: { fixed: 10000, distance: 0.0001, time: 0.0048 },
-            shifts: commonShifts,
-            capacity: [31000],
-            skills: ["convoy_10am"],
-            amount: 10
-          },
-          {
-            id: "Tracto_normal",
-            profile: "perfil_camion_estandar",
-            costs: { fixed: 10000, distance: 0.0001, time: 0.0048 },
-            shifts: commonShifts,
-            capacity: [31000],
-            skills: ["normal"],
-            amount: 10
-          }
-        ],
+          shifts: commonShifts,
+          capacity: v.capacity || [18000],
+          skills: v.skills || ["normal"],
+          amount: parseInt(v.amount) || 1
+        })),
         profiles: [{ type: "truck", name: "perfil_camion_estandar" }]
       },
       plan: {
@@ -258,7 +233,7 @@ function App() {
             id: "andenes_cedi",
             places: [{
               duration: (parseInt(cediConfig.loadDuration) || 120) * 60,
-              vehicleTypeIds: ["Torton_propio", "Truck_tercero", "Tracto", "Tracto_normal"]
+              vehicleTypeIds: fleet.map(v => v.id)
             }]
           }]
         }
