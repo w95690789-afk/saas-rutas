@@ -488,6 +488,14 @@ function App() {
                             }} />
                           </div>
                           <div className="form-item">
+                            <label>Costo Fijo ($)</label>
+                            <input type="number" value={v.costs.fixed} onChange={(e) => {
+                              const newFleet = [...fleet];
+                              newFleet[idx].costs.fixed = parseInt(e.target.value);
+                              setFleet(newFleet);
+                            }} />
+                          </div>
+                          <div className="form-item">
                             <label>Capacidad (Kg)</label>
                             <input type="number" value={v.capacity[0]} onChange={(e) => {
                               const newFleet = [...fleet];
