@@ -290,7 +290,7 @@ function App() {
           if (state === 'success' || state === 'completed') {
             clearInterval(interval);
             setStatus('fetching_solution');
-            fetch(`/api/get-solution?taskId=${id}`)
+            fetch(`/api/get-solution?taskId=${id}&apiKey=${API_KEY}`)
               .then(async (res) => {
                 const data = await res.json();
                 if (!res.ok) {

@@ -1,19 +1,15 @@
 export default async function handler(req, res) {
-  const { taskId } = req.query;
+  const { taskId, apiKey: queryApiKey } = req.query;
   
-  // Lógica blindada: Si la env var es nula, vacía o sospechosamente corta, usamos el fallback
-  let apiKey = process.env.VITE_HERE_API_KEY;
+  // Fuente de verdad: Si viene en el query, la usamos. Si no, usamos el fallback industrial.
   const fallbackKey = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
-  
-  if (!apiKey || apiKey.trim().length < 5 || apiKey === 'undefined') {
-    apiKey = fallbackKey;
-  }
+  const apiKey = (queryApiKey && queryApiKey.length > 10) ? queryApiKey : fallbackKey;
   
   if (!taskId) {
     return res.status(400).json({ error: 'taskId is required' });
   }
 
-  const url = `https://tourplanning.hereapi.com/v3/problems/async/${taskId}/solution?apiKey=${apiKey}`;
+  const url = `https://tourplanning.hereapi.com/v3/problems/async/${taskId}/solution?apiKey=${apiKey.trim().replace(/['"]/g, '')}`;
 
   console.log(`[Proxy] Fetching solution for taskId: ${taskId}`);
 
