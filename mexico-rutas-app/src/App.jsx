@@ -252,7 +252,7 @@ function App() {
     fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/optimize-routes-async', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ problem: problem }) 
+      body: JSON.stringify({ problem: problem, apiKey: API_KEY }) 
     })
     .then(res => res.json())
     .then(payload => {
@@ -281,7 +281,7 @@ function App() {
         fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/check-optimization-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ taskId: id })
+          body: JSON.stringify({ taskId: id, apiKey: API_KEY })
         })
         .then(res => res.json())
         .then(payload => {
@@ -291,12 +291,22 @@ function App() {
             clearInterval(interval);
             setStatus('fetching_solution');
             fetch(`/api/get-solution?taskId=${id}`)
-              .then(res => res.json())
+              .then(async (res) => {
+                const data = await res.json();
+                if (!res.ok) {
+                   console.error("DETALLE_ERROR_SOLUCION:", data);
+                   throw new Error(data.message || 'Fallo al recuperar solución');
+                }
+                return data;
+              })
               .then(solutionData => {
                 setResult({ solution: solutionData, problem: currentProblem });
                 setStatus('success');
               })
-              .catch(() => setStatus('error'));
+              .catch((err) => {
+                console.error("ERROR_FINAL_SOLUCION:", err);
+                setStatus('error');
+              });
           } else if (state === 'failed') {
           clearInterval(interval);
           setStatus('error');
