@@ -3,7 +3,7 @@ export default async function handler(req, res) {
   
   // Lógica blindada: Si la env var es nula, vacía o sospechosamente corta, usamos el fallback
   let apiKey = process.env.VITE_HERE_API_KEY;
-  const fallbackKey = 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
+  const fallbackKey = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
   
   if (!apiKey || apiKey.trim().length < 5 || apiKey === 'undefined') {
     apiKey = fallbackKey;

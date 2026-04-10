@@ -104,9 +104,13 @@
 
 ## 📅 SESIÓN 9: DERROTA DEL BLOQUEO CORS Y PROXIFICACIÓN
 **Estatus:** Hito 7 Completado - FLUJO DE DATOS RESTAURADO
-- [x] **Vercel Proxy Serverless:** Creación de `/api/get-solution.js` para intermediar peticiones hacia HERE Tour Planning.
-- [x] **Bypass de CORS:** Eliminación definitiva del error `Access-Control-Allow-Origin` al trasladar el fetching del lado del cliente al lado del servidor.
-- [x] **Protección de Credenciales:** La `API_KEY` ahora se maneja de forma segura en el entorno de ejecución de Vercel, evitando su exposición innecesaria en las herramientas de red del navegador.
+- [2026-04-10] - Resolución de Error 404 en Soluciones
+**Problema:** El sistema devolvía 404 al recuperar resultados, indicando una discrepancia de credenciales entre Supabase y Vercel.
+**Acciones:**
+1.  **Proxy Resiliente:** Se implementó lógica de blindaje en `api/get-solution.js` para usar un fallback seguro de la API Key, evitando errores por variables de entorno mal configuradas en Vercel.
+2.  **Sincronización Contextual:** Se modificó `App.jsx` para inyectar la `apiKey` en todas las llamadas a Supabase Edge Functions (`optimize-routes-async` y `check-optimization-status`), garantizando que la tarea se cree con la misma identidad que el proxy intentará leer.
+3.  **Logs de Diagnóstico:** Se enriqueció el manejo de errores en el frontend para capturar y mostrar detalles técnicos en caso de fallos futuros.
+**Resultado:** Se eliminó la causa raíz de la disparidad de llaves, permitiendo que el flujo de optimización asíncrona sea robusto y verificable.
 - [x] **Refactorización de Polling:** Actualización de `App.jsx` para consumir el nuevo endpoint local.
 - [x] **Autonomía Total (API Fallback):** Implementación de inyección redundante de la API KEY de HERE en el backend y frontend como fallback, eliminando la necesidad de gestión manual en el dashboard de Vercel.
 
