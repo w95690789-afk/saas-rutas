@@ -21,7 +21,7 @@ function App() {
     { id: 'Tracto_31t', costs: { fixed: 10000 }, capacity: [31000], skills: ['tracto'], amount: 5 },
     { id: 'Torton_propio', costs: { fixed: 100 }, capacity: [18000], skills: ['torton'], amount: 10 }
   ]);
-  const API_KEY = import.meta.env.VITE_HERE_API_KEY;
+  const API_KEY = import.meta.env.VITE_HERE_API_KEY || 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
 
   const [cediConfig, setCediConfig] = useState({
     name: 'CEDI Principal México',

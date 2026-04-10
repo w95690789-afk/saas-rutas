@@ -1,6 +1,6 @@
 export default async function handler(req, res) {
   const { taskId } = req.query;
-  const apiKey = process.env.VITE_HERE_API_KEY;
+  const apiKey = process.env.VITE_HERE_API_KEY || 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
 
   if (!taskId) {
     return res.status(400).json({ error: 'taskId is required' });
