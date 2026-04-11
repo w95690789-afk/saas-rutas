@@ -21,7 +21,8 @@ function App() {
     { id: 'Tracto_31t', costs: { fixed: 10000 }, capacity: [31000], skills: ['tracto'], amount: 5 },
     { id: 'Torton_propio', costs: { fixed: 100 }, capacity: [18000], skills: ['torton'], amount: 10 }
   ]);
-  const API_KEY = import.meta.env.VITE_HERE_API_KEY || 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
+  // Hardcode industrial key to bypass Vercel environment variable cache
+  const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
 
   const [cediConfig, setCediConfig] = useState({
     name: 'CEDI Principal México',
