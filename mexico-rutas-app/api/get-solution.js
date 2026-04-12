@@ -9,7 +9,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'taskId is required' });
   }
 
-  const url = `https://tourplanning.hereapi.com/v3/problems/async/${taskId}/solution?apiKey=${apiKey.trim().replace(/['"]/g, '')}`;
+  const url = `https://tourplanning.hereapi.com/v3/problems/${taskId}/solution?apiKey=${apiKey.trim().replace(/['"]/g, '')}`;
 
   console.log(`[Proxy] Fetching solution for taskId: ${taskId}`);
 

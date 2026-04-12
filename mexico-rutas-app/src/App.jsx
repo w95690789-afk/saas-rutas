@@ -85,6 +85,8 @@ function App() {
   });
 
   const transformDataToHERE = () => {
+    const sanitizeId = (id) => id ? id.toString().replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown';
+
     const formatTime = (localTime, baseDateStr = "2026-04-10") => {
       try {
         if (!localTime || !localTime.includes(':')) localTime = '08:00';
@@ -148,7 +150,7 @@ function App() {
       const skill = row[mapping.skill] || 'normal';
       if (!id) return acc;
       
-      const groupKey = `${id}_${skill}`;
+      const groupKey = sanitizeId(`${id}_${skill}`);
       
       if (!acc[groupKey]) {
         acc[groupKey] = { 
@@ -174,7 +176,7 @@ function App() {
       fleet: {
         traffic: "historicalOnly",
         types: fleet.map(v => ({
-          id: v.id,
+          id: sanitizeId(v.id),
           profile: "perfil_camion_estandar",
           costs: { 
             fixed: parseFloat(v.costs?.fixed) || 0, 
@@ -183,7 +185,7 @@ function App() {
           },
           shifts: commonShifts,
           capacity: v.capacity || [18000],
-          skills: v.skills || ["normal"],
+          skills: (v.skills || ["normal"]).map(sanitizeId),
           amount: parseInt(v.amount) || 1
         })),
         profiles: [{ type: "truck", name: "perfil_camion_estandar" }]
@@ -224,7 +226,7 @@ function App() {
               }]
             },
             priority: 1,
-            skills: [row.currentSkill]
+            skills: [sanitizeId(row.currentSkill)]
           };
         }),
         clustering: {
@@ -235,7 +237,7 @@ function App() {
             id: "andenes_cedi",
             places: [{
               duration: (parseInt(cediConfig.loadDuration) || 120) * 60,
-              vehicleTypeIds: fleet.map(v => v.id)
+              vehicleTypeIds: fleet.map(v => sanitizeId(v.id))
             }]
           }]
         }
@@ -291,14 +293,19 @@ function App() {
           if (state === 'success' || state === 'completed') {
             clearInterval(interval);
             setStatus('fetching_solution');
-            fetch(`/api/get-solution?taskId=${id}&apiKey=${API_KEY}`)
+            const resourceId = result.resource?.resourceId || id;
+            fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/get-optimization-solution', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ taskId: resourceId, apiKey: API_KEY })
+            })
               .then(async (res) => {
-                const data = await res.json();
+                const payload = await res.json();
                 if (!res.ok) {
-                   console.error("DETALLE_ERROR_SOLUCION:", data);
-                   throw new Error(data.message || 'Fallo al recuperar solución');
+                   console.error("DETALLE_ERROR_SOLUCION:", payload);
+                   throw new Error(payload.error || 'Fallo al recuperar solución');
                 }
-                return data;
+                return payload.data; // El objeto de solución está en payload.data
               })
               .then(solutionData => {
                 setResult({ solution: solutionData, problem: currentProblem });
