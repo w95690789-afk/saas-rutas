@@ -1,6 +1,9 @@
 import React, { useState } from 'react';
 import Papa from 'papaparse';
-import { Upload, Database, Settings, ArrowRight, Route, CheckCircle, AlertTriangle, Terminal, Truck, MapPin } from 'lucide-react';
+import { 
+  Upload, Database, Settings, ArrowRight, Route, CheckCircle, 
+  AlertTriangle, Terminal, Truck, MapPin, Hash, Package, Clock, Target 
+} from 'lucide-react';
 import AuditPanel from './components/AuditPanel';
 import LogisticAnalyst from './components/LogisticAnalyst';
 import './index.css';
@@ -18,8 +21,12 @@ function App() {
   const [cediAddress, setCediAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [fleet, setFleet] = useState([
-    { id: 'Tracto_31t', costs: { fixed: 10000 }, capacity: [31000], skills: ['tracto'], amount: 5 },
-    { id: 'Torton_propio', costs: { fixed: 100 }, capacity: [18000], skills: ['torton'], amount: 10 }
+    { id: 'Tracto_31t', amount: 1, costs: { fixed: 250 }, capacity: [31000], skills: ['normal'], canReload: true },
+    { id: 'Torton_propio', amount: 15, costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], canReload: true },
+    { id: 'Torton_propio_convoy_10am', amount: 10, costs: { fixed: 100 }, capacity: [18000], skills: ['convoy_10am'], canReload: true },
+    { id: 'Tracto_31t_convoy_10am', amount: 1, costs: { fixed: 250 }, capacity: [31000], skills: ['convoy_10am'], canReload: true },
+    { id: 'camioneta_normal', amount: 2, costs: { fixed: 200 }, capacity: [7000], skills: ['normal'], canReload: true },
+    { id: 'camioneta_convoy_10am', amount: 2, costs: { fixed: 200 }, capacity: [7000], skills: ['convoy_10am'], canReload: true }
   ]);
   // Hardcode industrial key to bypass Vercel environment variable cache
   const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
@@ -29,13 +36,15 @@ function App() {
     lat: '18.911402273629243',
     lng: '-97.00091430169718',
     startTime: '06:00',
-    endTime: '15:00',
+    endTime: '17:00',
     loadDuration: '120', // Minutos de cargue
     useFileLocation: false,
     globalJobStart: '08:00',
     globalJobEnd: '18:00',
     useGlobalForAll: false,
-    useGlobalForMissing: true
+    useGlobalForMissing: true,
+    maxShiftDays: 1,
+    docks: '5'
   });
 
   // Búsqueda inversa para coordenadas (arranque y cambios manuales)
@@ -87,16 +96,42 @@ function App() {
   const transformDataToHERE = () => {
     const sanitizeId = (id) => id ? id.toString().replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown';
 
-    const formatTime = (localTime, baseDateStr = "2026-04-10") => {
+    const formatTime = (timeStr, baseDateStr = "2026-04-10", offsetDays = 0) => {
+      if (!timeStr) return `${baseDateStr}T14:00:00Z`;
+      
       try {
-        if (!localTime || !localTime.includes(':')) localTime = '08:00';
-        const [h, m] = localTime.split(':').map(Number);
-        const date = new Date(`${baseDateStr}T${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:00`);
-        // Sumar 6 horas para UTC-6 (México)
-        date.setHours(date.getHours() + 6);
-        return date.toISOString().split('.')[0] + "Z";
+        let hours = 8, minutes = 0;
+        
+        // Match HH:mm or HH:mm:ss with optional AM/PM
+        const timeMatch = timeStr.toString().match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(am|pm)?/i);
+        
+        if (timeMatch) {
+          hours = parseInt(timeMatch[1]);
+          minutes = parseInt(timeMatch[2]);
+          const ampm = timeMatch[3]?.toLowerCase();
+          
+          if (ampm === 'pm' && hours < 12) hours += 12;
+          if (ampm === 'am' && hours === 12) hours = 0;
+        } else {
+          // Fallback for simple hour numbers
+          const hourOnly = parseInt(timeStr);
+          if (!isNaN(hourOnly)) hours = hourOnly;
+        }
+
+        hours = Math.max(0, Math.min(23, hours));
+        minutes = Math.max(0, Math.min(59, minutes));
+
+        let finalDateStr = baseDateStr;
+        if (offsetDays > 0) {
+          const d = new Date(baseDateStr + "T00:00:00Z");
+          d.setUTCDate(d.getUTCDate() + offsetDays);
+          finalDateStr = d.toISOString().split('T')[0];
+        }
+
+        // Important: Using -06:00 (Mexico) instead of Z ensures HERE uses the correct historical traffic data
+        return `${finalDateStr}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00-06:00`;
       } catch (e) {
-        return `${baseDateStr}T14:00:00Z`;
+        return `${baseDateStr}T14:00:00-06:00`;
       }
     };
 
@@ -125,24 +160,24 @@ function App() {
       }));
     });
 
-    // 2. Definir turnos comunes
-    const commonShifts = [{
-      start: { 
-        time: formatTime(cediConfig.startTime), 
-        location: cediLoc
-      },
-      end: { 
-        time: formatTime(cediConfig.endTime), 
-        location: cediLoc
-      },
-      recharges: {
-        maxDistance: 1000000,
-        stations: [{
-          duration: (parseInt(cediConfig.loadDuration) || 120) * 60,
+    // 2. Definir turnos por tipo de vehículo (respetando si recargan o no)
+    const getShiftsForType = (vType) => {
+      const loadDur = (parseInt(cediConfig.loadDuration) || 120) * 60;
+      const shift = {
+        start: { time: formatTime(cediConfig.startTime), location: cediLoc },
+        end: { 
+          time: formatTime(cediConfig.endTime, "2026-04-10", (parseInt(cediConfig.maxShiftDays) || 1) - 1), 
           location: cediLoc
-        }]
+        }
+      };
+      if (vType.canReload) {
+        shift.reloads = Array.from({ length: 5 }).map(() => ({
+          location: cediLoc,
+          duration: loadDur
+        }));
       }
-    }];
+      return [shift];
+    };
 
     // 3. Lógica de Agrupación Industrial (Jerárquica: ID + Skill)
     const groupedData = data.reduce((acc, row) => {
@@ -171,7 +206,7 @@ function App() {
       configuration: {
         termination: { maxTime: 300, stagnationTime: 60 },
         routeDetails: ["polyline"],
-        experimentalFeatures: ["recharges", "parkingIds"]
+        experimentalFeatures: ["parkingIds"]
       },
       fleet: {
         traffic: "historicalOnly",
@@ -183,7 +218,7 @@ function App() {
             distance: 0.0001, 
             time: 0.0048 
           },
-          shifts: commonShifts,
+          shifts: getShiftsForType(v),
           capacity: v.capacity || [18000],
           skills: (v.skills || ["normal"]).map(sanitizeId),
           amount: parseInt(v.amount) || 1
@@ -195,19 +230,17 @@ function App() {
           const coords = row[mapping.latitude]?.split(',').map(c => parseFloat(c.trim())) || [0,0];
           let rawStart, rawEnd;
           
-          if (cediConfig.useGlobalForAll) {
-            rawStart = cediConfig.globalJobStart;
-            rawEnd = cediConfig.globalJobEnd;
+          // User Request: All orders 8 AM to 6 PM except Tapachula (no window)
+          const isTapachula = Object.values(row).some(v => 
+            v?.toString().toLowerCase().includes('tapachula')
+          );
+          
+          if (isTapachula) {
+            rawStart = null;
+            rawEnd = null;
           } else {
-            const csvStart = row[mapping.windowStart];
-            const csvEnd = row[mapping.windowEnd];
-            if (cediConfig.useGlobalForMissing) {
-              rawStart = csvStart || cediConfig.globalJobStart;
-              rawEnd = csvEnd || cediConfig.globalJobEnd;
-            } else {
-              rawStart = csvStart || '08:00';
-              rawEnd = csvEnd || '18:00';
-            }
+            rawStart = "08:00";
+            rawEnd = "18:00";
           }
           
           return {
@@ -217,15 +250,17 @@ function App() {
                 places: [{
                   location: { lat: coords[0], lng: coords[1] },
                   duration: (parseInt(mapping.serviceTime) || 30) * 60,
-                  times: [[
-                    formatTime(rawStart), 
-                    formatTime(rawEnd)
-                  ]]
+                  ...(rawStart && rawEnd ? {
+                    times: Array.from({ length: (parseInt(cediConfig.maxShiftDays) || 1) }).map((_, dIdx) => [
+                      formatTime(rawStart, "2026-04-10", dIdx), 
+                      formatTime(rawEnd, "2026-04-10", dIdx)
+                    ])
+                  } : {})
                 }],
                 demand: [Math.round(row.groupedWeight || 0)]
               }]
             },
-            priority: 1,
+            priority: row.currentSkill === 'convoy_10am' ? 1 : 2,
             skills: [sanitizeId(row.currentSkill)]
           };
         }),
@@ -235,10 +270,32 @@ function App() {
         shared: {
           parking: [{
             id: "andenes_cedi",
-            places: [{
-              duration: (parseInt(cediConfig.loadDuration) || 120) * 60,
-              vehicleTypeIds: fleet.map(v => sanitizeId(v.id))
-            }]
+            places: (() => {
+              const numDocks = parseInt(cediConfig.docks) || 5;
+              const fleetIds = fleet.map(v => sanitizeId(v.id));
+              const loadDur = (parseInt(cediConfig.loadDuration) || 120) * 60;
+
+              if (fleetIds.length === 0) {
+                return [{ duration: loadDur }];
+              }
+
+              const maxSpecific = Math.max(1, numDocks - 1);
+              const size = Math.ceil(fleetIds.length / maxSpecific);
+              const places = [];
+
+              for (let i = 0; i < maxSpecific; i++) {
+                const group = fleetIds.slice(i * size, (i + 1) * size);
+                if (group.length > 0) {
+                  places.push({
+                    duration: loadDur,
+                    vehicleTypeIds: group
+                  });
+                }
+              }
+
+              places.push({ duration: loadDur });
+              return places;
+            })()
           }]
         }
       },
@@ -331,8 +388,32 @@ function App() {
         header: true,
         skipEmptyLines: true,
         complete: (results) => {
-          setData(results.data);
-          setHeaders(Object.keys(results.data[0]));
+          const rows = results.data;
+          if (rows.length > 0) {
+            const detectedHeaders = Object.keys(rows[0]);
+            setData(rows);
+            setHeaders(detectedHeaders);
+            
+            // Auto-detect mappings based on header names
+            const newMapping = { ...mapping };
+            const detectionMap = {
+              id: ['EmbarqueMovMovID', 'movimiento', 'order_id', 'id_entrega', 'uuid'],
+              latitude: ['latLong', 'coordenadas', 'ubicacion', 'location', 'posicion'],
+              weight: ['PesoArticulo', 'peso', 'kg', 'weight', 'carga'],
+              windowStart: ['Window Start', 'Inicio_Ventana', 'Inicio Ventana', 'ventana_inicio', 'start_time'],
+              windowEnd: ['Window End', 'Fin_Ventana', 'Fin Ventana', 'ventana_fin', 'end_time'],
+              skill: ['Skill', 'tipo_vehiculo', 'habilidad', 'capability']
+            };
+
+            Object.entries(detectionMap).forEach(([field, keywords]) => {
+              const found = detectedHeaders.find(h => 
+                keywords.some(k => h.toLowerCase() === k.toLowerCase()) || 
+                keywords.some(k => h.toLowerCase().includes(k.toLowerCase()) && k.length > 5)
+              );
+              if (found) newMapping[field] = found;
+            });
+            setMapping(newMapping);
+          }
         }
       });
     }
@@ -433,6 +514,28 @@ function App() {
                       <input type="number" value={cediConfig.loadDuration} onChange={(e) => setCediConfig({ ...cediConfig, loadDuration: e.target.value })} />
                     </div>
                     <div className="form-item">
+                      <label>Días de Turno (Max 7)</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="7"
+                        value={cediConfig.maxShiftDays} 
+                        onChange={(e) => setCediConfig({ ...cediConfig, maxShiftDays: e.target.value })} 
+                      />
+                      <small style={{color: '#666', fontSize: '0.7rem'}}>1 = Mismo día, 3 = Tapachula/Tijuana</small>
+                    </div>
+                    <div className="form-item">
+                      <label>Andenes Disponibles</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="20"
+                        value={cediConfig.docks} 
+                        onChange={(e) => setCediConfig({ ...cediConfig, docks: e.target.value })} 
+                      />
+                      <small style={{color: '#666', fontSize: '0.7rem'}}>Cargas simultáneas posibles</small>
+                    </div>
+                    <div className="form-item">
                       <label>Referencia Geográfica</label>
                       <div style={{ position: 'relative' }}>
                         <input 
@@ -471,11 +574,11 @@ function App() {
                     </div>
                   </div>
                 </div>
-              ) : (
+              ) : configTab === 'fleet' ? (
                 <div className="modal-sub-section animate-fade-in">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div className="modal-section-title" style={{ margin: 0, border: 0 }}>Gestión de Flota</div>
-                    <button className="btn-mini" onClick={() => setFleet([...fleet, { id: 'Tipo_' + (fleet.length + 1), costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], amount: 5 }])}>
+                    <button className="btn-mini" onClick={() => setFleet([...fleet, { id: 'Tipo_' + (fleet.length + 1), costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], amount: 5, canReload: true }])}>
                       + Agregar Tipo de Vehículo
                     </button>
                   </div>
@@ -529,6 +632,20 @@ function App() {
                               setFleet(newFleet);
                             }} />
                           </div>
+                          <div className="form-item" style={{ alignSelf: 'center', paddingTop: '10px' }}>
+                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                              <input 
+                                type="checkbox" 
+                                checked={v.canReload !== false} 
+                                onChange={(e) => {
+                                  const newFleet = [...fleet];
+                                  newFleet[idx].canReload = e.target.checked;
+                                  setFleet(newFleet);
+                                }} 
+                              />
+                              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Habilitar Recargas</span>
+                            </label>
+                          </div>
                           <div className="modal-full-width" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
                             <button className="btn-text-danger" onClick={() => setFleet(fleet.filter((_, i) => i !== idx))}>Eliminar este tipo</button>
                           </div>
@@ -537,7 +654,7 @@ function App() {
                     ))}
                   </div>
                 </div>
-              )}
+              ) : null}
             </div>
             
             <div className="modal-footer">
@@ -595,7 +712,7 @@ function App() {
             </div>
           ) : (
             <div className="mapping-workspace animate-fade-in">
-              <div className="stat-main" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '1.5rem', width: '100%' }}>
+              <div className="stat-main" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1.5rem', width: '100%' }}>
                 <div className="form-item">
                   <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>ID Pedido</label>
                   <select value={mapping.id} onChange={e => setMapping({...mapping, id: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
@@ -619,8 +736,23 @@ function App() {
                   <input type="number" value={mapping.serviceTime} onChange={e => setMapping({...mapping, serviceTime: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }} />
                 </div>
                 <div className="form-item">
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Ventana Inicio</label>
+                  <select value={mapping.windowStart} onChange={e => setMapping({...mapping, windowStart: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Opcional --</option>
+                    {headers.map(h => <option key={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div className="form-item">
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Ventana Fin</label>
+                  <select value={mapping.windowEnd} onChange={e => setMapping({...mapping, windowEnd: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Opcional --</option>
+                    {headers.map(h => <option key={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div className="form-item">
                   <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Habilidad (Skill)</label>
                   <select value={mapping.skill} onChange={e => setMapping({...mapping, skill: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Opcional --</option>
                     {headers.map(h => <option key={h}>{h}</option>)}
                   </select>
                 </div>

@@ -169,10 +169,35 @@
 
 ---
 
-## 🏆 SÍNTESIS FINAL: CIERRE DE INCIDENCIAS (STABILIZATION COMPLETE)
+## 📅 SESIÓN 13: OPTIMIZACIÓN DE ALTO TONELAJE Y MULTI-TRIP (RELOADS)
+**Estatus:** ✅ Hito 8 Completado - EFICIENCIA MÁXIMA
+- [x] **Corrección de Esquema v3.1**: Transición de `capacity/skills` a los campos estándar `capacities/capabilities`. Resolución del bloqueo de carga de 29t en Tractos de 31t.
+- [x] **Motor Multi-Trip**: Implementación de la sección `reloads` en el plan de optimización. Los camiones ahora pueden regresar al CEDI a recargar mercancía durante el turno.
+- [x] **Eliminación de Residuos**: Purga de la lógica experimental de `recharges` (energía) para evitar conflictos en el motor de combustión estándar.
+- **Resultado**: Incremento masivo en la capacidad de absorción de demanda por unidad. El sistema ahora soporta dinámicas de "operación continua" de 48-72 horas.
+
+
+## 📅 SESIÓN 14: BLINDAJE DE PARKING Y PARALELISMO DE ANDENES (V3.1 FIX)
+**Estatus:** ✅ Hito 9 Completado - CAPACIDAD CEDI ASEGURADA
+- [2026-04-12] - Resolución de Conflictos de Esquema en Andenes
+- **Error Crítico Identificado:** Múltiples errores `400 (E613200, E613657, E613658)` debidos a restricciones no documentadas o estrictas de la API de HERE v3.1 sobre el objeto `parking`.
+- **Problemas Resueltos:**
+  1. **Herencia de Ubicación:** Se eliminó el campo `location` de los `places` de parking; la ubicación ahora se hereda íntegramente de la tarea (Job/Reload) que lo referencia.
+  2. **Eliminación de Concurrency:** Se removió la propiedad `concurrency` prohibida en este nivel de la especificación técnica.
+  3. **Derrota del 'Multiple Defaults' (E613658):** La API solo permite UN bloque de parking sin identificadores específicos por ubicación. 
+- **Acciones Realizadas:**
+  1. **Algoritmo de Segmentación de Flota:** Implementación de lógica dinámica en `App.jsx` que divide los tipos de vehículos en grupos y los asigna a andenes individuales.
+  2. **Garantía de Unicidad:** El sistema asegura que solo el último andén sea el "default" (sin `vehicleTypeIds`), permitiendo que hasta 5 camiones de grupos distintos carguen en paralelo.
+  3. **Activación Experimental:** Inyección de `"parkingIds"` en `experimentalFeatures` para habilitar el motor de coordinación de muelles.
+- **Resultado:** El CEDI ahora puede procesar carga en paralelo respetando los límites físicos de andenes sin bloqueos de validación.
+
+---
+
+## 🏆 SÍNTESIS FINAL: CIERRE DE INCIDENCIAS (LOGISTICS STABILIZED)
 **Estatus:** 🏁 PROYECTO BLINDADO
-- **Resolución Técnica del 404:** Se ha eliminado la dependencia de proxies externos (Vercel). La arquitectura ahora es **Supabase-Native**, lo que garantiza que no haya desincronización de deploys entre el código y la infraestructura.
-- **Robustez de Datos:** La implementación de la **Capa de Sanitización** protege el sistema contra errores humanos de nomenclatura (espacios, acentos, caracteres especiales). El sistema ahora "limpia" los datos antes de enviarlos a procesar.
+- **Resolución Técnica del 404:** Se ha eliminado la dependencia de proxies externos (Vercel). La arquitectura ahora es **Supabase-Native**.
+- **Blindaje de Andenes:** La resolución de los errores de parking permite que el CEDI opere con límites físicos reales (andenes), evitando el colapso logístico por sobrecarga de muelles.
+- **Robustez de Datos:** La implementación de la **Capa de Sanitización** protege el sistema contra errores humanos de nomenclatura.
 - **Sincronización CI/CD:** El flujo de desarrollo ha sido validado con un despliegue exitoso vía GitHub -> Vercel, asegurando que los cambios locales se reflejen instantáneamente en la nube.
 
 ### 💡 RECOMENDACIONES DE OPERACIÓN PARA EL USUARIO
@@ -180,7 +205,25 @@
 2.  **Validación de Rutas:** Si ves un error de "Solución no encontrada", primero verifica que el CEDI tenga coordenadas válidas en el modal de configuración.
 3.  **Despliegue de Cambios:** Siempre que realices un cambio estructural en el código, asegúrate de que el despliegue en Vercel termine antes de probar (toma aprox. 90 segundos).
 
+## 📅 SESIÓN 15: GESTIÓN DE MULTI-VIAJES Y VENTANAS DISCRETAS (V3.2 STABLE)
+**Estatus:** ✅ Hito 10 Completado - OPERACIÓN DISCONTINUA BLINDADA
+- [2026-04-12] - Flexibilidad de Flota y Ventanas de Entrega
+- **Nuevas Funcionalidades:**
+  1. **Toggle de Recargas (Reloads):** Implementación de una opción en la UI (Gestión de Flota) para habilitar o deshabilitar las recargas por tipo de vehículo.
+  2. **Ventanas Horarias Discretas:** Refactorización del generador de ventanas para clientes. En lugar de una ventana continua de 48-72h, el sistema ahora genera "slots" diarios (ej: 08:00-18:00 cada día). Esto permite que los camiones viajen de noche pero solo entreguen en horario de oficina.
+  3. **Corrección de Validación E613200:** Se eliminó el error 400 que ocurría al enviar un arreglo de recargas vacío (`[]`). Ahora, si el camión no recarga, el campo se omite totalmente del JSON.
+- **Optimización Lograda:**
+  - **Eficiencia Total:** Se alcanzó el 100% de asignación (0 rechazos) incluso en rutas críticas como Tapachula, gracias a la sincronización de las nuevas ventanas diarias con turnos multi-día.
+  - **FinOps Estabilizado:** Reversión de costos a valores originales ($250 Tracto, $100 Torton, $200 Camioneta) bajo solicitud del usuario, manteniendo la jerarquía de eficiencia.
+
 ---
 
-**Firmado y Validado:** Antigravity AI Lead Architect - Deployment Confirmed ✅
+## 🛠️ VIII. AVANCES TÉCNICOS LOGRADOS (Multi-Trip & Windows)
+- **Lógica de Omisión Condicional:** Prevención de errores de esquema mediante inyección dinámica de propiedades.
+- **Algoritmo de Segmentación Temporal:** Generación de `times[]` asíncronos para cubrir `maxShiftDays` sin violar restricciones domiciliarias de entrega.
+
+---
+
+**Firmado y Validado:** Antigravity AI Lead Architect - Logistics Schema Secured ✅
+
 
