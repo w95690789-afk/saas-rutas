@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { 
   BarChart3, TrendingUp, Truck, Package, BrainCircuit, 
-  Clock, MapPin, Gauge, AlertCircle, TrendingDown,
+  Clock, MapPin, AlertCircle, TrendingDown,
   Target, ShieldAlert, Info, ChevronDown, ChevronUp, 
   LayoutGrid, List, Calendar, ChevronLeft, ChevronRight,
   ZoomIn, ZoomOut, Maximize2
@@ -539,13 +539,6 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
           <div className="view-mode-selector">
             <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}><List size={16}/> Lista</button>
             <button className={viewMode === 'gantt' ? 'active' : ''} onClick={() => setViewMode('gantt')}><Calendar size={16}/> Cronograma</button>
-          </div>
-          <div className="kpi-mini-card highlight">
-            <span className="kpi-label">Uso de Activos</span>
-            <div className="kpi-value-row">
-              <span className="kpi-value">{Math.round(analysis.globalUtilization)}%</span>
-              <Gauge size={16} />
-            </div>
           </div>
         </div>
       </div>
