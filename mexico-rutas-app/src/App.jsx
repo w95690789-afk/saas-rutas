@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import Papa from 'papaparse';
 import { 
   Upload, Database, Settings, ArrowRight, Route, CheckCircle, 
-  AlertTriangle, Terminal, Truck, MapPin, Hash, Package, Clock, Target 
+  AlertTriangle, Terminal, Truck, MapPin, Hash, Package, Clock, Target,
+  PanelLeftClose, PanelLeftOpen
 } from 'lucide-react';
 import AuditPanel from './components/AuditPanel';
 import LogisticAnalyst from './components/LogisticAnalyst';
+import GeoreferenceModule from './components/GeoreferenceModule';
 import './index.css';
 
 function App() {
@@ -17,6 +19,8 @@ function App() {
   const [lastProblem, setLastProblem] = useState(null);
   const [showConfigModal, setShowConfigModal] = useState(false);
   const [showAudit, setShowAudit] = useState(false);
+  const [activeWorkspace, setActiveWorkspace] = useState('optimizer');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
   const [configTab, setConfigTab] = useState('cedi'); // Internal modal navigation
   const [cediAddress, setCediAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -556,8 +560,8 @@ function App() {
   };
 
   return (
-    <div className="app-container">
-      <aside className="sidebar">
+    <div className={`app-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
+      <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="brand-section">
           <div className="logo-box"><Route size={24} color="white" /></div>
           <h2>HERO<span>LOGIC</span></h2>
@@ -587,6 +591,26 @@ function App() {
                   <div className="text-wrap">
                     <span className="label">Recursos</span>
                     <span className="title">Gestión de Flota</span>
+                  </div>
+                </button>
+                <button
+                  className={`nav-item-btn ${activeWorkspace === 'georef' ? 'active' : ''}`}
+                  onClick={() => setActiveWorkspace('georef')}
+                >
+                  <div className="icon-wrap"><Target size={20} /></div>
+                  <div className="text-wrap">
+                    <span className="label">Calidad de Datos</span>
+                    <span className="title">Georreferenciación</span>
+                  </div>
+                </button>
+                <button
+                  className={`nav-item-btn ${activeWorkspace === 'optimizer' ? 'active' : ''}`}
+                  onClick={() => setActiveWorkspace('optimizer')}
+                >
+                  <div className="icon-wrap"><Route size={20} /></div>
+                  <div className="text-wrap">
+                    <span className="label">Planeación</span>
+                    <span className="title">Optimización de Flota</span>
                   </div>
                 </button>
               </div>
@@ -810,6 +834,14 @@ function App() {
       <main className="main-content">
         <header className="top-bar">
           <div className="page-info">
+            <button
+              className="sidebar-toggle-btn"
+              onClick={() => setIsSidebarCollapsed(prev => !prev)}
+              title={isSidebarCollapsed ? 'Mostrar barra lateral' : 'Ocultar barra lateral'}
+            >
+              {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
+              <span>{isSidebarCollapsed ? 'Mostrar menú' : 'Ocultar menú'}</span>
+            </button>
             <h1 className="page-title">México Rutas</h1>
             <p className="page-subtitle">Optimización Industrial HERE v3.1</p>
           </div>
@@ -836,7 +868,9 @@ function App() {
         </header>
 
         <section className="content-area">
-          {status === 'success' && result ? (
+          {activeWorkspace === 'georef' ? (
+            <GeoreferenceModule apiKey={API_KEY} />
+          ) : status === 'success' && result ? (
             <div className="results-grid animate-fade-in">
               <div className="summary-cards">
                 <div className="glass-card stat-main"><div className="stat-icon"><CheckCircle color="#0058be" /></div><div><span className="stat-value">{result.solution?.tours?.length || 0}</span><span className="stat-label">Rutas</span></div></div>
