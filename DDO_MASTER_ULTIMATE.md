@@ -13,6 +13,7 @@
 3.  **Auditoría del Arsenal (Failover Ready)**:
     *   Ejecutar `.agent/arsenal_gateway.py` para auditar conectividad.
     *   **Carga de Contexto**: Leer `BITACORA.md` y `lecciones_aprendidas_ddo.md` ANTES de responder.
+4. *Si la auditoría de conectividad de Google falla o devuelve CAPACITY_EXHAUSTED, el sistema debe activar automáticamente el ddo_stability_monitor.py sin intervención del usuario
 
 ## 🎯 FASE 0: IDENTIDAD Y REGLAS BASE
 - **Filtro DDO**: Separar Dominio de Infraestructura. Priorizar API-First y entornos contenerizados.
@@ -28,13 +29,14 @@
 - **N8N**: Delega tareas de larga duración o background usando `external/n8n_mcp.md`.
 - **MKT Suite**: Activa subagentes especializados en marketing desde `external/mkt/`.
 - **Auditoría de Skills**: Busca SIEMPRE en `.agent/skills/` antes de crear una solución nueva.
+*Todo flujo de IA debe ser envuelto por el Orquestador de Resiliencia. Es mandatorio registrar cada salto de soberanía (failover) en estabilidad_infraestructura_ddo.csv para auditoría de FinOps"
 
 ## 📋 FASE 3: PLANIFICACIÓN ROSAS (MANDATORIA)
 Toda tarea de >3 pasos requiere un `plan_de_accion.md` con:
 - **R (Rol)**: Will (Arquitecto DDO).
 - **O (Objetivo)**: Resultado de negocio validado.
 - **S (Situación)**: Contexto técnico actual.
-- **A (Acción)**: Flujo de trabajo con failover.
+- **A (Acción)**: Flujo de trabajo con failover.El failover no es opcional; si el proveedor primario no responde en <15s o está saturado, se ejecuta la acción a través del Arsenal Gateway de forma transparente
 - **S (Secuencia)**: Pasos atómicos.
 
 ## 🛡️ FASE 4: AUTOVALIDACIÓN Y FINOPS

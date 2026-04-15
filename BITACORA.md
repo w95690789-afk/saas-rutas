@@ -222,8 +222,30 @@
 - **Lógica de Omisión Condicional:** Prevención de errores de esquema mediante inyección dinámica de propiedades.
 - **Algoritmo de Segmentación Temporal:** Generación de `times[]` asíncronos para cubrir `maxShiftDays` sin violar restricciones domiciliarias de entrega.
 
+## 📅 SESIÓN 16: CRONOGRAMA INDUSTRIAL Y CONTROL DE COSTOS (ZERO-CREDIT)
+**Estatus:** ✅ Hito 11 Completado - DISEÑO VALIDADO & AHORRO ACTIVO
+- [2026-04-12/13] - Rediseño de Experiencia de Usuario y Simulación Local
+- **Problema de Usuario:** El costo por cada envío a optimización real limitaba la iteración estética y el diagnóstico de la UI.
+- **Acciones Realizadas:**
+  1. **Motor de Simulación Gratis (Demo Mode):** Implementación de `generateMockSolution` en `App.jsx`. El sistema genera ahora soluciones logísticas realistas localmente basadas en el CSV del usuario sin tocar la API de HERE.
+  2. **Gantt V2 (Professional Activity Blocks):** Refactorización completa de `LogisticAnalyst.jsx`. Los puntos estáticos fueron reemplazados por bloques con ancho proporcional a la duración del servicio y líneas de tránsito que unen las paradas.
+  3. **Correcciones de Estabilidad:** 
+     - **Scope Fix:** Se movió `sanitizeId` al alcance global tras detectarse un `ReferenceError` que bloqueaba la simulación.
+     - **Status Correction:** Ajuste de la transición de estado `success` para asegurar que el resumen y el Gantt se rendericen tras la simulación.
+  4. **Timezone Resilience:** Ajuste en el motor de renderizado para evitar que las rutas se amontonen al inicio del turno (06:00 AM) por choques de zona horaria UTC/Local.
+- **Impacto:** Iteración de diseño a costo cero. El usuario ahora puede ver el potencial de su logística (bloques de tiempo, solapamientos, trayectos) antes de ejecutar el gasto real del crédito.
+- [x] **Protocolo de Continuidad Automática**: Creación de `iniciar_logistica.ps1` para permitir que Antigravity levante el entorno de desarrollo de forma autónoma en la siguiente sesión.
+
 ---
 
-**Firmado y Validado:** Antigravity AI Lead Architect - Logistics Schema Secured ✅
+## 🛠️ IX. AVANCES TÉCNICOS LOGRADOS (UI/UX & Cost Efficiency)
+- **Visualización Industrial:** Uso de `ActivityBlocks` que permiten un diagnóstico visual de la saturación de flota.
+- **Tooltips Enriquecidos:** Trazabilidad total de la secuencia, cliente y horarios de llegada/salida sin salir del cronograma.
+- **Arquitectura de Previsualización:** Separación total entre el motor de lógica visual y el motor de optimización HERE.
+- **Automatización de Sesión:** Script de arranque (`iniciar_logistica.ps1`) validado para manos libres.
+
+---
+
+**Firmado y Validado:** Antigravity AI Lead Architect - UI & FinOps Secured ✅
 
 

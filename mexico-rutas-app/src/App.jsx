@@ -21,12 +21,12 @@ function App() {
   const [cediAddress, setCediAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [fleet, setFleet] = useState([
-    { id: 'Tracto_31t', amount: 1, costs: { fixed: 250 }, capacity: [31000], skills: ['normal'], canReload: true },
-    { id: 'Torton_propio', amount: 15, costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], canReload: true },
-    { id: 'Torton_propio_convoy_10am', amount: 10, costs: { fixed: 100 }, capacity: [18000], skills: ['convoy_10am'], canReload: true },
-    { id: 'Tracto_31t_convoy_10am', amount: 1, costs: { fixed: 250 }, capacity: [31000], skills: ['convoy_10am'], canReload: true },
-    { id: 'camioneta_normal', amount: 2, costs: { fixed: 200 }, capacity: [7000], skills: ['normal'], canReload: true },
-    { id: 'camioneta_convoy_10am', amount: 2, costs: { fixed: 200 }, capacity: [7000], skills: ['convoy_10am'], canReload: true }
+    { id: 'Tracto_31t', amount: 1, costs: { fixed: 800 }, capacity: [31000], skills: ['normal'], canReload: true },
+    { id: 'Torton_propio', amount: 15, costs: { fixed: 400 }, capacity: [18000], skills: ['normal'], canReload: true },
+    { id: 'Torton_propio_convoy_10am', amount: 10, costs: { fixed: 400 }, capacity: [18000], skills: ['convoy_10am'], canReload: true },
+    { id: 'Tracto_31t_convoy_10am', amount: 1, costs: { fixed: 800 }, capacity: [31000], skills: ['convoy_10am'], canReload: true },
+    { id: 'camioneta_normal', amount: 5, costs: { fixed: 150 }, capacity: [7000], skills: ['normal'], canReload: true },
+    { id: 'camioneta_convoy_10am', amount: 5, costs: { fixed: 150 }, capacity: [7000], skills: ['convoy_10am'], canReload: true }
   ]);
   // Hardcode industrial key to bypass Vercel environment variable cache
   const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
@@ -85,6 +85,7 @@ function App() {
   };
   const [mapping, setMapping] = useState({
     id: 'EmbarqueMovMovID',
+    name: 'Nombre Cliente',
     latitude: 'latLong',
     weight: 'PesoArticulo',
     serviceTime: '30',
@@ -93,9 +94,9 @@ function App() {
     skill: 'Skill'
   });
 
-  const transformDataToHERE = () => {
-    const sanitizeId = (id) => id ? id.toString().replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown';
+  const sanitizeId = (id) => id ? id.toString().replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown';
 
+  const transformDataToHERE = () => {
     const formatTime = (timeStr, baseDateStr = "2026-04-10", offsetDays = 0) => {
       if (!timeStr) return `${baseDateStr}T14:00:00Z`;
       
@@ -227,6 +228,7 @@ function App() {
       },
       plan: {
         jobs: uniqueRows.map((row, index) => {
+          const baseDuration = (parseInt(mapping.serviceTime) || 30) * 60;
           const coords = row[mapping.latitude]?.split(',').map(c => parseFloat(c.trim())) || [0,0];
           let rawStart, rawEnd;
           
@@ -249,7 +251,7 @@ function App() {
               deliveries: [{
                 places: [{
                   location: { lat: coords[0], lng: coords[1] },
-                  duration: (parseInt(mapping.serviceTime) || 30) * 60,
+                  duration: baseDuration,
                   ...(rawStart && rawEnd ? {
                     times: Array.from({ length: (parseInt(cediConfig.maxShiftDays) || 1) }).map((_, dIdx) => [
                       formatTime(rawStart, "2026-04-10", dIdx), 
@@ -265,7 +267,12 @@ function App() {
           };
         }),
         clustering: {
-          serviceTimeStrategy: { type: "maxDurationStrategy" }
+          // boundedSumStrategy: suma service times pero CAPEA al maxDuration
+          // Así, N jobs × 30min en misma ubicación → capped a 30min (no N×30)
+          serviceTimeStrategy: { 
+            type: "boundedSumStrategy",
+            maxDuration: (parseInt(mapping.serviceTime) || 30) * 60
+          }
         },
         shared: {
           parking: [{
@@ -301,11 +308,25 @@ function App() {
       },
       objectives: [
         { type: "minimizeUnassigned" },
-        { type: "minimizeCost" }
+        { type: "minimizeCost" },
+        { type: "minimizeDuration" }
       ]
     };
     
     console.log("INDUSTRIAL_EXEC_V3:", problem);
+    console.log("🔧 CLUSTERING_CONFIG:", JSON.stringify(problem.plan.clustering, null, 2));
+    // Debug: find jobs sharing coordinates
+    const coordMap = {};
+    problem.plan.jobs.forEach(j => {
+      const loc = j.tasks?.deliveries?.[0]?.places?.[0]?.location;
+      if (loc) {
+        const key = `${loc.lat},${loc.lng}`;
+        if (!coordMap[key]) coordMap[key] = [];
+        coordMap[key].push({ id: j.id, duration: j.tasks?.deliveries?.[0]?.places?.[0]?.duration });
+      }
+    });
+    const shared = Object.entries(coordMap).filter(([,v]) => v.length > 1);
+    console.log("📍 JOBS_SAME_LOCATION:", shared.length, "groups:", shared);
     setLastProblem(problem);
     setStatus('polling');
 
@@ -365,6 +386,14 @@ function App() {
                 return payload.data; // El objeto de solución está en payload.data
               })
               .then(solutionData => {
+                console.log('🔥 HERE_RAW_SOLUTION:', JSON.stringify(solutionData, null, 2).substring(0, 5000));
+                console.log('🔥 HERE_TOURS_COUNT:', solutionData?.tours?.length);
+                console.log('🔥 HERE_UNASSIGNED:', solutionData?.unassigned);
+                if (solutionData?.tours?.[0]?.stops?.[0]) {
+                  console.log('🔥 HERE_FIRST_STOP_KEYS:', Object.keys(solutionData.tours[0].stops[0]));
+                  console.log('🔥 HERE_FIRST_STOP:', JSON.stringify(solutionData.tours[0].stops[0], null, 2));
+                  console.log('🔥 HERE_SECOND_STOP:', JSON.stringify(solutionData.tours[0].stops[1], null, 2));
+                }
                 setResult({ solution: solutionData, problem: currentProblem });
                 setStatus('success');
               })
@@ -379,6 +408,92 @@ function App() {
       })
       .catch(err => console.error(err));
     }, 10000);
+  };
+
+  const generateMockSolution = () => {
+    if (data.length === 0) return;
+    setStatus('optimizing');
+    
+    // Simular un proceso de 2 segundos
+    setTimeout(() => {
+      const mockTours = [
+        { id: 'camioneta_v1', type: 'Camioneta', capacity: 7000 },
+        { id: 'torton_v2', type: 'Torton', capacity: 18000 },
+        { id: 'tracto_v3', type: 'Tracto', capacity: 31000 }
+      ];
+
+      try {
+        const tours = mockTours.map((v, vIdx) => {
+          const jobsPerVehicle = Math.ceil(data.length / mockTours.length);
+          const startIndex = vIdx * jobsPerVehicle;
+          const vehicleJobs = data.slice(startIndex, startIndex + jobsPerVehicle);
+          
+          let currentTime = new Date("2026-04-10T08:00:00-06:00");
+          
+          const stops = [
+            { location: { lat: cediConfig.lat, lng: cediConfig.lng }, departure: { time: currentTime.toISOString() }, activities: [{ type: 'departure' }] }
+          ];
+
+          vehicleJobs.forEach((job, jIdx) => {
+            if (!job || !mapping.latitude) return;
+            
+            // Tránsito: 30-60 mins
+            currentTime = new Date(currentTime.getTime() + (30 + Math.random() * 30) * 60000);
+            const arrival = currentTime.toISOString();
+            // Servicio: 20-40 mins
+            currentTime = new Date(currentTime.getTime() + (20 + Math.random() * 20) * 60000);
+            const departure = currentTime.toISOString();
+
+            // Intentar parsear lat/lng
+            let lat = cediConfig.lat, lng = cediConfig.lng;
+            const coordsStr = job[mapping.latitude];
+            if (coordsStr && typeof coordsStr === 'string' && coordsStr.includes(',')) {
+              const parts = coordsStr.split(',');
+              lat = parseFloat(parts[0]);
+              lng = parseFloat(parts[1]);
+            }
+
+            stops.push({
+              location: { lat, lng },
+              arrival: { time: arrival },
+              departure: { time: departure },
+              activities: [{ type: 'delivery', jobId: `job_${sanitizeId(job[mapping.id])}_normal` }]
+            });
+          });
+
+          // Regreso CEDI
+          currentTime = new Date(currentTime.getTime() + 45 * 60000);
+          stops.push({
+            location: { lat: cediConfig.lat, lng: cediConfig.lng },
+            arrival: { time: currentTime.toISOString() },
+            activities: [{ type: 'arrival' }]
+          });
+
+          return {
+            vehicleId: v.id,
+            typeId: v.type,
+            stops,
+            statistic: { distance: Math.random() * 150000 }
+          };
+        });
+
+        const mockProblem = {
+          plan: {
+            jobs: data.map(row => ({
+              id: `job_${sanitizeId(row[mapping.id])}_normal`,
+              label: row[mapping.name]
+            }))
+          }
+        };
+
+        setResult({ solution: { tours }, problem: mockProblem });
+        setStatus('success');
+      } catch (err) {
+        console.error("Simulation error:", err);
+        setStatus('idle');
+        alert("Hubo un error en la simulación. Revisa tus mapeos.");
+      }
+    }, 1500);
   };
 
   const handleFileUpload = (e) => {
@@ -398,6 +513,7 @@ function App() {
             const newMapping = { ...mapping };
             const detectionMap = {
               id: ['EmbarqueMovMovID', 'movimiento', 'order_id', 'id_entrega', 'uuid'],
+              name: ['Nombre Cliente', 'Nombre', 'CLIENTE', 'client_name', 'razon_social'],
               latitude: ['latLong', 'coordenadas', 'ubicacion', 'location', 'posicion'],
               weight: ['PesoArticulo', 'peso', 'kg', 'weight', 'carga'],
               windowStart: ['Window Start', 'Inicio_Ventana', 'Inicio Ventana', 'ventana_inicio', 'start_time'],
@@ -677,7 +793,16 @@ function App() {
             <h1 className="page-title">México Rutas</h1>
             <p className="page-subtitle">Optimización Industrial HERE v3.1</p>
           </div>
-          <div className="actions">
+          <div className="actions" style={{ display: 'flex', gap: '12px' }}>
+            {data.length > 0 && (
+              <button 
+                className="btn-secondary-dark" 
+                onClick={generateMockSolution}
+                style={{ background: 'white', border: '1px solid var(--primary-electric)', color: 'var(--primary-electric)', padding: '0.85rem 1.5rem' }}
+              >
+                Simular Cronograma (Gratis)
+              </button>
+            )}
             <button 
               className="btn-primary" 
               disabled={status === 'optimizing' || status === 'polling' || !data.length} 
@@ -699,7 +824,7 @@ function App() {
                 <div className="glass-card stat-main"><div className="stat-icon"><Route color="#0058be" /></div><div><span className="stat-value">{Math.round((result.solution?.tours?.reduce((acc, r) => acc + (r.statistic?.distance || 0), 0) || 0) / 1000)}</span><span className="stat-label">KM Totales</span></div></div>
               </div>
 
-              <LogisticAnalyst result={result} />
+              <LogisticAnalyst result={result} fullData={data} mapping={mapping} />
             </div>
           ) : !data.length ? (
             <div className="upload-empty-state animate-fade-in">
