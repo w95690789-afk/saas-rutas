@@ -32,6 +32,12 @@ function App() {
     { id: 'camioneta_normal', amount: 5, costs: { fixed: 150 }, capacity: [7000], skills: ['normal'], canReload: true },
     { id: 'camioneta_convoy_10am', amount: 5, costs: { fixed: 150 }, capacity: [7000], skills: ['convoy_10am'], canReload: true }
   ]);
+  const [fleetData, setFleetData] = useState([]);
+  const [fleetHeaders, setFleetHeaders] = useState([]);
+  const [showFleetMapping, setShowFleetMapping] = useState(false);
+  const [fleetMapping, setFleetMapping] = useState({
+    id: '', amount: '', fixedCost: '', capacity: '', skill: '', canReload: ''
+  });
   // Hardcode industrial key to bypass Vercel environment variable cache
   const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
 
@@ -559,6 +565,57 @@ function App() {
     }
   };
 
+  const handleFleetFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      Papa.parse(file, {
+        header: true,
+        skipEmptyLines: true,
+        complete: (results) => {
+          const rows = results.data.filter(r => Object.values(r).some(v => v));
+          if (rows.length > 0) {
+            const detectedHeaders = Object.keys(rows[0]);
+            setFleetData(rows);
+            setFleetHeaders(detectedHeaders);
+            setShowFleetMapping(true);
+            
+            const newMapping = { ...fleetMapping };
+            const fleetDetectionMap = {
+              id: ['ID', 'Vehiculo', 'Unit', 'unidad', 'placa', 'nombre'],
+              amount: ['Amount', 'Cantidad', 'unidades', 'count'],
+              fixedCost: ['Fixed Cost', 'Costo', 'Costo Fijo', 'costo_fijo', 'rate'],
+              capacity: ['Capacity', 'Capacidad', 'KG', 'peso_max', 'volume'],
+              skill: ['Skill', 'Tipo', 'Especialidad', 'habilidad', 'capability'],
+              canReload: ['Reload', 'Recargas', 'permite_recarga', 'can_reload']
+            };
+
+            Object.entries(fleetDetectionMap).forEach(([field, keywords]) => {
+              const found = detectedHeaders.find(h => 
+                keywords.some(k => h.toLowerCase() === k.toLowerCase()) || 
+                keywords.some(k => h.toLowerCase().includes(k.toLowerCase()) && k.length > 5)
+              );
+              if (found) newMapping[field] = found;
+            });
+            setFleetMapping(newMapping);
+          }
+        }
+      });
+    }
+  };
+
+  const applyFleetMapping = () => {
+    const newFleet = fleetData.map(row => ({
+      id: row[fleetMapping.id] || 'v_unidentified',
+      amount: parseInt(row[fleetMapping.amount]) || 1,
+      costs: { fixed: parseInt(row[fleetMapping.fixedCost]) || 0 },
+      capacity: [parseInt(row[fleetMapping.capacity]) || 18000],
+      skills: [row[fleetMapping.skill] || 'normal'],
+      canReload: row[fleetMapping.canReload] === 'SI' || row[fleetMapping.canReload] === 'true' || row[fleetMapping.canReload] === '1' || true
+    }));
+    setFleet(newFleet);
+    setShowFleetMapping(false);
+  };
+
   return (
     <div className={`app-container ${isSidebarCollapsed ? 'sidebar-collapsed' : ''}`}>
       <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
@@ -738,10 +795,74 @@ function App() {
                 <div className="modal-sub-section animate-fade-in">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div className="modal-section-title" style={{ margin: 0, border: 0 }}>Gestión de Flota</div>
-                    <button className="btn-mini" onClick={() => setFleet([...fleet, { id: 'Tipo_' + (fleet.length + 1), costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], amount: 5, canReload: true }])}>
-                      + Agregar Tipo de Vehículo
-                    </button>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <label className="btn-mini" style={{ cursor: 'pointer', background: 'white', color: 'var(--primary-electric)', border: '1px solid var(--primary-electric)' }}>
+                        <Upload size={14} style={{ marginRight: 6 }} />
+                        Importar CSV
+                        <input type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFleetFileUpload} />
+                      </label>
+                      <button className="btn-mini" onClick={() => setFleet([...fleet, { id: 'Tipo_' + (fleet.length + 1), costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], amount: 5, canReload: true }])}>
+                        + Agregar Tipo de Vehículo
+                      </button>
+                    </div>
                   </div>
+
+                  {showFleetMapping && (
+                    <div className="nav-card animate-slide-up" style={{ padding: '24px', marginBottom: '24px', background: 'rgba(0, 88, 190, 0.03)', border: '1px solid rgba(0, 88, 190, 0.15)' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <Settings size={18} color="var(--primary-electric)" />
+                          <span style={{ fontWeight: 700, fontSize: '0.9rem' }}>Mapeador Flexible de Flota</span>
+                        </div>
+                        <button className="btn-mini" onClick={applyFleetMapping} style={{ padding: '0.5rem 1.5rem' }}>Confirmar y Cargar Flota</button>
+                      </div>
+                      
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Identificador</label>
+                          <select value={fleetMapping.id} onChange={e => setFleetMapping({...fleetMapping, id: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Cantidad</label>
+                          <select value={fleetMapping.amount} onChange={e => setFleetMapping({...fleetMapping, amount: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Costo Fijo</label>
+                          <select value={fleetMapping.fixedCost} onChange={e => setFleetMapping({...fleetMapping, fixedCost: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Capacidad (KG)</label>
+                          <select value={fleetMapping.capacity} onChange={e => setFleetMapping({...fleetMapping, capacity: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Especialidad / Skill</label>
+                          <select value={fleetMapping.skill} onChange={e => setFleetMapping({...fleetMapping, skill: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Permite Recarga</label>
+                          <select value={fleetMapping.canReload} onChange={e => setFleetMapping({...fleetMapping, canReload: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                   
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
                     {fleet.length === 0 && (
