@@ -40,6 +40,31 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
     return isNaN(ms) ? null : ms;
   };
 
+  const translateReason = (reasonCode = '', reasonText = '') => {
+    const code = (reasonCode || '').toUpperCase();
+    const text = (reasonText || '').toLowerCase();
+
+    const byCode = {
+      CAPACITY_CONSTRAINT: 'Capacidad insuficiente de vehículo',
+      TIME_WINDOW_CONSTRAINT: 'Ventana horaria incumplida',
+      SKILL_CONSTRAINT: 'Habilidad requerida no disponible',
+      DISTANCE_CONSTRAINT: 'Distancia fuera de alcance',
+      MAX_DISTANCE_CONSTRAINT: 'Límite de distancia excedido',
+      MAX_DURATION_CONSTRAINT: 'Duración máxima de ruta excedida',
+      REACHABILITY_CONSTRAINT: 'Ubicación no alcanzable',
+      PRECEDENCE_CONSTRAINT: 'Dependencia de secuencia no cumplida',
+    };
+
+    if (byCode[code]) return byCode[code];
+    if (text.includes('capacity')) return 'Capacidad insuficiente de vehículo';
+    if (text.includes('time window')) return 'Ventana horaria incumplida';
+    if (text.includes('skill')) return 'Habilidad requerida no disponible';
+    if (text.includes('distance')) return 'Distancia fuera de alcance';
+    if (text.includes('duration')) return 'Duración máxima de ruta excedida';
+    if (text.includes('reach')) return 'Ubicación no alcanzable';
+    return reasonText || 'Sin detalle disponible';
+  };
+
   const analysis = useMemo(() => {
     if (!result || !result.solution) return null;
 
@@ -250,6 +275,87 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       if (v.endTime) uniqueDays.add(v.endTime.toISOString().split('T')[0]);
     });
 
+    const unassignedDetails = unassigned.map((item, idx) => {
+      const jobId = item.jobId || item.id || `sin_job_${idx}`;
+      const reasons = item.reasons || item.code || [];
+      const reasonList = Array.isArray(reasons) ? reasons : [reasons];
+      const reasonCodes = reasonList.map(r => (r?.code || r || '').toString()).filter(Boolean);
+      const rawReason = reasonList.map(r => (r?.description || r || '').toString()).filter(Boolean).join(', ');
+      const reasonEs = reasonList
+        .map(r => translateReason(r?.code || '', r?.description || r?.toString?.() || ''))
+        .filter(Boolean)
+        .join(', ');
+
+      const linkedOrders = jobToOrdersMap[jobId] || [];
+
+      return {
+        jobId,
+        reasonCodes,
+        reasonRaw: rawReason || 'Sin motivo especificado',
+        reasonEs: reasonEs || 'Sin motivo especificado',
+        orders: linkedOrders,
+        ordersCount: linkedOrders.length,
+      };
+    });
+
+    const totalOrdersFromCsv = fullData.length || 0;
+    const totalOrdersAssigned = vehiclePerformance.reduce((acc, v) => acc + v.totalOrdersCount, 0);
+    const totalOrdersUnassignedFromMap = unassignedDetails.reduce((acc, u) => acc + u.ordersCount, 0);
+    const totalOrdersUnassigned = Math.max(totalOrdersFromCsv - totalOrdersAssigned, totalOrdersUnassignedFromMap, 0);
+    const coveragePct = totalOrdersFromCsv > 0 ? ((totalOrdersAssigned / totalOrdersFromCsv) * 100) : 0;
+    const totalRoutes = tours.length || 0;
+    const totalStopsAssigned = vehiclePerformance.reduce((acc, v) => acc + v.stopsCount, 0);
+    const averageOrdersPerRoute = totalRoutes > 0 ? (totalOrdersAssigned / totalRoutes) : 0;
+    const averageKmPerRoute = totalRoutes > 0 ? (totalDist / totalRoutes) : 0;
+    const consolidationRatio = totalStopsAssigned > 0 ? (totalOrdersAssigned / totalStopsAssigned) : 0;
+    const estimatedSingleTripRoutes = totalOrdersAssigned;
+    const estimatedOptimizedRoutes = Math.max(totalRoutes, 1);
+    const estimatedRoutesSaved = Math.max(estimatedSingleTripRoutes - estimatedOptimizedRoutes, 0);
+    const productivityGainPct = estimatedSingleTripRoutes > 0
+      ? (estimatedRoutesSaved / estimatedSingleTripRoutes) * 100
+      : 0;
+    // ROI proxy para toma de decisión ejecutiva cuando no hay costo total facturado en respuesta HERE
+    const roiIndex = Math.max(0, Math.min(100,
+      (coveragePct * 0.45) +
+      (Math.min(consolidationRatio, 3) / 3) * 25 +
+      (Math.min(globalUtilization, 100) * 0.20) +
+      (Math.min(productivityGainPct, 100) * 0.10)
+    ));
+
+    const constraintStats = unassignedDetails.reduce((acc, item) => {
+      if (!item.reasonCodes.length) {
+        acc.SIN_CODIGO = (acc.SIN_CODIGO || 0) + 1;
+        return acc;
+      }
+      item.reasonCodes.forEach(code => {
+        const normalized = (code || 'SIN_CODIGO').toUpperCase();
+        acc[normalized] = (acc[normalized] || 0) + 1;
+      });
+      return acc;
+    }, {});
+    const topConstraints = Object.entries(constraintStats)
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 3);
+
+    const strategicInsights = [];
+    if (coveragePct >= 95) {
+      strategicInsights.push("Cobertura sobresaliente: la operación está absorbiendo casi toda la demanda con alta continuidad de servicio.");
+    } else if (coveragePct >= 85) {
+      strategicInsights.push("Cobertura sólida con margen de mejora: conviene atacar restricciones para cerrar la brecha final de asignación.");
+    } else {
+      strategicInsights.push("Cobertura baja para estándar industrial: se recomienda ajuste inmediato de flota, skills o ventanas horarias.");
+    }
+
+    if (consolidationRatio >= 1.5) {
+      strategicInsights.push("Consolidación eficiente: se están atendiendo múltiples pedidos por parada, reduciendo fricción operativa.");
+    } else {
+      strategicInsights.push("Consolidación limitada: hay oportunidad de agrupar mejor pedidos por zona para elevar productividad.");
+    }
+
+    if (topConstraints.length > 0) {
+      strategicInsights.push(`Restricción principal detectada: ${translateReason(topConstraints[0][0], topConstraints[0][0])}.`);
+    }
+
     return {
       vehiclePerformance,
       globalUtilization,
@@ -259,6 +365,20 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       unassignedCount: unassigned.length,
       assignedJobsCount: tours.reduce((acc, t) => acc + t.stops.flatMap(s => s.activities).filter(a => a.type === 'delivery').length, 0),
       totalOrdersAssigned: vehiclePerformance.reduce((acc, v) => acc + v.totalOrdersCount, 0),
+      totalOrdersFromCsv,
+      totalOrdersUnassigned,
+      coveragePct,
+      totalRoutes,
+      totalStopsAssigned,
+      averageOrdersPerRoute,
+      averageKmPerRoute,
+      consolidationRatio,
+      estimatedRoutesSaved,
+      productivityGainPct,
+      roiIndex,
+      topConstraints,
+      strategicInsights,
+      unassignedDetails,
       totalJobsInProblem: problem.plan?.jobs?.length || 0,
       dataMinMs: dataMinMs === Infinity ? null : dataMinMs,
       dataMaxMs: dataMaxMs === -Infinity ? null : dataMaxMs,
@@ -687,48 +807,144 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         </div>
       )}
 
+      <div className="report-section" style={{ marginTop: '14px' }}>
+        <div className="performance-table-wrapper" style={{ padding: '14px', borderRadius: '14px', background: '#111327', border: '1px solid rgba(255,255,255,0.08)' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', gap: '10px', flexWrap: 'wrap' }}>
+            <h3 style={{ margin: 0, color: '#f8fafc', fontSize: '1rem' }}>Análisis Logístico Integral (Operación + Finanzas)</h3>
+            <span style={{ fontSize: '0.72rem', color: '#93c5fd', border: '1px solid rgba(147,197,253,0.35)', padding: '4px 8px', borderRadius: '999px' }}>
+              ROI Logístico Estimado: {Math.round(analysis.roiIndex)}/100
+            </span>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '12px' }}>
+            <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#86efac', fontSize: '0.68rem', textTransform: 'uppercase' }}>Cobertura real</div>
+              <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{Math.round(analysis.coveragePct)}%</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalOrdersAssigned}/{analysis.totalOrdersFromCsv} pedidos</div>
+            </div>
+            <div style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#93c5fd', fontSize: '0.68rem', textTransform: 'uppercase' }}>Productividad por ruta</div>
+              <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.averageOrdersPerRoute.toFixed(1)} pedidos/ruta</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalRoutes} rutas activas</div>
+            </div>
+            <div style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#fde68a', fontSize: '0.68rem', textTransform: 'uppercase' }}>Consolidación de entregas</div>
+              <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.consolidationRatio.toFixed(2)} pedidos/parada</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalStopsAssigned} paradas de entrega</div>
+            </div>
+            <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#c4b5fd', fontSize: '0.68rem', textTransform: 'uppercase' }}>Ganancia de productividad</div>
+              <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>-{analysis.estimatedRoutesSaved} rutas equivalentes</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{Math.round(analysis.productivityGainPct)}% vs escenario 1 pedido = 1 ruta</div>
+            </div>
+            <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#fca5a5', fontSize: '0.68rem', textTransform: 'uppercase' }}>Brecha operativa</div>
+              <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.totalOrdersUnassigned} pedidos no cubiertos</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>Foco inmediato para Finanzas y Operaciones</div>
+            </div>
+            <div style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#5eead4', fontSize: '0.68rem', textTransform: 'uppercase' }}>Intensidad de red</div>
+              <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.averageKmPerRoute.toFixed(1)} km/ruta</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalDist.toLocaleString()} km totales optimizados</div>
+            </div>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 1fr', gap: '12px' }}>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#e2e8f0', fontSize: '0.78rem', fontWeight: 700, marginBottom: '8px' }}>Narrativa ejecutiva (ROI + Productividad)</div>
+              <ul style={{ margin: 0, paddingLeft: '18px', color: '#cbd5e1', fontSize: '0.73rem', lineHeight: 1.45 }}>
+                {analysis.strategicInsights.map((insight, i) => (
+                  <li key={i}>{insight}</li>
+                ))}
+              </ul>
+            </div>
+            <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px' }}>
+              <div style={{ color: '#e2e8f0', fontSize: '0.78rem', fontWeight: 700, marginBottom: '8px' }}>Top restricciones financieras/operativas</div>
+              {analysis.topConstraints.length === 0 ? (
+                <div style={{ color: '#94a3b8', fontSize: '0.72rem' }}>Sin restricciones críticas detectadas.</div>
+              ) : (
+                <div style={{ display: 'grid', gap: '6px' }}>
+                  {analysis.topConstraints.map(([code, count]) => (
+                    <div key={code} style={{ display: 'flex', justifyContent: 'space-between', gap: '10px', fontSize: '0.72rem' }}>
+                      <span style={{ color: '#fca5a5' }}>{translateReason(code, code)}</span>
+                      <strong style={{ color: '#f8fafc' }}>{count}</strong>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+
       {analysis.unassignedCount > 0 && (
         <>
           <div className="unassigned-alert-banner">
             <ShieldAlert size={18} />
-            <span>Atención: {analysis.unassignedCount} pedidos no asignados.</span>
+            <span>
+              Atención: {analysis.totalOrdersUnassigned} pedidos sin asignar
+              ({Math.round(analysis.coveragePct)}% cobertura total).
+            </span>
             <button className="btn-secondary-dark" onClick={() => setShowUnassigned(!showUnassigned)}>
               {showUnassigned ? 'Ocultar' : 'Ver Motivos'}
             </button>
           </div>
           {showUnassigned && (
             <div className="unassigned-detail-panel animate-fade-in" style={{
-              background: '#1e1b2e', border: '1px solid rgba(255,100,100,0.2)', 
-              borderRadius: '12px', padding: '16px', marginTop: '8px'
+              background: '#171528', border: '1px solid rgba(255,100,100,0.25)',
+              borderRadius: '14px', padding: '16px', marginTop: '8px'
             }}>
-              <h4 style={{ color: '#ff6b6b', margin: '0 0 12px', fontSize: '0.9rem' }}>
+              <h4 style={{ color: '#ff8a8a', margin: '0 0 8px', fontSize: '0.95rem', display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <AlertCircle size={15} style={{ marginRight: '6px', verticalAlign: 'middle' }} />
-                Detalle de Pedidos No Asignados
+                Pedidos no asignados - Diagnóstico integral
               </h4>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
+                gap: '10px',
+                marginBottom: '12px'
+              }}>
+                <div style={{ background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '10px', padding: '10px' }}>
+                  <div style={{ color: '#94a3b8', fontSize: '0.68rem', textTransform: 'uppercase' }}>Pedidos CSV</div>
+                  <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.totalOrdersFromCsv}</div>
+                </div>
+                <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '10px', padding: '10px' }}>
+                  <div style={{ color: '#86efac', fontSize: '0.68rem', textTransform: 'uppercase' }}>Pedidos asignados</div>
+                  <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.totalOrdersAssigned}</div>
+                </div>
+                <div style={{ background: 'rgba(255,107,107,0.08)', border: '1px solid rgba(255,107,107,0.25)', borderRadius: '10px', padding: '10px' }}>
+                  <div style={{ color: '#fca5a5', fontSize: '0.68rem', textTransform: 'uppercase' }}>Pedidos no asignados</div>
+                  <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.totalOrdersUnassigned}</div>
+                </div>
+                <div style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: '10px', padding: '10px' }}>
+                  <div style={{ color: '#93c5fd', fontSize: '0.68rem', textTransform: 'uppercase' }}>Cobertura</div>
+                  <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{Math.round(analysis.coveragePct)}%</div>
+                </div>
+              </div>
               <div style={{ maxHeight: '300px', overflowY: 'auto' }}>
                 <table style={{ width: '100%', fontSize: '0.75rem', color: '#e2e8f0' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
                       <th style={{ padding: '6px 8px', textAlign: 'left' }}>Job ID</th>
-                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Motivo</th>
-                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Descripción</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Cliente</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Skill</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Motivo (ES)</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Código</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {analysis.unassigned.map((item, idx) => {
-                      const jobId = item.jobId || item.id || 'Desconocido';
-                      const reasons = item.reasons || item.code || [];
-                      const reasonText = Array.isArray(reasons) 
-                        ? reasons.map(r => r.description || r.code || r).join(', ')
-                        : typeof reasons === 'string' ? reasons : JSON.stringify(reasons);
-                      const codeText = Array.isArray(reasons)
-                        ? reasons.map(r => r.code || '').filter(Boolean).join(', ')
-                        : '';
+                    {analysis.unassignedDetails.map((item, idx) => {
+                      const firstOrder = item.orders?.[0] || {};
+                      const clientName = firstOrder?.[mapping.name] || 'Sin cliente identificado';
+                      const skill = firstOrder?.[mapping.skill] || 'N/A';
+                      const codeText = item.reasonCodes.join(', ');
                       return (
                         <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
                           <td style={{ padding: '6px 8px', fontFamily: 'monospace', color: '#fbbf24' }}>{jobId}</td>
-                          <td style={{ padding: '6px 8px', color: '#ff9999' }}>{codeText || 'Sin código'}</td>
-                          <td style={{ padding: '6px 8px', color: '#94a3b8' }}>{reasonText || 'Sin motivo especificado'}</td>
+                          <td style={{ padding: '6px 8px', color: '#e2e8f0' }}>{clientName}</td>
+                          <td style={{ padding: '6px 8px', color: '#c4b5fd' }}>{skill}</td>
+                          <td style={{ padding: '6px 8px', color: '#fca5a5' }}>{item.reasonEs}</td>
+                          <td style={{ padding: '6px 8px', color: '#94a3b8' }}>{codeText || 'Sin código'}</td>
                         </tr>
                       );
                     })}

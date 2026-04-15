@@ -327,30 +327,50 @@ function App() {
     });
     const shared = Object.entries(coordMap).filter(([,v]) => v.length > 1);
     console.log("📍 JOBS_SAME_LOCATION:", shared.length, "groups:", shared);
-    setLastProblem(problem);
-    setStatus('polling');
+    const submitOptimization = (problemToSend, canFallback = true) => {
+      setLastProblem(problemToSend);
+      setStatus('polling');
 
-    fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/optimize-routes-async', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ problem: problem, apiKey: API_KEY }) 
-    })
-    .then(res => res.json())
-    .then(payload => {
-        if (payload.data?.statusId) {
-          setTaskId(payload.data.statusId);
-          startPolling(payload.data.statusId, problem);
-        } else {
+      fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/optimize-routes-async', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ problem: problemToSend, apiKey: API_KEY }) 
+      })
+      .then(res => res.json())
+      .then(payload => {
+          if (payload.data?.statusId) {
+            setTaskId(payload.data.statusId);
+            startPolling(payload.data.statusId, problemToSend);
+            return;
+          }
+
+          const isClusterSchemaError =
+            payload?.data?.code === 'E613200' &&
+            (payload?.data?.cause || '').includes('/plan/clustering/serviceTimeStrategy');
+
+          if (canFallback && isClusterSchemaError) {
+            const fallbackProblem = JSON.parse(JSON.stringify(problemToSend));
+            fallbackProblem.plan.clustering = {
+              serviceTimeStrategy: { type: "maxDurationStrategy" }
+            };
+            console.warn("⚠️ boundedSumStrategy rechazado por esquema. Reintentando con maxDurationStrategy.");
+            console.log("🔧 CLUSTERING_CONFIG_FALLBACK:", JSON.stringify(fallbackProblem.plan.clustering, null, 2));
+            submitOptimization(fallbackProblem, false);
+            return;
+          }
+
+          setStatus('error');
+          const errorDetail = payload.data?.title || payload.data?.cause || "Error desconocido";
+          alert(`Error de arquitectura en Supabase Edge: ${errorDetail}`);
+          console.error("DEBUG_ERROR:", payload);
+      })
+      .catch(err => {
         setStatus('error');
-        const errorDetail = payload.data?.title || payload.data?.cause || "Error desconocido";
-        alert(`Error de arquitectura en Supabase Edge: ${errorDetail}`);
-        console.error("DEBUG_ERROR:", payload);
-      }
-    })
-    .catch(err => {
-      setStatus('error');
-      alert(`Error de red o CORS: ${err.message}`);
-    });
+        alert(`Error de red o CORS: ${err.message}`);
+      });
+    };
+
+    submitOptimization(problem, true);
   };
 
   const [elapsedTime, setElapsedTime] = useState(0);

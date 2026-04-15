@@ -148,7 +148,8 @@
         ],
         "clustering": {
             "serviceTimeStrategy": {
-                "type": "maxDurationStrategy"
+                "type": "boundedSumStrategy",
+                "maxDuration": 1800
             }
         },
         "shared": {
