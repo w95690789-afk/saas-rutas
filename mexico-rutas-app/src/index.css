@@ -496,11 +496,11 @@ body {
 
 /* Page Headers - Industrial Hierarchy */
 .top-bar {
-  padding: 2.5rem 3rem;
+  padding: 1.25rem 3rem;
   background-color: var(--surface-lowest);
   display: flex;
   justify-content: space-between;
-  align-items: flex-end;
+  align-items: center;
   border-bottom: 1px solid rgba(0,0,0,0.03);
 }
 

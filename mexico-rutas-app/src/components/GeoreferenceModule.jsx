@@ -284,6 +284,15 @@ const GeoreferenceModule = ({ apiKey }) => {
     const alto = rows.filter(r => r.riesgo === 'Alto' || r.riesgo === 'Critico').length;
     return { total, done, exactas, avgScore, alto };
   }, [rows]);
+  
+  const displayedRows = useMemo(() => {
+    return rows.filter(r => 
+      r.riesgo === 'Critico' || 
+      r.riesgo === 'Alto' || 
+      r.riesgo === 'Moderado' ||
+      r.riesgo === 'Pendiente'
+    );
+  }, [rows]);
 
   const exportCSV = () => {
     const data = rows.map(r => ({
@@ -560,12 +569,12 @@ const GeoreferenceModule = ({ apiKey }) => {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
+              {displayedRows.length === 0 && (
                 <tr>
                   <td colSpan="7" style={{ textAlign: 'center', padding: '60px', color: '#94a3b8', fontStyle: 'italic' }}>No hay datos para mostrar. Sube un archivo o ingresa una dirección manual.</td>
                 </tr>
               )}
-              {rows.map((r) => (
+              {displayedRows.map((r) => (
                 <tr key={r.id}>
                   <td style={{ maxWidth: '220px', fontWeight: 600, fontSize: '0.9rem' }}>{r.fullAddress}</td>
                   <td style={{ fontSize: '0.8rem', color: '#475569' }}>{r.providerLabel || '-'}</td>

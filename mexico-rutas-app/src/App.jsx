@@ -621,7 +621,7 @@ function App() {
       <aside className={`sidebar ${isSidebarCollapsed ? 'collapsed' : ''}`}>
         <div className="brand-section">
           <div className="logo-box"><Route size={24} color="white" /></div>
-          <h2>HERO<span>LOGIC</span></h2>
+          <h2>FLEET<span>MIND OPS</span></h2>
         </div>
 
         <nav className="sidebar-nav">
@@ -963,19 +963,9 @@ function App() {
               {isSidebarCollapsed ? <PanelLeftOpen size={16} /> : <PanelLeftClose size={16} />}
               <span>{isSidebarCollapsed ? 'Mostrar menú' : 'Ocultar menú'}</span>
             </button>
-            <h1 className="page-title">México Rutas</h1>
-            <p className="page-subtitle">Optimización Industrial HERE v3.1</p>
           </div>
           <div className="actions" style={{ display: 'flex', gap: '12px' }}>
-            {data.length > 0 && (
-              <button 
-                className="btn-secondary-dark" 
-                onClick={generateMockSolution}
-                style={{ background: 'white', border: '1px solid var(--primary-electric)', color: 'var(--primary-electric)', padding: '0.85rem 1.5rem' }}
-              >
-                Simular Cronograma (Gratis)
-              </button>
-            )}
+
             <button 
               className="btn-primary" 
               disabled={status === 'optimizing' || status === 'polling' || !data.length} 
