@@ -464,7 +464,7 @@ const GeoreferenceModule = ({ apiKey }) => {
                   <p style={{ margin: '4px 0 0 0', fontSize: '0.8rem', color: '#64748b' }}>Detectadas {fileRawData.length} direcciones para procesar.</p>
                 </div>
                 <div style={{ display: 'flex', gap: 12 }}>
-                  <button className="btn-text" onClick={() => setIsMapping(false)}>Descartar archivo</button>
+                  <button className="btn-secondary" style={{ width: 'auto', padding: '0.7rem 1.5rem' }} onClick={() => setIsMapping(false)}>Descartar archivo</button>
                   <button className="btn-primary" style={{ width: 'auto', padding: '0.7rem 2.5rem' }} onClick={startBatchGeocoding}>
                     <PlayCircle size={18} style={{ marginRight: 8 }} />
                     Lanzar Geocodificación Masiva
