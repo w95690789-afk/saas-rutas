@@ -53,8 +53,7 @@ function App() {
     globalJobEnd: '18:00',
     useGlobalForAll: false,
     useGlobalForMissing: true,
-    maxShiftDays: 1,
-    docks: '5'
+    maxShiftDays: 1
   });
 
   // Búsqueda inversa para coordenadas (arranque y cambios manuales)
@@ -711,59 +710,32 @@ function App() {
             
             <div className="modal-body">
               {configTab === 'cedi' ? (
-                <div className="modal-sub-section animate-fade-in">
-                  <div className="modal-section-title">Parámetros del CEDI</div>
+                  <div className="modal-section-title">
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div style={{ width: 4, height: 18, background: 'var(--primary-electric)', borderRadius: 2 }}></div>
+                      CONFIGURACIÓN OPERATIVA DEL CENTRO DE DISTRIBUCIÓN
+                    </div>
+                  </div>
+                  
                   <div className="modal-grid">
+                    {/* Fila 1: Identificación y Ubicación */}
                     <div className="form-item modal-full-width">
-                      <label>Nombre del CEDI</label>
-                      <input type="text" value={cediConfig.name} onChange={(e) => setCediConfig({ ...cediConfig, name: e.target.value })} />
+                      <label><Target size={14} style={{ marginRight: 6 }} /> Nombre Identificador del CEDI</label>
+                      <input type="text" placeholder="Ej: CDMX - HUB Norte" value={cediConfig.name} onChange={(e) => setCediConfig({ ...cediConfig, name: e.target.value })} />
                     </div>
-                    <div className="form-item">
-                      <label>Hora Apertura</label>
-                      <input type="time" value={cediConfig.startTime} onChange={(e) => setCediConfig({ ...cediConfig, startTime: e.target.value })} />
-                    </div>
-                    <div className="form-item">
-                      <label>Hora Cierre</label>
-                      <input type="time" value={cediConfig.endTime} onChange={(e) => setCediConfig({ ...cediConfig, endTime: e.target.value })} />
-                    </div>
-                    <div className="form-item">
-                      <label>Duración del Cargue (min)</label>
-                      <input type="number" value={cediConfig.loadDuration} onChange={(e) => setCediConfig({ ...cediConfig, loadDuration: e.target.value })} />
-                    </div>
-                    <div className="form-item">
-                      <label>Días de Turno (Max 7)</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        max="7"
-                        value={cediConfig.maxShiftDays} 
-                        onChange={(e) => setCediConfig({ ...cediConfig, maxShiftDays: e.target.value })} 
-                      />
-                      <small style={{color: '#666', fontSize: '0.7rem'}}>1 = Mismo día, 3 = Tapachula/Tijuana</small>
-                    </div>
-                    <div className="form-item">
-                      <label>Andenes Disponibles</label>
-                      <input 
-                        type="number" 
-                        min="1" 
-                        max="20"
-                        value={cediConfig.docks} 
-                        onChange={(e) => setCediConfig({ ...cediConfig, docks: e.target.value })} 
-                      />
-                      <small style={{color: '#666', fontSize: '0.7rem'}}>Cargas simultáneas posibles</small>
-                    </div>
-                    <div className="form-item">
-                      <label>Referencia Geográfica</label>
+
+                    <div className="form-item modal-full-width">
+                      <label><MapPin size={14} style={{ marginRight: 6 }} /> Referencia Geográfica (Ubicación Exacta)</label>
                       <div style={{ position: 'relative' }}>
                         <input 
                           type="text" 
-                          placeholder="Busca dirección..." 
+                          placeholder="Busca una dirección o arrastra el marcador..." 
                           value={cediAddress} 
                           onChange={e => handleAddressSearch(e.target.value)}
-                          style={{ width: '100%' }}
+                          style={{ width: '100%', paddingLeft: '12px' }}
                         />
                         {suggestions.length > 0 && (
-                          <div className="suggestions-dropdown" style={{ left: 0, right: 0 }}>
+                          <div className="suggestions-dropdown" style={{ left: 0, right: 0, zIndex: 100 }}>
                             {suggestions.map((s, i) => (
                               <div key={i} className="suggestion-item" onClick={() => selectSuggestion(s)}>
                                 <MapPin size={12} />
@@ -773,24 +745,58 @@ function App() {
                           </div>
                         )}
                       </div>
+                      <small style={{ color: '#64748b', fontSize: '0.65rem', marginTop: 4, display: 'block' }}>
+                        Esta ubicación se utilizará como punto de partida y llegada para todas las rutas.
+                      </small>
                     </div>
+
+                    {/* Fila 2: Horarios de Operación */}
+                    <div className="form-item">
+                      <label><Clock size={14} style={{ marginRight: 6 }} /> Apertura de Puertas</label>
+                      <input type="time" value={cediConfig.startTime} onChange={(e) => setCediConfig({ ...cediConfig, startTime: e.target.value })} />
+                    </div>
+                    <div className="form-item">
+                      <label><Clock size={14} style={{ marginRight: 6 }} /> Cierre de Operación</label>
+                      <input type="time" value={cediConfig.endTime} onChange={(e) => setCediConfig({ ...cediConfig, endTime: e.target.value })} />
+                    </div>
+
+                    {/* Fila 3: Parámetros Logísticos */}
+                    <div className="form-item">
+                      <label><Package size={14} style={{ marginRight: 6 }} /> Tiempo de Carga Promedio</label>
+                      <div style={{ position: 'relative' }}>
+                        <input type="number" value={cediConfig.loadDuration} onChange={(e) => setCediConfig({ ...cediConfig, loadDuration: e.target.value })} style={{ paddingRight: '45px' }} />
+                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>MIN</span>
+                      </div>
+                    </div>
+                    <div className="form-item">
+                      <label><Target size={14} style={{ marginRight: 6 }} /> Días Máximos de Turno</label>
+                      <input 
+                        type="number" 
+                        min="1" 
+                        max="7"
+                        value={cediConfig.maxShiftDays} 
+                        onChange={(e) => setCediConfig({ ...cediConfig, maxShiftDays: e.target.value })} 
+                      />
+                      <small style={{color: '#64748b', fontSize: '0.65rem'}}>1 = Entrega inmediata (mismo día)</small>
+                    </div>
+
+                    {/* Fila 4: Ventanas Horarias Especiales */}
                     <div className="form-item modal-full-width">
-                      <label>Ventanas Horarias Automáticas</label>
-                      <div className="nav-card" style={{ padding: '15px', background: 'var(--surface-low)' }}>
-                        <div style={{ display: 'flex', gap: '10px', alignItems: 'center', marginBottom: '10px' }}>
-                          <span style={{ fontSize: '0.7rem', fontWeight: 700 }}>PREDETERMINADO:</span>
-                          <input type="time" value={cediConfig.globalJobStart} onChange={(e) => setCediConfig({ ...cediConfig, globalJobStart: e.target.value })} />
-                          <span>a</span>
-                          <input type="time" value={cediConfig.globalJobEnd} onChange={(e) => setCediConfig({ ...cediConfig, globalJobEnd: e.target.value })} />
+                      <label><AlertTriangle size={14} style={{ marginRight: 6 }} /> Ventanas Horarias por Defecto para Clientes</label>
+                      <div className="nav-card" style={{ padding: '20px', background: 'rgba(3, 22, 54, 0.02)', border: '1px solid rgba(3, 22, 54, 0.05)' }}>
+                        <div style={{ display: 'flex', gap: '15px', alignItems: 'center', marginBottom: '12px' }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#334155' }}>RANGO HORARIO:</span>
+                          <input type="time" value={cediConfig.globalJobStart} onChange={(e) => setCediConfig({ ...cediConfig, globalJobStart: e.target.value })} style={{ background: 'white' }} />
+                          <span style={{ fontSize: '0.8rem', color: '#94a3b8' }}>hasta</span>
+                          <input type="time" value={cediConfig.globalJobEnd} onChange={(e) => setCediConfig({ ...cediConfig, globalJobEnd: e.target.value })} style={{ background: 'white' }} />
                         </div>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer', padding: '10px', background: 'white', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
                           <input type="checkbox" checked={cediConfig.useGlobalForMissing} onChange={(e) => setCediConfig({ ...cediConfig, useGlobalForMissing: e.target.checked, useGlobalForAll: false })} />
-                          <span style={{ fontSize: '0.75rem' }}>Auto-completar clientes sin horario especificado</span>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 600, color: '#475569' }}>Aplicar este horario automáticamente a entregas sin ventana definida</span>
                         </label>
                       </div>
                     </div>
                   </div>
-                </div>
               ) : configTab === 'fleet' ? (
                 <div className="modal-sub-section animate-fade-in">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
