@@ -710,6 +710,7 @@ function App() {
             
             <div className="modal-body">
               {configTab === 'cedi' ? (
+                <>
                   <div className="modal-section-title">
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <div style={{ width: 4, height: 18, background: 'var(--primary-electric)', borderRadius: 2 }}></div>
@@ -797,6 +798,7 @@ function App() {
                       </div>
                     </div>
                   </div>
+                </>
               ) : configTab === 'fleet' ? (
                 <div className="modal-sub-section animate-fade-in">
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
