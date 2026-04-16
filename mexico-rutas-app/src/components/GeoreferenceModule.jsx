@@ -4,7 +4,7 @@ import * as XLSX from 'xlsx';
 import {
   Upload, Plus, MapPin, AlertTriangle, CheckCircle2, Target, FileDown, LocateFixed, Settings, PlayCircle, RefreshCw
 } from 'lucide-react';
-import { MapContainer, TileLayer, Marker, useMapEvents } from 'react-leaflet';
+import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -19,6 +19,27 @@ L.Icon.Default.mergeOptions({
 });
 
 const DEFAULT_CENTER = { lat: 19.4326, lng: -99.1332 };
+
+const createRiskIcon = (riesgo) => {
+  let color = '#22c55e'; // Verde (Bajo)
+  if (riesgo === 'Critico') color = '#ef4444'; // Rojo
+  else if (riesgo === 'Alto') color = '#f97316'; // Naranja
+  else if (riesgo === 'Moderado') color = '#3b82f6'; // Azul
+
+  return L.divIcon({
+    className: 'custom-risk-marker',
+    html: `<div style="
+      background: ${color}; 
+      width: 14px; 
+      height: 14px; 
+      border-radius: 50%; 
+      border: 2.5px solid white; 
+      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    "></div>`,
+    iconSize: [20, 20],
+    iconAnchor: [10, 10]
+  });
+};
 
 const computeQuality = (item) => {
   if (!item) {
@@ -69,7 +90,7 @@ const computeQuality = (item) => {
   };
 };
 
-const MarkerDragController = ({ position, onChange }) => {
+const MarkerDragController = ({ position, onChange, icon }) => {
   const [markerPos, setMarkerPos] = useState(position);
   useMapEvents({
     click(e) {
@@ -83,6 +104,7 @@ const MarkerDragController = ({ position, onChange }) => {
     <Marker
       draggable
       position={markerPos}
+      icon={icon}
       eventHandlers={{
         dragend: (e) => {
           const latlng = e.target.getLatLng();
@@ -102,6 +124,7 @@ const GeoreferenceModule = ({ apiKey }) => {
   const [selected, setSelected] = useState(null);
   const [draftPoint, setDraftPoint] = useState(null);
   const [isConfirmingPoint, setIsConfirmingPoint] = useState(false);
+  const [showGlobalMap, setShowGlobalMap] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
 
   // States for Batch Mapping
@@ -395,6 +418,20 @@ const GeoreferenceModule = ({ apiKey }) => {
             Descargar JSON
           </button>
           <button 
+            className="btn-primary" 
+            onClick={() => setShowGlobalMap(true)} 
+            disabled={!rows.some(r => r.lat)} 
+            style={{ 
+              width: 'auto', 
+              padding: '0.75rem 1.2rem', 
+              background: '#031636',
+              boxShadow: '0 4px 12px rgba(3, 22, 54, 0.2)'
+            }}
+          >
+            <MapPin size={14} style={{ marginRight: 8 }} />
+            Ver Mapa Completo
+          </button>
+          <button 
             className="btn-secondary" 
             onClick={runPendingGeocoding} 
             disabled={isProcessing || !rows.filter(r => r.geocodeStatus === 'error').length}
@@ -611,8 +648,8 @@ const GeoreferenceModule = ({ apiKey }) => {
                   </td>
                   <td style={{ textAlign: 'right' }}>
                     <button className="btn-mini" onClick={() => openMap(r)} style={{ minWidth: '100px', justifyContent: 'center' }}>
-                      <MapPin size={12} style={{ marginRight: 6 }} />
-                      Auditar Mapa
+                      <LocateFixed size={12} style={{ marginRight: 6 }} />
+                      Auditar
                     </button>
                   </td>
                 </tr>
@@ -643,6 +680,7 @@ const GeoreferenceModule = ({ apiKey }) => {
                 <MarkerDragController
                   position={{ lat: draftPoint?.lat || selected.lat || DEFAULT_CENTER.lat, lng: draftPoint?.lng || selected.lng || DEFAULT_CENTER.lng }}
                   onChange={(pos) => setDraftPoint(pos)}
+                  icon={createRiskIcon(selected.riesgo)}
                 />
               </MapContainer>
             </div>
@@ -670,6 +708,78 @@ const GeoreferenceModule = ({ apiKey }) => {
               >
                 {isConfirmingPoint ? 'GUARDANDO...' : 'CONFIRMAR Y CERRAR'}
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+      {/* GLOBAL MAP VIEW */}
+      {showGlobalMap && (
+        <div className="audit-overlay">
+          <div className="audit-modal" style={{ width: '95vw', maxWidth: 1200, height: '90vh' }}>
+            <header className="audit-header">
+              <div className="audit-title-group">
+                <div className="audit-icon-box" style={{ background: '#031636' }}><MapPin size={18} color="white" /></div>
+                <div>
+                  <h3 style={{ margin: 0 }}>Mapa de Cobertura Geográfica</h3>
+                  <p style={{ margin: 0, fontSize: '0.8rem' }}>Visualizando {rows.filter(r => r.lat).length} puntos procesados</p>
+                </div>
+              </div>
+              <button className="close-btn" onClick={() => setShowGlobalMap(false)}>&times;</button>
+            </header>
+
+            <div style={{ flex: 1, position: 'relative' }}>
+              <MapContainer 
+                center={rows.find(r => r.lat) ? { lat: rows.find(r => r.lat).lat, lng: rows.find(r => r.lat).lng } : DEFAULT_CENTER} 
+                zoom={10} 
+                style={{ height: '100%', width: '100%' }}
+              >
+                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                {rows.filter(r => r.lat).map(r => (
+                  <Marker 
+                    key={r.id} 
+                    position={{ lat: r.lat, lng: r.lng }} 
+                    icon={createRiskIcon(r.riesgo)}
+                  >
+                    <Popup>
+                      <div style={{ padding: '4px' }}>
+                        <strong style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>{r.fullAddress}</strong>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>RIESGO:</span>
+                          <span style={{ 
+                            fontSize: '0.7rem', 
+                            color: r.riesgo === 'Critico' ? '#dc2626' : r.riesgo === 'Alto' ? '#ea580c' : r.riesgo === 'Moderado' ? '#3b82f6' : '#16a34a',
+                            fontWeight: 900
+                          }}>{r.riesgo.toUpperCase()}</span>
+                        </div>
+                      </div>
+                    </Popup>
+                  </Marker>
+                ))}
+              </MapContainer>
+            </div>
+
+            <div className="audit-toolbar" style={{ padding: '15px 30px', background: '#f8fafc', display: 'flex', gap: '20px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 15 }}>
+                <div className="legend-item" style={{ textTransform: 'none', fontSize: '0.75rem' }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#ef4444', marginRight: 5 }}></div>
+                  Crítico
+                </div>
+                <div className="legend-item" style={{ textTransform: 'none', fontSize: '0.75rem' }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#f97316', marginRight: 5 }}></div>
+                  Alto
+                </div>
+                <div className="legend-item" style={{ textTransform: 'none', fontSize: '0.75rem' }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#3b82f6', marginRight: 5 }}></div>
+                  Moderado
+                </div>
+                <div className="legend-item" style={{ textTransform: 'none', fontSize: '0.75rem' }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: '#22c55e', marginRight: 5 }}></div>
+                  Bajo
+                </div>
+              </div>
+              <p style={{ fontSize: '0.75rem', color: '#64748b', margin: 0, marginLeft: 'auto' }}>
+                Haga clic en los marcadores para ver detalles de la dirección.
+              </p>
             </div>
           </div>
         </div>
