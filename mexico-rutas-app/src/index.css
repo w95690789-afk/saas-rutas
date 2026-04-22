@@ -90,6 +90,67 @@ body {
   box-shadow: 0 2px 8px rgba(0,0,0,0.02);
 }
 
+/* Itinerary Specific Premium Styles */
+.itinerary-step {
+  padding: 1.5rem 0;
+  border-left: 2px solid #e2e8f0;
+  margin-left: 1.5rem;
+  position: relative;
+}
+
+.itinerary-step::before {
+  content: '';
+  position: absolute;
+  left: -9px;
+  top: 1.75rem;
+  width: 16px;
+  height: 16px;
+  background: white;
+  border: 3px solid var(--primary-electric);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.itinerary-step.depot::before {
+  border-color: #64748b;
+  background: #f8fafc;
+}
+
+.order-row-hover:hover {
+  background-color: #f8fafc !important;
+  cursor: default;
+}
+
+.order-row-hover td {
+  transition: all 0.2s ease;
+}
+
+.order-row-hover:hover td {
+  color: #0f172a !important;
+}
+
+.badge-grouped {
+  animation: pulse-soft 2s infinite;
+}
+
+@keyframes pulse-soft {
+  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 88, 190, 0.2); }
+  70% { transform: scale(1.02); box-shadow: 0 0 0 6px rgba(0, 88, 190, 0); }
+  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(0, 88, 190, 0); }
+}
+
+.itinerary-expand-container {
+  background: #fcfdfe;
+  border-radius: 16px;
+  padding: 2rem;
+  margin: 10px;
+  border: 1px solid #eef2f6;
+}
+
+.step-dot {
+  display: none; /* Handled by pseudo-element now */
+}
+
 .header h1 {
   font-size: 1.1rem;
   font-weight: 800;

@@ -25,12 +25,10 @@ function App() {
   const [cediAddress, setCediAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [fleet, setFleet] = useState([
-    { id: 'Tracto_31t', amount: 1, costs: { fixed: 800 }, capacity: [31000], skills: ['normal'], canReload: true },
-    { id: 'Torton_propio', amount: 15, costs: { fixed: 400 }, capacity: [18000], skills: ['normal'], canReload: true },
-    { id: 'Torton_propio_convoy_10am', amount: 10, costs: { fixed: 400 }, capacity: [18000], skills: ['convoy_10am'], canReload: true },
-    { id: 'Tracto_31t_convoy_10am', amount: 1, costs: { fixed: 800 }, capacity: [31000], skills: ['convoy_10am'], canReload: true },
-    { id: 'camioneta_normal', amount: 5, costs: { fixed: 150 }, capacity: [7000], skills: ['normal'], canReload: true },
-    { id: 'camioneta_convoy_10am', amount: 5, costs: { fixed: 150 }, capacity: [7000], skills: ['convoy_10am'], canReload: true }
+    { id: 'Torton', amount: 15, costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], canReload: true },
+    { id: 'Tracto camion', amount: 3, costs: { fixed: 140 }, capacity: [30000], skills: ['normal'], canReload: true },
+    { id: 'Camioneta4', amount: 1, costs: { fixed: 110 }, capacity: [4000], skills: ['normal'], canReload: true },
+    { id: 'Camioneta7', amount: 4, costs: { fixed: 110 }, capacity: [7000], skills: ['normal'], canReload: true }
   ]);
   const [fleetData, setFleetData] = useState([]);
   const [fleetHeaders, setFleetHeaders] = useState([]);
@@ -93,23 +91,66 @@ function App() {
     setSuggestions([]);
   };
   const [mapping, setMapping] = useState({
-    id: 'EmbarqueMovMovID',
-    name: 'Nombre Cliente',
-    latitude: 'latLong',
-    weight: 'PesoArticulo',
+    id: 'id',
+    movimiento: 'movimiento',
+    client: 'client', // This will now represent client name
+    clientCode: 'clientCode', // Added for explicit client identifier
+    latitude: 'latitude',
+    longitude: 'longitude',
+    weight: 'weight',
+    time: 'time',
+    date: 'date',
     serviceTime: '30',
     windowStart: 'Inicio_Ventana',
     windowEnd: 'Fin_Ventana',
-    skill: 'Skill'
+    skill: 'Skill',
+    address: 'address'
   });
 
   const sanitizeId = (id) => id ? id.toString().replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown';
 
   const transformDataToHERE = () => {
+    const SCALING_FACTOR = 1000;
+
+    // Helper para limpiar coordenadas (maneja separadores de miles y puntos decimales implícitos)
+    const parseCoord = (val) => {
+      if (!val) return 0;
+      // Eliminar comas y espacios (común en exportaciones con formato de miles)
+      let clean = val.toString().replace(/,/g, '').replace(/\s/g, '');
+      let n = parseFloat(clean);
+      if (isNaN(n)) return 0;
+      // Si el valor es mayor a 180, es muy probable que sea un entero representando decimales (ej: 1890531 -> 18.90531)
+      // Escalamos dividiendo por 10 hasta que esté en un rango geográfico válido (-180 a 180)
+      while (Math.abs(n) > 180) {
+        n /= 10;
+      }
+      return n;
+    };
+
+    // Helper para limpiar números (especialmente para Peso con comas de miles)
+    const parseNumber = (val) => {
+      if (!val) return 0;
+      let clean = val.toString().replace(/,/g, '').replace(/\s/g, '');
+      let n = parseFloat(clean);
+      return isNaN(n) ? 0 : n;
+    };
+
     const formatTime = (timeStr, baseDateStr = "2026-04-10", offsetDays = 0) => {
-      if (!timeStr) return `${baseDateStr}T14:00:00Z`;
+      if (!timeStr) return `${baseDateStr}T14:00:00-06:00`;
       
       try {
+        // Use date from data if available to avoid hardcoding
+        const dataDate = data[0]?.[mapping.date || 'FechaEmision'] || data[0]?.['Fecha'] || baseDateStr;
+        let finalBaseDate = baseDateStr;
+        
+        // Simple DD/MM/YYYY to YYYY-MM-DD
+        if (dataDate && typeof dataDate === 'string' && dataDate.includes('/')) {
+          const parts = dataDate.split('/');
+          if (parts.length === 3) {
+            finalBaseDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+          }
+        }
+
         let hours = 8, minutes = 0;
         
         // Match HH:mm or HH:mm:ss with optional AM/PM
@@ -123,7 +164,6 @@ function App() {
           if (ampm === 'pm' && hours < 12) hours += 12;
           if (ampm === 'am' && hours === 12) hours = 0;
         } else {
-          // Fallback for simple hour numbers
           const hourOnly = parseInt(timeStr);
           if (!isNaN(hourOnly)) hours = hourOnly;
         }
@@ -131,14 +171,13 @@ function App() {
         hours = Math.max(0, Math.min(23, hours));
         minutes = Math.max(0, Math.min(59, minutes));
 
-        let finalDateStr = baseDateStr;
+        let finalDateStr = finalBaseDate;
         if (offsetDays > 0) {
-          const d = new Date(baseDateStr + "T00:00:00Z");
+          const d = new Date(finalBaseDate + "T00:00:00Z");
           d.setUTCDate(d.getUTCDate() + offsetDays);
           finalDateStr = d.toISOString().split('T')[0];
         }
 
-        // Important: Using -06:00 (Mexico) instead of Z ensures HERE uses the correct historical traffic data
         return `${finalDateStr}T${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00-06:00`;
       } catch (e) {
         return `${baseDateStr}T14:00:00-06:00`;
@@ -159,9 +198,12 @@ function App() {
         id: `${type.id}_${i + 1}`,
         type: "vehicle",
         costs: type.costs,
-        profile: "truck_fast",
-        capacities: type.capacity,
-        capabilities: type.skills,
+        profile: type.id.toLowerCase().includes('camioneta') ? "perfil_camioneta_ligera" : "perfil_camion_estandar",
+        // Escalar capacidades
+        capacities: (type.capacity || [18000]).map(cap => Math.round(parseNumber(cap) * SCALING_FACTOR)),
+        capabilities: (type.skills && type.skills.length > 0) 
+          ? type.skills.map(s => sanitizeId(s.trim())).filter(Boolean)
+          : ['normal'],
         shifts: [{
           id: "shift_1",
           start: { time: formatTime(cediConfig.startTime), location: "cedi" },
@@ -189,27 +231,14 @@ function App() {
       return [shift];
     };
 
-    // 3. Lógica de Agrupación Industrial (Jerárquica: ID + Skill)
-    const groupedData = data.reduce((acc, row) => {
-      const id = row[mapping.id];
-      const skill = row[mapping.skill] || 'normal';
-      if (!id) return acc;
-      
-      const groupKey = sanitizeId(`${id}_${skill}`);
-      
-      if (!acc[groupKey]) {
-        acc[groupKey] = { 
-          ...row, 
-          groupedWeight: 0,
-          uniqueJobId: groupKey, 
-          currentSkill: skill
-        };
-      }
-      acc[groupKey].groupedWeight += parseFloat(row[mapping.weight] || 0);
-      return acc;
-    }, {});
-
-    const uniqueRows = Object.values(groupedData);
+    // 3. Ya no hacemos agrupación manual. Dejamos que HERE Tour Planning lo haga mediante clustering.
+    // Esto evita problemas de capacidad falsa cuando varios pedidos pequeños se suman y exceden el camión,
+    // pero individualmente sí caben.
+    console.log(`[Agrupación] Manual desactivada. Enviando ${data.length} pedidos individuales.`);
+    console.log(`[Mapping Info] id: ${mapping.id}, clientCode: ${mapping.clientCode}, clientName: ${mapping.client}`);
+    if (data.length > 0) {
+      console.log("[Data Sample] First row keys:", Object.keys(data[0]));
+    }
 
     // 4. Construir Objeto de Problema para HERE
     const problem = {
@@ -222,23 +251,52 @@ function App() {
         traffic: "historicalOnly",
         types: fleet.map(v => ({
           id: sanitizeId(v.id),
-          profile: "perfil_camion_estandar",
+          profile: v.id.toLowerCase().includes('camioneta') ? "perfil_camioneta_ligera" : "perfil_camion_estandar",
           costs: { 
             fixed: parseFloat(v.costs?.fixed) || 0, 
             distance: 0.0001, 
             time: 0.0048 
           },
           shifts: getShiftsForType(v),
-          capacity: v.capacity || [18000],
-          skills: (v.skills || ["normal"]).map(sanitizeId),
+          // Escalar capacidades
+          capacity: (v.capacity || [18000]).map(cap => Math.round(parseNumber(cap) * SCALING_FACTOR)),
+          skills: (() => {
+            const raw = (v.skills || ["normal"]).map(s => sanitizeId(s.trim())).filter(Boolean);
+            return raw.length > 0 ? raw : ["normal"];
+          })(),
           amount: parseInt(v.amount) || 1
         })),
-        profiles: [{ type: "truck", name: "perfil_camion_estandar" }]
+        profiles: [
+          { type: "truck", name: "perfil_camion_estandar" },
+          { type: "car", name: "perfil_camioneta_ligera" }
+        ]
       },
       plan: {
-        jobs: uniqueRows.map((row, index) => {
+        clustering: {
+          serviceTimeStrategy: {
+            type: "maxDurationStrategy"
+          }
+        },
+        jobs: data.map((row, index) => {
           const baseDuration = (parseInt(mapping.serviceTime) || 30) * 60;
-          const coords = row[mapping.latitude]?.split(',').map(c => parseFloat(c.trim())) || [0,0];
+          let lat = parseCoord(row[mapping.latitude]);
+          let lng = parseCoord(row[mapping.longitude]);
+          
+          if (!mapping.longitude || !row[mapping.longitude]) {
+            const coords = row[mapping.latitude]?.toString().split(',').map(c => parseCoord(c.trim())) || [0,0];
+            lat = coords[0] || 0;
+            lng = coords[1] || 0;
+          }
+
+          // Validación de seguridad: Si la coordenada es 0,0 o inválida, registrar para depuración
+          if (lat === 0 && lng === 0) {
+            console.warn(`⚠️ Pedido ${row[mapping.id]} ignorado por coordenadas inválidas (0,0)`);
+            return null;
+          }
+
+          // Generar ID único para cada pedido
+          const orderId = sanitizeId(row[mapping.id] || `idx_${index}`);
+
           let rawStart, rawEnd;
           
           // User Request: All orders 8 AM to 6 PM except Tapachula (no window)
@@ -255,11 +313,11 @@ function App() {
           }
           
           return {
-            id: `job_${row.uniqueJobId}`,
+            id: `job_${orderId}`,
             tasks: {
               deliveries: [{
                 places: [{
-                  location: { lat: coords[0], lng: coords[1] },
+                  location: { lat, lng },
                   duration: baseDuration,
                   ...(rawStart && rawEnd ? {
                     times: Array.from({ length: (parseInt(cediConfig.maxShiftDays) || 1) }).map((_, dIdx) => [
@@ -268,21 +326,21 @@ function App() {
                     ])
                   } : {})
                 }],
-                demand: [Math.round(row.groupedWeight || 0)]
+                // Escalar demanda (Individual por pedido)
+                demand: [(() => {
+                  const rawWeight = Math.round(parseNumber(row[mapping.weight] || 0) * SCALING_FACTOR);
+                  const MAX_HERE_INT = 2147483647;
+                  if (rawWeight > MAX_HERE_INT) {
+                    console.warn(`⚠️ ALERTA DE DATOS: El peso escalado del pedido ${orderId} (${rawWeight}) excede el límite.`);
+                    return MAX_HERE_INT;
+                  }
+                  return rawWeight;
+                })()]
               }]
             },
-            priority: row.currentSkill === 'convoy_10am' ? 1 : 2,
-            skills: [sanitizeId(row.currentSkill)]
+            skills: ['normal']
           };
-        }),
-        clustering: {
-          // boundedSumStrategy: suma service times pero CAPEA al maxDuration
-          // Así, N jobs × 30min en misma ubicación → capped a 30min (no N×30)
-          serviceTimeStrategy: { 
-            type: "boundedSumStrategy",
-            maxDuration: (parseInt(mapping.serviceTime) || 30) * 60
-          }
-        },
+        }).filter(Boolean),
         shared: {
           parking: [{
             id: "andenes_cedi",
@@ -323,7 +381,7 @@ function App() {
     };
     
     console.log("INDUSTRIAL_EXEC_V3:", problem);
-    console.log("🔧 CLUSTERING_CONFIG:", JSON.stringify(problem.plan.clustering, null, 2));
+    console.log("🔧 CLUSTERING_CONFIG:", JSON.stringify(problem.plan.clustering || "disabled", null, 2));
     // Debug: find jobs sharing coordinates
     const coordMap = {};
     problem.plan.jobs.forEach(j => {
@@ -340,7 +398,7 @@ function App() {
       setLastProblem(problemToSend);
       setStatus('polling');
 
-      fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/optimize-routes-async', {
+      fetch('https://bqlqurwvfvcbxlhrhune.supabase.co/functions/v1/optimize-routes-async', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ problem: problemToSend, apiKey: API_KEY }) 
@@ -353,20 +411,6 @@ function App() {
             return;
           }
 
-          const isClusterSchemaError =
-            payload?.data?.code === 'E613200' &&
-            (payload?.data?.cause || '').includes('/plan/clustering/serviceTimeStrategy');
-
-          if (canFallback && isClusterSchemaError) {
-            const fallbackProblem = JSON.parse(JSON.stringify(problemToSend));
-            fallbackProblem.plan.clustering = {
-              serviceTimeStrategy: { type: "maxDurationStrategy" }
-            };
-            console.warn("⚠️ boundedSumStrategy rechazado por esquema. Reintentando con maxDurationStrategy.");
-            console.log("🔧 CLUSTERING_CONFIG_FALLBACK:", JSON.stringify(fallbackProblem.plan.clustering, null, 2));
-            submitOptimization(fallbackProblem, false);
-            return;
-          }
 
           setStatus('error');
           const errorDetail = payload.data?.title || payload.data?.cause || "Error desconocido";
@@ -388,7 +432,7 @@ function App() {
       setElapsedTime(0);
       const interval = setInterval(() => {
         setElapsedTime(prev => prev + 10);
-        fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/check-optimization-status', {
+        fetch('https://bqlqurwvfvcbxlhrhune.supabase.co/functions/v1/check-optimization-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ taskId: id, apiKey: API_KEY })
@@ -401,7 +445,7 @@ function App() {
             clearInterval(interval);
             setStatus('fetching_solution');
             const resourceId = result.resource?.resourceId || id;
-            fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/get-optimization-solution', {
+            fetch('https://bqlqurwvfvcbxlhrhune.supabase.co/functions/v1/get-optimization-solution', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ taskId: resourceId, apiKey: API_KEY })
@@ -474,12 +518,17 @@ function App() {
             const departure = currentTime.toISOString();
 
             // Intentar parsear lat/lng
-            let lat = cediConfig.lat, lng = cediConfig.lng;
-            const coordsStr = job[mapping.latitude];
-            if (coordsStr && typeof coordsStr === 'string' && coordsStr.includes(',')) {
-              const parts = coordsStr.split(',');
-              lat = parseFloat(parts[0]);
-              lng = parseFloat(parts[1]);
+            let lat = parseFloat(cediConfig.lat), lng = parseFloat(cediConfig.lng);
+            if (mapping.longitude && job[mapping.longitude]) {
+              lat = parseFloat(job[mapping.latitude]) || lat;
+              lng = parseFloat(job[mapping.longitude]) || lng;
+            } else {
+              const coordsStr = job[mapping.latitude];
+              if (coordsStr && typeof coordsStr === 'string' && coordsStr.includes(',')) {
+                const parts = coordsStr.split(',');
+                lat = parseFloat(parts[0]) || lat;
+                lng = parseFloat(parts[1]) || lng;
+              }
             }
 
             stops.push({
@@ -541,21 +590,28 @@ function App() {
             // Auto-detect mappings based on header names
             const newMapping = { ...mapping };
             const detectionMap = {
-              id: ['EmbarqueMovMovID', 'movimiento', 'order_id', 'id_entrega', 'uuid'],
-              name: ['Nombre Cliente', 'Nombre', 'CLIENTE', 'client_name', 'razon_social'],
-              latitude: ['latLong', 'coordenadas', 'ubicacion', 'location', 'posicion'],
-              weight: ['PesoArticulo', 'peso', 'kg', 'weight', 'carga'],
-              windowStart: ['Window Start', 'Inicio_Ventana', 'Inicio Ventana', 'ventana_inicio', 'start_time'],
-              windowEnd: ['Window End', 'Fin_Ventana', 'Fin Ventana', 'ventana_fin', 'end_time'],
-              skill: ['Skill', 'tipo_vehiculo', 'habilidad', 'capability']
+              id: ['order_id', 'id_entrega', 'uuid', 'ID', 'Pedido', 'Número de pedido', 'Numero de pedido', 'Nro Pedido', 'Nro. Pedido', 'No. Pedido', 'No Pedido', 'id_pedido'],
+              movimiento: ['EmbarqueMovMovID', 'movimiento', 'Movimiento', 'MOVIMIENTO', 'Nro Movimiento', 'Mov ID', 'ID Movimiento', 'Mov_ID'],
+              client: ['Nombre Cliente', 'Nombre', 'Razon Social', 'NombreCompleto', 'ClientName', 'Nombre_Cliente', 'Nombre del cliente'],
+              clientCode: ['Cliente', 'CodigoCliente', 'id_cliente', 'Codigo', 'ClientCode', 'Code', 'Cve Cliente', 'Clave', 'Nro Cliente', 'IdCliente', 'Código de cliente'],
+              latitude: ['latLong', 'coordenadas', 'ubicacion', 'location', 'posicion', 'latitud', 'lat'],
+              longitude: ['longitud', 'longitude', 'lng', 'lon'],
+              weight: ['peso', 'weight', 'kg', 'kilogramos', 'volumen', 'carga', 'PesoArticulo', 'Total Peso', 'Masa'],
+              time: ['horario', 'ventana', 'entrega_time', 'time', 'HoraInicio'],
+              date: ['fecha', 'date', 'FechaEmision', 'Fecha'],
+              address: ['Dirección', 'Address', 'Ubicación', 'Destino', 'Direccion', 'Calle']
             };
 
             Object.entries(detectionMap).forEach(([field, keywords]) => {
-              const found = detectedHeaders.find(h => 
-                keywords.some(k => h.toLowerCase() === k.toLowerCase()) || 
-                keywords.some(k => h.toLowerCase().includes(k.toLowerCase()) && k.length > 5)
+              // Buscar el mejor match basado en el orden de los keywords (prioridad)
+              const bestKeyword = keywords.find(k => 
+                detectedHeaders.some(h => h.toLowerCase() === k.toLowerCase())
               );
-              if (found) newMapping[field] = found;
+              
+              if (bestKeyword) {
+                const actualHeader = detectedHeaders.find(h => h.toLowerCase() === bestKeyword.toLowerCase());
+                newMapping[field] = actualHeader;
+              }
             });
             setMapping(newMapping);
           }
@@ -608,7 +664,7 @@ function App() {
       amount: parseInt(row[fleetMapping.amount]) || 1,
       costs: { fixed: parseInt(row[fleetMapping.fixedCost]) || 0 },
       capacity: [parseInt(row[fleetMapping.capacity]) || 18000],
-      skills: [row[fleetMapping.skill] || 'normal'],
+      skills: (row[fleetMapping.skill] || 'normal').split(',').map(s => s.trim()).filter(Boolean),
       canReload: row[fleetMapping.canReload] === 'SI' || row[fleetMapping.canReload] === 'true' || row[fleetMapping.canReload] === '1' || true
     }));
     setFleet(newFleet);
@@ -1012,14 +1068,35 @@ function App() {
             <div className="mapping-workspace animate-fade-in">
               <div className="stat-main" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '1.5rem', width: '100%' }}>
                 <div className="form-item">
-                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>ID Pedido</label>
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Nombre Cliente</label>
+                  <select value={mapping.client} onChange={e => setMapping({...mapping, client: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Opcional --</option>
+                    {headers.map(h => <option key={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div className="form-item">
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Código Cliente (Agrupación)</label>
+                  <select value={mapping.clientCode} onChange={e => setMapping({...mapping, clientCode: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Usar nombre/ID --</option>
+                    {headers.map(h => <option key={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div className="form-item">
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Id de Registro</label>
                   <select value={mapping.id} onChange={e => setMapping({...mapping, id: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
                     {headers.map(h => <option key={h}>{h}</option>)}
                   </select>
                 </div>
                 <div className="form-item">
-                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Lat/Lng Cliente</label>
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Latitud / Coords</label>
                   <select value={mapping.latitude} onChange={e => setMapping({...mapping, latitude: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    {headers.map(h => <option key={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div className="form-item">
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Longitud (Opcional)</label>
+                  <select value={mapping.longitude} onChange={e => setMapping({...mapping, longitude: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Usar columna inicial --</option>
                     {headers.map(h => <option key={h}>{h}</option>)}
                   </select>
                 </div>
@@ -1051,6 +1128,13 @@ function App() {
                   <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Habilidad (Skill)</label>
                   <select value={mapping.skill} onChange={e => setMapping({...mapping, skill: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
                     <option value="">-- Opcional --</option>
+                    {headers.map(h => <option key={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div className="form-item">
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Dirección</label>
+                  <select value={mapping.address} onChange={e => setMapping({...mapping, address: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Seleccionar --</option>
                     {headers.map(h => <option key={h}>{h}</option>)}
                   </select>
                 </div>

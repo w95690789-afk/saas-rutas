@@ -1,10 +1,11 @@
 import React, { useMemo, useState } from 'react';
+import * as XLSX from 'xlsx';
 import { 
   BarChart3, TrendingUp, Truck, Package, BrainCircuit, 
   Clock, MapPin, AlertCircle, TrendingDown,
   Target, ShieldAlert, Info, ChevronDown, ChevronUp, 
   LayoutGrid, List, Calendar, ChevronLeft, ChevronRight,
-  ZoomIn, ZoomOut, Maximize2
+  ZoomIn, ZoomOut, Maximize2, Download
 } from 'lucide-react';
 
 const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
@@ -15,6 +16,29 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
   const [showUnassigned, setShowUnassigned] = useState(false);
 
   const sanitizeId = (id) => id ? id.toString().replace(/[^a-zA-Z0-9_-]/g, '_') : 'unknown';
+
+  const parseNumber = (val) => {
+    if (val === undefined || val === null || val === '') return 0;
+    // Limpiar comas (separadores de miles) y espacios
+    let clean = val.toString().replace(/,/g, '').replace(/\s/g, '');
+    let n = parseFloat(clean);
+    return isNaN(n) ? 0 : n;
+  };
+
+  // Helper para limpiar coordenadas (maneja separadores de miles y puntos decimales implícitos)
+  const parseCoord = (val) => {
+    if (!val) return 0;
+    // Eliminar comas y espacios (común en exportaciones con formato de miles)
+    let clean = val.toString().replace(/,/g, '').replace(/\s/g, '');
+    let n = parseFloat(clean);
+    if (isNaN(n)) return 0;
+    // Si el valor es mayor a 180, es muy probable que sea un entero representando decimales (ej: 1890531 -> 18.90531)
+    // Escalamos dividiendo por 10 hasta que esté en un rango geográfico válido (-180 a 180)
+    while (Math.abs(n) > 180) {
+      n /= 10;
+    }
+    return n;
+  };
 
   // ─── Extractores universales de tiempo ───
   // HERE API v3 devuelve: stop.time.arrival / stop.time.departure
@@ -65,6 +89,69 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
     return reasonText || 'Sin detalle disponible';
   };
 
+  const getOrderId = (order, mapping) => {
+    if (!order) return 'N/A';
+    
+    // 1. Intentar con el mapeo explícito (si el usuario seleccionó una columna)
+    if (mapping.id && order[mapping.id] !== undefined && order[mapping.id] !== null && order[mapping.id] !== '') {
+      return order[mapping.id].toString().trim();
+    }
+
+    // 2. Fallbacks directos comunes (Búsqueda exacta de llaves frecuentes)
+    const directFallbacks = [
+      'Pedido', 'ID', 'Nro Pedido', 'Número de pedido', 'Nro. Pedido', 
+      'Num. Pedido', 'Folio', 'Referencia', 'Nro_pedido', 'ID Pedido', 'Factura', 
+      'Remisión', 'Venta', 'Documento', 'Nro_Documento', 'No_Pedido', 
+      'No_Documento', 'Orden', 'Nro Orden', 'Entrega', 'Nro Entrega', 'Shipment',
+      'GUIA', 'TICKET', 'REMISION', 'ID_PEDIDO', 'Movimiento'
+    ];
+
+    for (const key of directFallbacks) {
+      if (order[key] !== undefined && order[key] !== null && order[key] !== '') {
+        return order[key].toString().trim();
+      }
+    }
+
+    // 3. Búsqueda Insensible a Mayúsculas/Minúsculas y Parcial (Más agresivo)
+    const keys = Object.keys(order);
+    const searchTerms = [
+      'pedido', 'nro', 'num', 'folio', 'ref', 'id', 'fact', 'remis', 
+      'venta', 'orden', 'doc', 'entrega', 'shipment', 'guia', 'ticket', 'folio'
+    ];
+    
+    for (const term of searchTerms) {
+      const foundKey = keys.find(k => k.toLowerCase().trim().includes(term));
+      if (foundKey && order[foundKey] !== undefined && order[foundKey] !== null && order[foundKey] !== '') {
+        return order[foundKey].toString().trim();
+      }
+    }
+
+    // 4. Búsqueda de cualquier campo que contenga 'ID' o 'CVE' o 'NUM'
+    const likelyIdKeys = keys.filter(k => 
+      k.toUpperCase().includes('ID') || 
+      k.toUpperCase().includes('CVE') || 
+      k.toUpperCase().includes('NUM')
+    );
+    for (const key of likelyIdKeys) {
+      if (order[key]) return order[key].toString().trim();
+    }
+
+    // 5. Último recurso: cualquier campo que parezca un ID (numérico o alfanumérico corto)
+    // que no sea lat/lng o peso
+    for (const key of keys) {
+      const val = order[key];
+      if (typeof val === 'string' || typeof val === 'number') {
+        const str = val.toString();
+        if (str.length > 2 && str.length < 15 && !key.toLowerCase().includes('lat') && !key.toLowerCase().includes('lon')) {
+          // Si el nombre de la columna es algo como "id_..." o "...id"
+          if (/id/i.test(key)) return str.trim();
+        }
+      }
+    }
+
+    return 'N/A';
+  };
+
   const analysis = useMemo(() => {
     if (!result || !result.solution) return null;
 
@@ -73,33 +160,22 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
     const tours = solution.tours || [];
     const unassigned = solution.unassigned || [];
 
-    // ─── FIX: Mapeo doble de Job IDs ───
-    // Creamos dos mapas para manejar ambos formatos:
-    // 1. Formato del simulador: job_{sanitizeId(id)}_normal
-    // 2. Formato real HERE: job_{sanitizeId(id + "_" + skill)}
+    // ─── FIX: Mapeo de Job IDs Sincronizado (Hierarchy) ───
     const jobToOrdersMap = {};
-    if (fullData.length > 0 && mapping.id) {
-      fullData.forEach(row => {
-        const rawId = row[mapping.id];
-        const skill = row[mapping.skill] || 'normal';
-        const id = sanitizeId(rawId);
+    if (fullData.length > 0) {
+      fullData.forEach((row, index) => {
+        // ID generation MUST match App.jsx exactly: job_${sanitizeId(row[mapping.id] || `idx_${index}`)}
+        const orderId = sanitizeId(row[mapping.id] || `idx_${index}`);
+        const jobId = `job_${orderId}`;
         
-        // Formato 1: Usado en simulador (job_{id}_{skill})
-        const jId1 = `job_${id}_${skill}`;
-        if (!jobToOrdersMap[jId1]) jobToOrdersMap[jId1] = [];
-        jobToOrdersMap[jId1].push(row);
-        
-        // Formato 2: Usado por HERE API (job_{sanitizeId(id+"_"+skill)})
-        const jId2 = `job_${sanitizeId(`${rawId}_${skill}`)}`;
-        if (jId2 !== jId1) {
-          if (!jobToOrdersMap[jId2]) jobToOrdersMap[jId2] = [];
-          jobToOrdersMap[jId2].push(row);
-        }
+        if (!jobToOrdersMap[jobId]) jobToOrdersMap[jobId] = [];
+        jobToOrdersMap[jobId].push(row);
       });
     }
 
     const jobWeightMap = (problem.plan?.jobs || []).reduce((acc, job) => {
-      const weight = job.tasks?.deliveries?.[0]?.demand?.[0] || 0;
+      // Revertir el escalamiento x1000 para la visualización
+      const weight = (job.tasks?.deliveries?.[0]?.demand?.[0] || 0) / 1000;
       acc[job.id] = weight;
       return acc;
     }, {});
@@ -151,28 +227,77 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                           rawType.includes('torton') ? 'Torton Propio' :
                           rawType.includes('camioneta') ? 'Camioneta' :
                           rawType.includes('truck') ? 'Camión Tercero' : tour.typeId || 'Desconocido';
-      const capacity = rawType.includes('tracto') ? 31000 : 
-                       rawType.includes('torton') ? 18000 : 
-                       rawType.includes('camioneta') ? 7000 : 18000;
+      // Buscar capacidad real en la definición del problema para precisión total
+      const problemVehicleType = (problem.fleet?.types || []).find(t => sanitizeId(t.id) === tour.typeId);
+      const capacity = problemVehicleType?.capacity 
+        ? (problemVehicleType.capacity[0] / 1000) 
+        : (rawType.includes('tracto') ? 31000 : 
+           rawType.includes('torton') ? 18000 : 
+           rawType.includes('camioneta') ? 7000 : 18000);
 
-      // Itinerario Completo
       let deliveryIndex = 0;
+      let currentCycle = 1;
+      let cycleLoad = 0;
       const itinerary = stops.map((stop, index) => {
         const isDepot = index === 0 || index === stops.length - 1;
         const activities = stop.activities || [];
         const deliveries = activities.filter(a => a.type === 'delivery');
         const reloads = activities.filter(a => a.type === 'reload');
         
+        if (reloads.length > 0) {
+          currentCycle++;
+          cycleLoad = 0; // Reiniciar carga para el nuevo ciclo
+        }
+
+        // Si es el primer stop (salida CEDI), también es el inicio del ciclo 1
+        if (index === 0) {
+          cycleLoad = 0;
+        }
+
         let clientName = 'CEDI';
+        let address = '';
+        let isGrouped = false;
+        let isMultiClient = false;
+        let totalOrdersInStop = 0;
+        let stopWeight = 0;
+
         if (deliveries.length > 0) {
           deliveryIndex++;
-          const orders = jobToOrdersMap[deliveries[0].jobId] || [];
-          clientName = orders[0]?.[mapping.name] || 'Cliente';
+          const allOrders = deliveries.flatMap(d => jobToOrdersMap[d.jobId] || []);
+          totalOrdersInStop = allOrders.length;
+          isGrouped = totalOrdersInStop > 1;
+          
+          stopWeight = deliveries.reduce((acc, d) => acc + (jobWeightMap[d.jobId] || 0), 0);
+          cycleLoad += stopWeight;
+
+          // Identificadores únicos de cliente en esta parada (chequeando código y nombre)
+          const clientEntities = new Set(allOrders.map(o => {
+            const code = (o[mapping.clientCode] || o['Cliente'] || o['CLIENTE'] || '').toString().trim();
+            const name = (o[mapping.client] || o['Nombre'] || o['NOMBRE'] || '').toString().trim();
+            return `${code}|${name}`;
+          }).filter(s => s !== '|'));
+          
+          isMultiClient = clientEntities.size > 1;
+
+          const firstOrder = allOrders[0] || {};
+          const codeVal = (firstOrder[mapping.clientCode] || firstOrder['Cliente'] || firstOrder['CLIENTE'] || '').toString().trim();
+          const nameVal = (firstOrder[mapping.client] || firstOrder['Nombre'] || firstOrder['NOMBRE'] || '').toString().trim();
+          
+          // El identificador para el título será prioritariamente el Código
+          clientName = codeVal || nameVal || 'Cliente S/N';
+          address = firstOrder[mapping.address] || '';
         }
 
         const stopLabel = index === 0 ? 'Salida CEDI' : 
                           index === stops.length - 1 ? 'Retorno Final CEDI' : 
-                          reloads.length > 0 ? 'Recarga en CEDI' : clientName;
+                          reloads.length > 0 ? 'Recarga en CEDI' : 
+                          isMultiClient ? `Parada Multi-cliente (${totalOrdersInStop} pedidos)` :
+                          isGrouped ? `${clientName} (${totalOrdersInStop} pedidos)` : 
+                          (() => {
+                            const firstOrder = (deliveries.flatMap(d => jobToOrdersMap[d.jobId] || []))[0] || {};
+                            const mov = firstOrder[mapping.movimiento] || firstOrder['Movimiento'] || firstOrder['MOVIMIENTO'] || '';
+                            return mov ? `${clientName} - ${mov}` : clientName;
+                          })();
 
         // FIX: Identificar Service vs Waiting time
         const arrivalMs = normalizeToMs(getStopArrival(stop));
@@ -205,7 +330,15 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         return {
           label: stopLabel,
           clientName,
+          address,
+          isGrouped,
+          isMultiClient,
+          totalOrdersInStop,
           sequence: deliveries.length > 0 ? deliveryIndex : null,
+          cycle: currentCycle,
+          cycleLoadAtStart: cycleLoad - stopWeight, // Carga antes de esta parada (para entregas)
+          cycleLoadAtEnd: cycleLoad, // Carga después de esta parada
+          stopWeight, // Peso de esta parada específica
           type: isDepot ? 'depot' : reloads.length > 0 ? 'reload' : 'delivery',
           location: stop.location,
           arrival: arrivalMs ? new Date(arrivalMs) : null,
@@ -217,6 +350,35 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
             orders: jobToOrdersMap[d.jobId] || []
           }))
         };
+      });
+
+      // Calcular el peso total de CADA ciclo para mostrar resúmenes por viaje
+      const cycleSummaries = {};
+      itinerary.forEach(stop => {
+        if (!cycleSummaries[stop.cycle]) {
+          cycleSummaries[stop.cycle] = { 
+            totalWeight: 0, 
+            stops: 0, 
+            orders: 0,
+            startTime: stop.arrival || stop.departure,
+            endTime: stop.departure || stop.arrival
+          };
+        }
+        cycleSummaries[stop.cycle].totalWeight += stop.stopWeight;
+        if (stop.type === 'delivery') {
+          cycleSummaries[stop.cycle].stops++;
+          cycleSummaries[stop.cycle].orders += stop.totalOrdersInStop;
+        }
+        
+        // Actualizar tiempos del ciclo
+        const stopStart = stop.arrival || stop.departure;
+        const stopEnd = stop.departure || stop.arrival;
+        if (stopStart && (!cycleSummaries[stop.cycle].startTime || stopStart < cycleSummaries[stop.cycle].startTime)) {
+          cycleSummaries[stop.cycle].startTime = stopStart;
+        }
+        if (stopEnd && (!cycleSummaries[stop.cycle].endTime || stopEnd > cycleSummaries[stop.cycle].endTime)) {
+          cycleSummaries[stop.cycle].endTime = stopEnd;
+        }
       });
 
       const totalLoad = itinerary.reduce((acc, stop) => 
@@ -232,6 +394,8 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       const startMs = normalizeToMs(startTimeRaw);
       const endMs = normalizeToMs(endTimeRaw);
 
+      const maxCycle = Math.max(...itinerary.map(s => s.cycle), 1);
+
       return {
         id: tour.vehicleId,
         typeId: rawType,
@@ -245,6 +409,9 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         load: totalLoad,
         capacity,
         utilization,
+        hasReloads: maxCycle > 1,
+        maxCycle,
+        cycleSummaries,
         distance: Math.round((tour.statistic?.distance || 0) / 1000),
         itinerary
       };
@@ -367,6 +534,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       totalOrdersAssigned: vehiclePerformance.reduce((acc, v) => acc + v.totalOrdersCount, 0),
       totalOrdersFromCsv,
       totalOrdersUnassigned,
+      totalUnprogrammedWeight: (unassignedDetails || []).reduce((acc, u) => acc + (u.orders || []).reduce((oAcc, o) => oAcc + parseNumber(o[mapping.weight] || 0), 0), 0),
       coveragePct,
       totalRoutes,
       totalStopsAssigned,
@@ -387,6 +555,158 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
   }, [result, fullData, mapping]);
 
   if (!analysis) return null;
+
+  const exportToExcel = () => {
+    const dataRows = [];
+    
+    analysis.vehiclePerformance.forEach(v => {
+      let currentLoadCycle = 1;
+      
+      v.itinerary.forEach(stop => {
+        if (stop.type === 'reload') {
+          currentLoadCycle++;
+          dataRows.push({
+            'ID Camión': v.id,
+            'Tipo Unidad': v.type,
+            'ID Pedido': 'RECARGA_CEDI',
+            'Movimiento': '--',
+            'Secuencia': '--',
+            'Nombre Cliente': 'RETORNO A CEDI PARA RECARGA',
+            'Dirección Cliente': 'CEDI',
+            'Peso (KG)': 0,
+            'Fecha': stop.arrival ? stop.arrival.toLocaleDateString('es-MX') : '--',
+            'Hora Llegada': formatTime(stop.arrival),
+            'Viaje / Recarga': `INICIO VIAJE ${currentLoadCycle}`,
+            'Ciclo': currentLoadCycle
+          });
+          return;
+        }
+
+        if (stop.type === 'delivery') {
+          stop.jobs.forEach(job => {
+            job.orders.forEach((order, oIdx) => {
+              const weight = parseNumber(order[mapping.weight] || 0);
+              const sequenceStr = stop.totalOrdersInStop > 1 ? `${stop.sequence}.${oIdx + 1}` : stop.sequence.toString();
+              const orderId = getOrderId(order, mapping);
+              
+              dataRows.push({
+                'ID Camión': v.id,
+                'Tipo Unidad': v.type,
+                'ID Pedido': orderId,
+                'Movimiento': order[mapping.movimiento] || order['Movimiento'] || '--',
+                'Secuencia': sequenceStr,
+                'Nombre Cliente': order[mapping.client] || order['Nombre'] || 'S/N',
+                'Dirección Cliente': order[mapping.address] || 'N/A',
+                'Peso (KG)': weight,
+                'Fecha': stop.arrival ? stop.arrival.toLocaleDateString('es-MX') : '--',
+                'Hora Llegada': formatTime(stop.arrival),
+                'Viaje / Recarga': `Viaje ${currentLoadCycle}`,
+                'Ciclo': currentLoadCycle
+              });
+            });
+          });
+        }
+      });
+    });
+
+    const worksheet = XLSX.utils.json_to_sheet(dataRows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Rutas Optimizadas");
+    
+    const maxWidths = {};
+    dataRows.forEach(row => {
+      Object.keys(row).forEach(key => {
+        const val = row[key] ? row[key].toString() : '';
+        maxWidths[key] = Math.max(maxWidths[key] || key.length, val.length);
+      });
+    });
+    worksheet['!cols'] = Object.keys(maxWidths).map(key => ({ wch: maxWidths[key] + 2 }));
+
+    XLSX.writeFile(workbook, `rutas_mexico_${new Date().toISOString().split('T')[0]}.xlsx`);
+  };
+
+  const exportToCSV = () => {
+    const headers = [
+      'ID Camión',
+      'Tipo Unidad',
+      'ID Pedido',
+      'Movimiento',
+      'Secuencia',
+      'Nombre Cliente',
+      'Dirección Cliente',
+      'Peso (KG)',
+      'Fecha',
+      'Hora Llegada',
+      'Viaje / Recarga'
+    ];
+
+    const rows = [];
+
+    analysis.vehiclePerformance.forEach(v => {
+      let currentLoadCycle = 1;
+      
+      v.itinerary.forEach(stop => {
+        if (stop.type === 'reload') {
+          currentLoadCycle++;
+          rows.push([
+            v.id,
+            v.type,
+            'RECARGA_CEDI',
+            '--',
+            '--',
+            'RETORNO A CEDI PARA RECARGA',
+            'CEDI',
+            '0',
+            stop.arrival ? stop.arrival.toLocaleDateString('es-MX') : '--',
+            formatTime(stop.arrival),
+            `INICIO VIAJE ${currentLoadCycle}`
+          ]);
+          return;
+        }
+
+        if (stop.type === 'delivery') {
+          stop.jobs.forEach(job => {
+            job.orders.forEach((order, oIdx) => {
+              const weight = parseNumber(order[mapping.weight] || 0);
+              const sequenceStr = stop.totalOrdersInStop > 1 ? `${stop.sequence}.${oIdx + 1}` : stop.sequence.toString();
+              const orderId = getOrderId(order, mapping);
+              
+              rows.push([
+                v.id,
+                v.type,
+                orderId,
+                order[mapping.movimiento] || order['Movimiento'] || '--',
+                sequenceStr,
+                order[mapping.client] || order['Nombre'] || 'S/N',
+                order[mapping.address] || 'N/A',
+                weight.toFixed(2),
+                stop.arrival ? stop.arrival.toLocaleDateString('es-MX') : '--',
+                formatTime(stop.arrival),
+                `Viaje ${currentLoadCycle}`
+              ]);
+            });
+          });
+        }
+      });
+    });
+
+    const csvContent = "\ufeff" + [
+      headers.join(','),
+      ...rows.map(row => row.map(cell => {
+        const val = cell === null || cell === undefined ? '' : cell.toString();
+        return `"${val.replace(/"/g, '""')}"`;
+      }).join(','))
+    ].join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.setAttribute("href", url);
+    link.setAttribute("download", `rutas_mexico_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const toggleExpand = (vId) => {
     setExpandedVehicles(prev => ({ ...prev, [vId]: !prev[vId] }));
@@ -535,10 +855,82 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
             <p>Visualización de rutas y cronogramas industriales</p>
           </div>
         </div>
-        <div className="global-kpis">
+        <div className="global-kpis" style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
+          <button 
+            onClick={exportToExcel}
+            className="btn-primary-small"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              padding: '8px 16px',
+              background: 'var(--primary-electric)',
+              color: '#fff',
+              border: 'none',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer',
+              transition: 'all 0.2s ease',
+              boxShadow: '0 4px 12px rgba(0, 88, 190, 0.25)'
+            }}
+          >
+            <Download size={16} /> Descargar Excel (.xlsx)
+          </button>
+          <button 
+            onClick={exportToCSV}
+            className="btn-secondary-dark"
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '8px', 
+              padding: '8px 16px',
+              background: 'rgba(16, 185, 129, 0.1)',
+              color: '#10b981',
+              border: '1px solid rgba(16, 185, 129, 0.2)',
+              borderRadius: '8px',
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              cursor: 'pointer'
+            }}
+          >
+            <Download size={16} /> CSV
+          </button>
           <div className="view-mode-selector">
             <button className={viewMode === 'list' ? 'active' : ''} onClick={() => setViewMode('list')}><List size={16}/> Lista</button>
             <button className={viewMode === 'gantt' ? 'active' : ''} onClick={() => setViewMode('gantt')}><Calendar size={16}/> Cronograma</button>
+          </div>
+        </div>
+      </div>
+
+      {/* RESUMEN DE COMPONENTES DE CARGA E INDICADORES (Programado vs No Programado) */}
+      <div className="summary-cards" style={{ marginBottom: '24px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.2rem' }}>
+        <div className="glass-card stat-main" style={{ borderLeft: '4px solid #10b981', padding: '16px' }}>
+          <div className="stat-icon" style={{ background: '#ecfdf5', width: '36px', height: '36px' }}><Package size={18} color="#10b981" /></div>
+          <div>
+            <span className="stat-value" style={{ fontSize: '1.2rem', display: 'block' }}>{analysis.totalOrdersAssigned} / {analysis.totalOrdersAssigned + analysis.totalOrdersUnassigned}</span>
+            <span className="stat-label">Pedidos Programados</span>
+          </div>
+        </div>
+        <div className="glass-card stat-main" style={{ borderLeft: '4px solid #0058be', padding: '16px' }}>
+          <div className="stat-icon" style={{ background: '#eff6ff', width: '36px', height: '36px' }}><Target size={18} color="#0058be" /></div>
+          <div>
+            <span className="stat-value" style={{ fontSize: '1.2rem', display: 'block' }}>{analysis.totalWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg</span>
+            <span className="stat-label">Carga en Ruta</span>
+          </div>
+        </div>
+        <div className="glass-card stat-main" style={{ borderLeft: '4px solid #ef4444', padding: '16px' }}>
+          <div className="stat-icon" style={{ background: '#fef2f2', width: '36px', height: '36px' }}><ShieldAlert size={18} color="#ef4444" /></div>
+          <div>
+            <span className="stat-value" style={{ fontSize: '1.2rem', display: 'block' }}>{analysis.totalOrdersUnassigned} Pedidos</span>
+            <span className="stat-label">No Programados</span>
+          </div>
+        </div>
+        <div className="glass-card stat-main" style={{ borderLeft: '4px solid #f59e0b', padding: '16px' }}>
+          <div className="stat-icon" style={{ background: '#fffbeb', width: '36px', height: '36px' }}><AlertCircle size={18} color="#f59e0b" /></div>
+          <div>
+            <span className="stat-value" style={{ fontSize: '1.2rem', display: 'block' }}>{analysis.totalUnprogrammedWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} kg</span>
+            <span className="stat-label">Carga Pendiente</span>
           </div>
         </div>
       </div>
@@ -565,7 +957,24 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                     <tr className={expandedVehicles[v.id] ? 'expanded-row' : ''} onClick={() => toggleExpand(v.id)} style={{ cursor: 'pointer' }}>
                       <td>{expandedVehicles[v.id] ? <ChevronUp size={18} color="#8293ba" /> : <ChevronDown size={18} color="#8293ba" />}</td>
                       <td><strong>{v.id}</strong></td>
-                      <td><span className="badge-type">{v.type}</span></td>
+                      <td>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span className="badge-type">{v.type}</span>
+                          {v.hasReloads && (
+                            <span style={{ 
+                              fontSize: '0.6rem', 
+                              background: '#eff6ff', 
+                              color: '#0058be', 
+                              padding: '2px 6px', 
+                              borderRadius: '4px',
+                              fontWeight: 800,
+                              border: '1px solid rgba(0, 88, 190, 0.2)'
+                            }}>
+                              {v.maxCycle} VIAJES
+                            </span>
+                          )}
+                        </div>
+                      </td>
                       <td>
                         <div className="time-cell">
                           <Clock size={12} />
@@ -583,7 +992,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                           <span style={{ fontSize: '0.7rem', color: '#666', marginTop: '4px' }}>{v.totalOrdersCount} Pedidos</span>
                         </div>
                       </td>
-                      <td><strong>{Math.round(v.load).toLocaleString()} kg</strong></td>
+                      <td><strong>{v.load.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg</strong></td>
                       <td>
                         <div className="util-bar-container">
                           <div className="util-bar-bg"><div className={`util-bar-fill ${v.utilization > 90 ? 'high' : 'low'}`} style={{ width: `${Math.min(v.utilization, 100)}%` }}></div></div>
@@ -597,54 +1006,345 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                       <tr className="itinerary-detail-row">
                         <td colSpan="8">
                           <div className="itinerary-expand-container animate-fade-in">
+                            <div className="itinerary-summary-header" style={{ 
+                              display: 'grid', 
+                              gridTemplateColumns: 'repeat(4, 1fr)', 
+                              gap: '20px', 
+                              padding: '16px 24px',
+                              background: '#f8fafc',
+                              borderBottom: '1px solid #e2e8f0',
+                              marginBottom: '20px'
+                            }}>
+                              <div className="it-stat">
+                                <span style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Distancia Total</span>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>{v.distance} km</span>
+                              </div>
+                              <div className="it-stat">
+                                <span style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Duración Total</span>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>
+                                  {v.startTime && v.endTime ? `${Math.round((v.endTime - v.startTime) / 60000)} min` : '--'}
+                                </span>
+                              </div>
+                              <div className="it-stat">
+                                <span style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Productividad</span>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>
+                                  {v.endTime && v.startTime && (v.endTime - v.startTime) > 0 
+                                    ? (v.stopsCount / ((v.endTime - v.startTime) / 3600000)).toFixed(1) 
+                                    : '0'} paradas/h
+                                </span>
+                              </div>
+                              <div className="it-stat">
+                                <span style={{ display: 'block', fontSize: '0.65rem', color: '#64748b', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Carga Total</span>
+                                <span style={{ fontSize: '1.1rem', fontWeight: 900, color: '#0f172a' }}>{v.load.toLocaleString()} kg</span>
+                              </div>
+                            </div>
                             <div className="itinerary-grid">
                               {v.itinerary.map((stop, sIdx) => {
                                 const orders = stop.jobs.flatMap(j => j.orders);
+                                const isFirstOfCycle = sIdx === 0 || (sIdx > 0 && v.itinerary[sIdx-1].cycle !== stop.cycle);
+                                const cycleInfo = v.cycleSummaries[stop.cycle] || { totalWeight: 0, stops: 0, orders: 0 };
+                                
                                 return (
-                                  <div key={sIdx} className={`itinerary-step ${stop.type}`}>
-                                    <div className="step-timeline">
-                                      <div className="step-dot">
-                                        {stop.sequence && <span className="dot-number">{stop.sequence}</span>}
-                                      </div>
-                                      {sIdx < v.itinerary.length - 1 && <div className="step-line"></div>}
-                                    </div>
-                                    <div className="step-content">
-                                      <div className="step-header">
-                                        <div className="step-title-row">
-                                          <div style={{ display: 'flex', flexDirection: 'column' }}>
-                                            <span className="step-label">{stop.label}</span>
-                                            {stop.type === 'delivery' && <span className="step-sublabel">Ruta Secuencia #{stop.sequence}</span>}
+                                  <React.Fragment key={sIdx}>
+                                    {/* Encabezado de Ciclo/Viaje */}
+                                    {isFirstOfCycle && (
+                                      <div style={{ 
+                                        gridColumn: '1 / -1',
+                                        margin: '20px 0 10px 0',
+                                        padding: '12px 20px',
+                                        background: stop.cycle === 1 ? 'linear-gradient(90deg, rgba(0, 88, 190, 0.1) 0%, transparent 100%)' : 'linear-gradient(90deg, rgba(245, 158, 11, 0.1) 0%, transparent 100%)',
+                                        borderRadius: '8px',
+                                        borderLeft: `4px solid ${stop.cycle === 1 ? 'var(--primary-electric)' : '#f59e0b'}`,
+                                        display: 'flex',
+                                        justifyContent: 'space-between',
+                                        alignItems: 'center'
+                                      }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                                          <div style={{ 
+                                            width: '32px', height: '32px', borderRadius: '50%', 
+                                            background: stop.cycle === 1 ? 'var(--primary-electric)' : '#f59e0b',
+                                            color: 'white', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                            fontWeight: 900, fontSize: '0.9rem'
+                                          }}>
+                                            {stop.cycle}
                                           </div>
-                                          <span className="step-time">
-                                            {stop.arrival && stop.departure && stop.arrival.getTime() !== stop.departure.getTime()
-                                              ? `${formatTime(stop.arrival)} - ${formatTime(stop.departure)}`
-                                              : stop.type === 'depot' && sIdx === 0
-                                                ? `Sale: ${formatTime(stop.departure || stop.arrival)}`
-                                                : stop.type === 'depot' && sIdx === v.itinerary.length - 1
-                                                  ? `Llega: ${formatTime(stop.arrival || stop.departure)}`
-                                                  : stop.arrival && stop.departure
-                                                    ? `${formatTime(stop.arrival)} - ${formatTime(stop.departure)}`
-                                                    : stop.arrival
-                                                      ? `Llegada: ${formatTime(stop.arrival)}`
-                                                      : `Salida: ${formatTime(stop.departure)}`}
-                                          </span>
+                                          <div>
+                                            <h4 style={{ margin: 0, color: '#0f172a', fontSize: '0.9rem', fontWeight: 800 }}>
+                                              {stop.cycle === 1 ? 'VIAJE INICIAL' : `VIAJE DE RECARGA #${stop.cycle - 1}`}
+                                            </h4>
+                                            <span style={{ fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>
+                                              {cycleInfo.stops} Paradas · {cycleInfo.orders} Pedidos
+                                            </span>
+                                          </div>
+                                        </div>
+                                          <div style={{ textAlign: 'right' }}>
+                                            <div style={{ fontSize: '0.9rem', fontWeight: 900, color: '#0f172a' }}>
+                                              {cycleInfo.totalWeight.toLocaleString()} kg
+                                            </div>
+                                            <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>
+                                              Carga ({Math.round((cycleInfo.totalWeight / v.capacity) * 100)}% cap)
+                                            </div>
+                                            {cycleInfo.startTime && cycleInfo.endTime && (
+                                              <div style={{ fontSize: '0.65rem', color: 'var(--primary-electric)', fontWeight: 700, marginTop: '2px' }}>
+                                                Duración: {Math.round((cycleInfo.endTime - cycleInfo.startTime) / 60000)} min
+                                              </div>
+                                            )}
+                                          </div>
+                                      </div>
+                                    )}
+
+                                    <div className={`itinerary-step ${stop.type} ${stop.type === 'reload' ? 'is-reload-point' : ''}`}>
+                                      <div className="step-timeline">
+                                        <div className="step-dot">
+                                          {stop.sequence && <span className="dot-number">{stop.sequence}</span>}
+                                        </div>
+                                        {sIdx < v.itinerary.length - 1 && <div className="step-line"></div>}
+                                      </div>
+                                      <div className="step-content" style={{ paddingLeft: '10px' }}>
+                                        <div className="step-header" style={{ marginBottom: '12px' }}>
+                                          <div className="step-title-row" style={{ justifyContent: 'flex-start', gap: '20px' }}>
+                                            <div style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                <span className="step-label" style={{ 
+                                                  fontWeight: 800, 
+                                                  color: stop.type === 'reload' ? '#d97706' : '#0f172a', 
+                                                  fontSize: '1rem',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '8px'
+                                                }}>
+                                                  {stop.type === 'reload' && <ArrowRight size={18} />}
+                                                  {stop.label}
+                                                  {stop.type === 'delivery' && (
+                                                    <span style={{ marginLeft: '10px', color: 'var(--primary-electric)', fontSize: '0.85rem' }}>
+                                                      [Mov: {orders.length <= 3 
+                                                        ? orders.map(o => o[mapping.movimiento]).join(', ') 
+                                                        : `${orders.slice(0, 3).map(o => o[mapping.movimiento]).join(', ')}... (+${orders.length - 3})`}
+                                                      ]
+                                                    </span>
+                                                  )}
+                                                </span>
+                                                {stop.isGrouped && (
+                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                    <span className="badge-grouped" style={{ 
+                                                      fontSize: '0.65rem', 
+                                                      background: 'rgba(0, 88, 190, 0.1)', 
+                                                      color: 'var(--primary-electric)', 
+                                                      padding: '3px 10px', 
+                                                      borderRadius: '100px',
+                                                      fontWeight: 800,
+                                                      textTransform: 'uppercase',
+                                                      display: 'flex',
+                                                      alignItems: 'center',
+                                                      gap: '4px',
+                                                      letterSpacing: '0.5px'
+                                                    }}>
+                                                      <BrainCircuit size={10} /> Agrupado
+                                                    </span>
+                                                  </div>
+                                                )}
+                                              </div>
+                                              {stop.address && (
+                                                <span className="step-address" style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                                                  <MapPin size={12} color="#94a3b8" /> {stop.address}
+                                                </span>
+                                              )}
+                                              
+                                              {stop.type === 'reload' && (
+                                                <div style={{ 
+                                                  marginTop: '8px',
+                                                  padding: '10px 16px',
+                                                  background: '#fffbeb',
+                                                  borderRadius: '8px',
+                                                  border: '1px solid #fef3c7',
+                                                  fontSize: '0.8rem',
+                                                  color: '#92400e',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '12px'
+                                                }}>
+                                                  <div style={{ background: '#f59e0b', color: 'white', padding: '4px 8px', borderRadius: '4px', fontWeight: 900, fontSize: '0.7rem' }}>RECARGA</div>
+                                                  <div style={{ fontWeight: 600 }}>
+                                                    El vehículo retorna al CEDI para iniciar el <strong>Viaje #{stop.cycle}</strong>. 
+                                                    Carga planeada para este bloque: <strong>{cycleInfo.totalWeight.toLocaleString()} kg</strong>
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {stop.isGrouped && (
+                                                <div style={{ 
+                                                  marginTop: '8px',
+                                                  padding: '8px 12px',
+                                                  background: '#f1f5f9',
+                                                  borderRadius: '6px',
+                                                  fontSize: '0.7rem',
+                                                  color: '#475569',
+                                                  borderLeft: '3px solid var(--primary-electric)',
+                                                  display: 'flex',
+                                                  flexDirection: 'column',
+                                                  gap: '4px'
+                                                }}>
+                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: 700, color: '#1e293b' }}>
+                                                    <BrainCircuit size={14} color="var(--primary-electric)" />
+                                                    Lógica de Agrupación Industrial
+                                                  </div>
+                                                  <span>
+                                                    {stop.isMultiClient 
+                                                      ? 'Esta parada consolida pedidos de múltiples clientes que comparten exactamente las mismas coordenadas geográficas.' 
+                                                      : 'Se han consolidado varios pedidos para este cliente en esta ubicación única para optimizar el tiempo de servicio.'}
+                                                  </span>
+                                                </div>
+                                              )}
+                                            </div>
+                                            
+                                              <div className="step-time" style={{ 
+                                                fontWeight: 700, 
+                                                color: '#1e293b', 
+                                                fontSize: '0.8rem', 
+                                                background: '#f8fafc', 
+                                                padding: '6px 12px', 
+                                                borderRadius: '6px', 
+                                                border: '1px solid #e2e8f0',
+                                                display: 'inline-block'
+                                              }}>
+                                                {stop.arrival && stop.departure && stop.arrival.getTime() !== stop.departure.getTime()
+                                                  ? `${formatTime(stop.arrival)} - ${formatTime(stop.departure)}`
+                                                  : stop.type === 'depot' && sIdx === 0
+                                                    ? `Salida: ${formatTime(stop.departure || stop.arrival)}`
+                                                    : stop.type === 'depot' && sIdx === v.itinerary.length - 1
+                                                      ? `Llegada: ${formatTime(stop.arrival || stop.departure)}`
+                                                      : stop.arrival && stop.departure
+                                                        ? `${formatTime(stop.arrival)} - ${formatTime(stop.departure)}`
+                                                        : stop.arrival
+                                                          ? `Llegada: ${formatTime(stop.arrival)}`
+                                                          : `Salida: ${formatTime(stop.departure)}`}
+                                              </div>
+                                              {stop.type === 'delivery' && (
+                                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                  <div style={{ 
+                                                    fontSize: '0.65rem', 
+                                                    color: '#64748b', 
+                                                    fontWeight: 800, 
+                                                    textTransform: 'uppercase', 
+                                                    marginTop: '6px',
+                                                    letterSpacing: '0.5px'
+                                                  }}>
+                                                    Entrega #{stop.sequence}
+                                                  </div>
+                                                  <div style={{ 
+                                                    fontSize: '0.65rem', 
+                                                    color: stop.cycle > 1 ? '#b45309' : '#10b981', 
+                                                    fontWeight: 900, 
+                                                    textTransform: 'uppercase', 
+                                                    marginTop: '6px',
+                                                    letterSpacing: '0.5px',
+                                                    background: stop.cycle > 1 ? 'rgba(245, 158, 11, 0.1)' : 'rgba(16, 185, 129, 0.08)',
+                                                    padding: '2px 8px',
+                                                    borderRadius: '4px'
+                                                  }}>
+                                                    {stop.cycle > 1 ? `Viaje ${stop.cycle}` : 'Primer Viaje'}
+                                                  </div>
+                                                </div>
+                                              )}
+                                            </div>
+                                          </div>
+                                          
+                                          {/* Solo mostrar tabla si hay pedidos (no en reloads o depot vacío) */}
+                                          {orders.length > 0 && (
+                                            <div style={{ 
+                                              display: 'flex', 
+                                              flexDirection: 'column', 
+                                              background: '#fff', 
+                                              borderRadius: '12px', 
+                                              border: '1px solid #e2e8f0',
+                                              overflow: 'hidden',
+                                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
+                                              marginBottom: '15px'
+                                            }}>
+                                              {/* Encabezados de Tabla */}
+                                              <div style={{ 
+                                                display: 'grid', 
+                                                gridTemplateColumns: '80px 120px 120px 250px 1fr 100px', 
+                                                gap: '15px', 
+                                                padding: '12px 20px',
+                                                background: '#f8fafc',
+                                                borderBottom: '1px solid #e2e8f0',
+                                                fontSize: '0.65rem',
+                                                fontWeight: 800,
+                                                color: '#64748b',
+                                                textTransform: 'uppercase',
+                                                letterSpacing: '1px'
+                                              }}>
+                                                <span>Secuencia</span>
+                                                <span>Movimiento</span>
+                                                <span>Pedido #</span>
+                                                <span>Cliente / Código</span>
+                                                <span>Dirección</span>
+                                                <span style={{ textAlign: 'right' }}>Peso (kg)</span>
+                                              </div>
+
+                                              {orders.map((order, oIdx) => (
+                                                <div key={oIdx} style={{ 
+                                                  display: 'grid', 
+                                                  gridTemplateColumns: '80px 120px 120px 250px 1fr 100px', 
+                                                  gap: '15px', 
+                                                  alignItems: 'center',
+                                                  padding: '12px 20px',
+                                                  borderBottom: oIdx === orders.length - 1 ? 'none' : '1px solid #f1f5f9',
+                                                  transition: 'background 0.2s ease',
+                                                  textAlign: 'left'
+                                                }} className="order-row-hover">
+                                                  <div style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem' }}>
+                                                    {stop.sequence ? `${stop.sequence}.${oIdx + 1}` : `${oIdx + 1}`}
+                                                  </div>
+                                                  
+                                                  <div style={{ fontWeight: 800, color: 'var(--primary-electric)', fontSize: '0.85rem' }}>
+                                                    {order[mapping.movimiento] || 'N/A'}
+                                                  </div>
+                                                  
+                                                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>
+                                                    {getOrderId(order, mapping)}
+                                                  </div>
+
+                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
+                                                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary-electric)', background: 'rgba(0, 88, 190, 0.05)', padding: '2px 6px', borderRadius: '4px', flexShrink: 0 }}>
+                                                      {order[mapping.clientCode] || 'S/C'}
+                                                    </span>
+                                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                                      {order[mapping.client] || 'Sin nombre'}
+                                                    </span>
+                                                  </div>
+                                                  
+                                                  <div style={{ fontSize: '0.8rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                    {order[mapping.address] || 'N/A'}
+                                                  </div>
+
+                                                  <div style={{ textAlign: 'right', fontWeight: 800, color: '#1e293b', fontSize: '0.85rem' }}>
+                                                    {parseNumber(order[mapping.weight] || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
+                                                  </div>
+                                                </div>
+                                              ))}
+                                              
+                                              <div style={{ 
+                                                display: 'grid', 
+                                                gridTemplateColumns: '1fr 100px', 
+                                                padding: '12px 20px',
+                                                background: '#f8fafc',
+                                                borderTop: '2px solid #e2e8f0',
+                                                alignItems: 'center'
+                                              }}>
+                                                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Total Parada</span>
+                                                <span style={{ textAlign: 'right', fontWeight: 900, color: '#0f172a', fontSize: '0.9rem' }}>
+                                                  {orders.reduce((acc, o) => acc + parseNumber(o[mapping.weight] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg
+                                                </span>
+                                              </div>
+                                            </div>
+                                          )}
                                         </div>
                                       </div>
-                                      
-                                      {orders.length > 0 && (
-                                        <div className="step-orders">
-                                          {orders.map((order, oIdx) => (
-                                            <div key={oIdx} className="order-mini-pill">
-                                              <Package size={10} />
-                                              <span>{order[mapping.id]}</span>
-                                            </div>
-                                          ))}
-                                        </div>
-                                      )}
-                                    </div>
-                                  </div>
-                                );
-                              })}
+                                    </React.Fragment>
+                                  );
+                                })}
                             </div>
                           </div>
                         </td>
@@ -772,7 +1472,19 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                         {(stop.type === 'delivery' || stop.type === 'reload') && (
                           <div className="activity-tooltip">
                             <span className="tooltip-seq">{stop.sequence || 'R'}</span>
-                            <span className="tooltip-main">{stop.label}</span>
+                            <span className="tooltip-main">
+                              {stop.label}
+                              {stop.jobs?.[0]?.orders?.length > 0 && (
+                                <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.6rem', color: '#cbd5e1' }}>
+                                  <strong>Movimientos:</strong> {stop.jobs[0].orders.map(o => o[mapping.movimiento]).filter(Boolean).join(', ')}
+                                </div>
+                              )}
+                            </span>
+                            {stop.address && (
+                              <span className="tooltip-address" style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', margin: '2px 0' }}>
+                                <MapPin size={8} /> {stop.address}
+                              </span>
+                            )}
                             <span className="tooltip-time">
                               {formatTime(stop.arrival)} - {formatTime(stop.departure)}
                               {analysis.dataDays > 1 && stop.arrival && (
@@ -810,35 +1522,41 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginBottom: '12px' }}>
-            <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '10px', padding: '10px' }}>
+            <div style={{ background: 'rgba(74,222,128,0.08)', border: '1px solid rgba(74,222,128,0.25)', borderRadius: '10px', padding: '10px' }} title="Porcentaje de pedidos totales que lograron ser asignados satisfactoriamente a una ruta.">
               <div style={{ color: '#86efac', fontSize: '0.68rem', textTransform: 'uppercase' }}>Cobertura real</div>
               <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{Math.round(analysis.coveragePct)}%</div>
-              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalOrdersAssigned}/{analysis.totalOrdersFromCsv} pedidos</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.62rem', marginTop: '2px' }}>Capacidad de atención vs demanda total</div>
+              <div style={{ color: '#86efac', fontSize: '0.68rem', marginTop: '4px' }}>{analysis.totalOrdersAssigned}/{analysis.totalOrdersFromCsv} pedidos</div>
             </div>
-            <div style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: '10px', padding: '10px' }}>
+            <div style={{ background: 'rgba(96,165,250,0.08)', border: '1px solid rgba(96,165,250,0.25)', borderRadius: '10px', padding: '10px' }} title="Promedio de pedidos que cada vehículo transporta por viaje.">
               <div style={{ color: '#93c5fd', fontSize: '0.68rem', textTransform: 'uppercase' }}>Productividad por ruta</div>
               <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.averageOrdersPerRoute.toFixed(1)} pedidos/ruta</div>
-              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalRoutes} rutas activas</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.62rem', marginTop: '2px' }}>Eficiencia de carga por unidad despachada</div>
+              <div style={{ color: '#93c5fd', fontSize: '0.68rem', marginTop: '4px' }}>{analysis.totalRoutes} rutas activas</div>
             </div>
-            <div style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)', borderRadius: '10px', padding: '10px' }}>
+            <div style={{ background: 'rgba(250,204,21,0.08)', border: '1px solid rgba(250,204,21,0.25)', borderRadius: '10px', padding: '10px' }} title="Indica cuántos pedidos se entregan en promedio en cada parada física (multicpedidos por punto).">
               <div style={{ color: '#fde68a', fontSize: '0.68rem', textTransform: 'uppercase' }}>Consolidación de entregas</div>
               <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.consolidationRatio.toFixed(2)} pedidos/parada</div>
-              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalStopsAssigned} paradas de entrega</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.62rem', marginTop: '2px' }}>Aprovechamiento de paradas logísticas</div>
+              <div style={{ color: '#fde68a', fontSize: '0.68rem', marginTop: '4px' }}>{analysis.totalStopsAssigned} paradas totales</div>
             </div>
-            <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: '10px', padding: '10px' }}>
+            <div style={{ background: 'rgba(167,139,250,0.08)', border: '1px solid rgba(167,139,250,0.25)', borderRadius: '10px', padding: '10px' }} title="Rutas ahorradas gracias a la optimización comparado con despachos individuales.">
               <div style={{ color: '#c4b5fd', fontSize: '0.68rem', textTransform: 'uppercase' }}>Ganancia de productividad</div>
               <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>-{analysis.estimatedRoutesSaved} rutas equivalentes</div>
-              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{Math.round(analysis.productivityGainPct)}% vs escenario 1 pedido = 1 ruta</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.62rem', marginTop: '2px' }}>Ahorro operativo y de flota estimado</div>
+              <div style={{ color: '#c4b5fd', fontSize: '0.68rem', marginTop: '4px' }}>{Math.round(analysis.productivityGainPct)}% de optimización real</div>
             </div>
-            <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: '10px', padding: '10px' }}>
+            <div style={{ background: 'rgba(248,113,113,0.08)', border: '1px solid rgba(248,113,113,0.25)', borderRadius: '10px', padding: '10px' }} title="Número de pedidos que no pudieron entrar en ruta por restricciones de tiempo, carga o skills.">
               <div style={{ color: '#fca5a5', fontSize: '0.68rem', textTransform: 'uppercase' }}>Brecha operativa</div>
               <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.totalOrdersUnassigned} pedidos no cubiertos</div>
-              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>Foco inmediato para Finanzas y Operaciones</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.62rem', marginTop: '2px' }}>Demanda insatisfecha por restricciones</div>
+              <div style={{ color: '#fca5a5', fontSize: '0.68rem', marginTop: '4px' }}>Foco en finanzas y planificación</div>
             </div>
-            <div style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: '10px', padding: '10px' }}>
+            <div style={{ background: 'rgba(45,212,191,0.08)', border: '1px solid rgba(45,212,191,0.25)', borderRadius: '10px', padding: '10px' }} title="Recorrido promedio en kilómetros por cada ruta generada.">
               <div style={{ color: '#5eead4', fontSize: '0.68rem', textTransform: 'uppercase' }}>Intensidad de red</div>
               <div style={{ color: '#f8fafc', fontSize: '1rem', fontWeight: 700 }}>{analysis.averageKmPerRoute.toFixed(1)} km/ruta</div>
-              <div style={{ color: '#cbd5e1', fontSize: '0.68rem' }}>{analysis.totalDist.toLocaleString()} km totales optimizados</div>
+              <div style={{ color: '#cbd5e1', fontSize: '0.62rem', marginTop: '2px' }}>Kilometraje útil promedio por unidad</div>
+              <div style={{ color: '#5eead4', fontSize: '0.68rem', marginTop: '4px' }}>{analysis.totalDist.toLocaleString()} km totales</div>
             </div>
           </div>
 
@@ -918,25 +1636,37 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                 <table style={{ width: '100%', fontSize: '0.75rem', color: '#e2e8f0' }}>
                   <thead>
                     <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Pedido #</th>
                       <th style={{ padding: '6px 8px', textAlign: 'left' }}>Job ID</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Movimiento</th>
                       <th style={{ padding: '6px 8px', textAlign: 'left' }}>Cliente</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Dirección</th>
                       <th style={{ padding: '6px 8px', textAlign: 'left' }}>Skill</th>
                       <th style={{ padding: '6px 8px', textAlign: 'left' }}>Motivo (ES)</th>
+                      <th style={{ padding: '6px 8px', textAlign: 'left' }}>Peso</th>
                       <th style={{ padding: '6px 8px', textAlign: 'left' }}>Código</th>
                     </tr>
                   </thead>
                   <tbody>
                     {analysis.unassignedDetails.map((item, idx) => {
                       const firstOrder = item.orders?.[0] || {};
-                      const clientName = firstOrder?.[mapping.name] || 'Sin cliente identificado';
+                      const clientName = firstOrder?.[mapping.client] || 'Sin cliente identificado';
                       const skill = firstOrder?.[mapping.skill] || 'N/A';
                       const codeText = item.reasonCodes.join(', ');
+                      const totalJobWeight = (item.orders || []).reduce((acc, o) => acc + parseNumber(o[mapping.weight] || 0), 0);
                       return (
                         <tr key={idx} style={{ borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
-                          <td style={{ padding: '6px 8px', fontFamily: 'monospace', color: '#fbbf24' }}>{jobId}</td>
-                          <td style={{ padding: '6px 8px', color: '#e2e8f0' }}>{clientName}</td>
+                          <td style={{ padding: '6px 8px', fontWeight: '700', color: '#fff' }}>{getOrderId(firstOrder, mapping)}</td>
+                          <td style={{ padding: '6px 8px', fontFamily: 'monospace', color: '#fbbf24' }}>{item.jobId}</td>
+                          <td style={{ padding: '6px 8px', fontWeight: '800', color: 'var(--primary-electric)' }}>{firstOrder[mapping.movimiento] || 'N/A'}</td>
+                          <td style={{ padding: '6px 8px', color: '#e2e8f0' }}>
+                            <span style={{ color: '#ff8a8a', marginRight: '6px' }}>[{firstOrder[mapping.clientCode] || 'S/C'}]</span>
+                            {clientName}
+                          </td>
+                          <td style={{ padding: '6px 8px', color: '#94a3b8', fontSize: '0.68rem' }}>{firstOrder?.[mapping.address] || 'N/A'}</td>
                           <td style={{ padding: '6px 8px', color: '#c4b5fd' }}>{skill}</td>
                           <td style={{ padding: '6px 8px', color: '#fca5a5' }}>{item.reasonEs}</td>
+                          <td style={{ padding: '6px 8px', fontWeight: '800', color: '#f9fafb' }}>{totalJobWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg</td>
                           <td style={{ padding: '6px 8px', color: '#94a3b8' }}>{codeText || 'Sin código'}</td>
                         </tr>
                       );

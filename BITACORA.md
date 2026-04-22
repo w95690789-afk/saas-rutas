@@ -262,6 +262,86 @@
 
 ---
 
+---
+
+## 📅 SESIÓN 18: RESTAURACIÓN DE INFRAESTRUCTURA Y MIGRACIÓN NATIVA (V4.1)
+**Estatus:** ✅ Hito 13 Completado - CONECTIVIDAD RESTABLECIDA
+- [2026-04-22] - Migración de Edge Functions y Refactorización de Endpoints
+- **Problema Detectado:** El proyecto Supabase anterior (`ahvmsiogvnhnkrayadgt`) fue marcado como inactivo, provocando errores `ERR_NAME_NOT_RESOLVED` en todas las llamadas de optimización.
+- **Acciones Realizadas:**
+  1. **Rescate de Código Fuente:** Se reactivó temporalmente el proyecto antiguo para extraer la lógica de las funciones `optimize-routes-async`, `check-optimization-status` y `get-optimization-solution`.
+  2. **Migración a Producción:** Despliegue de las 3 funciones críticas en el proyecto activo `bqlqurwvfvcbxlhrhune` (DDO_BaaS_V6).
+  3. **Refactorización del Frontend:** Actualización de `App.jsx` para apuntar a los nuevos endpoints de producción, eliminando la dependencia de proyectos obsoletos.
+  4. **Verificación de Salud:** Las 3 funciones fueron validadas y se encuentran en estado `ACTIVE`.
+- **Impacto:** Recuperación total de la capacidad de optimización asíncrona. El sistema vuelve a ser operativo bajo la arquitectura "Supabase-Native", garantizando estabilidad y evitando bloqueos por inactividad de proyectos secundarios.
+
+---
+
+## 🛠️ XI. AVANCES TÉCNICOS LOGRADOS (Infrastructure & Connectivity)
+- **Centralización de Endpoints:** Consolidación de la infraestructura en un único proyecto de alta disponibilidad.
+- **Protocolo de Recuperación:** Metodología establecida para el rescate de funciones en entornos serverless.
+- **Blindaje de Producción:** Las llamadas fetch ahora cuentan con manejo de errores específico para el nuevo cluster.
+
+---
+
+## 📅 SESIÓN 19: PARALELIZACIÓN DE FLOTA Y CONTROL DE RECARGAS
+**Estatus:** ✅ Hito 14 Completado - UTILIZACIÓN PARALELA ACTIVA
+- [2026-04-22] - Optimización de Distribución de Carga en Flota Propia
+- **Problema Detectado:** El motor de optimización consolidaba 200+ pedidos en un solo vehículo ("Torton_5") realizando múltiples viajes secuenciales. Esto ocurría porque el ahorro en `fixedCosts` superaba el costo de tiempo/distancia al permitir recargas (`reloads`).
+- **Acciones Realizadas:**
+  1. **Restricción de Recargas:** Se desactivó la función de `reloads` para los vehículos propios. Esto obliga al sistema a usar una nueva unidad una vez que la primera agota su capacidad volumétrica/peso en un solo viaje.
+  2. **Ajuste de Shifts (Turnos):** Reducción de la duración de los turnos de los operadores. Al limitar el tiempo disponible, el algoritmo se ve forzado a despachar camiones en paralelo para cumplir con las ventanas de entrega.
+  3. **Calibración de Costos:** Ajuste fino de la relación `time` vs `fixed` para priorizar el tiempo de finalización (Makespan) sobre el ahorro marginal de unidades.
+- **Impacto:** Logro de una operación logística en paralelo. Los pedidos ahora se distribuyen entre toda la flota disponible, terminando las entregas en una fracción del tiempo original y maximizando el uso de activos propios.
+
+---
+
+## 🛠️ XII. AVANCES TÉCNICOS LOGRADOS (Fleet Parallelization)
+- **Control de Saturación de Activos:** Uso de restricciones de hardware (capacidad) y tiempo (shifts) para modelar el comportamiento del solver.
+- **Sincronización Operativa:** El flujo de trabajo ahora refleja una operación real de "salida masiva" matutina en lugar de un flujo continuo de un solo camión.
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+### Sesión 20: Inteligencia de Datos y Reportabilidad (Hito 15)
+**Fecha:** 22 de Abril, 2026
+**Objetivo:** Implementar la exportación masiva de resultados de optimización para auditoría y ejecución en campo.
+
+**Acciones Realizadas:**
+1.  **Módulo de Exportación (CSV/Excel):**
+    -   Se implementó la función `exportToCSV` en el componente `LogisticAnalyst.jsx`.
+    -   Campos incluidos: `ID Camión`, `Tipo Unidad`, `ID Pedido`, `Secuencia`, `Nombre Cliente`, `Dirección`, `Peso (KG)`, `Fecha`, `Hora Llegada` y **`Viaje / Recarga`**.
+    -   **Lógica de Multi-viaje:** El reporte ahora identifica y enumera los ciclos de carga (`Viaje 1`, `Viaje 2`, etc.). Si un vehículo regresa al CEDI, se inserta una fila de evento `RECARGA_CEDI` para justificar por qué la suma de pesos puede superar la capacidad nominal en un solo día.
+    -   Soporte para **Paradas Agrupadas**: La exportación desglosa cada pedido individual dentro de paradas consolidadas (formato `X.Y`).
+2.  **Optimización para Excel:**
+    -   Inclusión de **BOM (Byte Order Mark)** para garantizar que Excel abra el archivo con codificación UTF-8 sin corromper caracteres especiales (acentos, Ñ).
+    -   Escape automático de comillas y comas en direcciones para evitar rotura de columnas.
+3.  **Interfaz de Usuario (UI):**
+    -   Integración de botón "Exportar Excel" en la cabecera del Centro de Control Logístico con micro-animaciones y feedback visual.
+
+**Resultados:**
+-   Capacidad de generar reportes operativos en segundos.
+-   Trazabilidad total de la optimización desde una hoja de cálculo.
+-   Cierre del ciclo: Optimización -> Visualización -> Ejecución (vía reporte).
+
 **Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
 
 
+
+---
+
+## 📅 SESIÓN 21: AUDITORÍA DE VIABILIDAD Y CUMPLIMIENTO NORMATIVO
+**Estatus:** ✅ Auditoría Completada - REPORTE GERENCIAL GENERADO
+- [2026-04-22] - Análisis de Viabilidad Real de la Operación Torton
+- **Hallazgos Críticos:**
+  1. **Fatiga del Operador:** Detección de una jornada de 17h 22m (NOM-087), considerada no ejecutable de forma segura.
+  2. **Ineficiencia de Activos:** Identificación de 24 horas de tiempo muerto en CEDI con unidad cargada.
+  3. **Realismo de Velocidades:** Validación de promedios de 68-72 km/h como adecuados para el terreno de Veracruz.
+- **Entregables de Inteligencia:**
+  - **Guía de Revisión Gerencial:** Estructura de auditoría para que la Gerencia de Logística valide seguridad, eficiencia y riesgos.
+  - **Glosario de Reporte:** Definición técnica de campos (ETA, ETD, Secuencia, Peso, etc.) para facilitar la interpretación de datos en campo.
+- **Acciones Técnicas:**
+  - Actualización de la documentación maestra para incluir protocolos de revisión humana post-optimización.
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
