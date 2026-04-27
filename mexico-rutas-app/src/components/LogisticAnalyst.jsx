@@ -5,7 +5,7 @@ import {
   Clock, MapPin, AlertCircle, TrendingDown,
   Target, ShieldAlert, Info, ChevronDown, ChevronUp, 
   LayoutGrid, List, Calendar, ChevronLeft, ChevronRight,
-  ZoomIn, ZoomOut, Maximize2, Download
+  ZoomIn, ZoomOut, Maximize2, Download, ArrowRight
 } from 'lucide-react';
 
 const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
