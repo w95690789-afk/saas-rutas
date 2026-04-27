@@ -398,7 +398,7 @@ function App() {
       setLastProblem(problemToSend);
       setStatus('polling');
 
-      fetch('https://bqlqurwvfvcbxlhrhune.supabase.co/functions/v1/optimize-routes-async', {
+      fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/optimize-routes-async', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ problem: problemToSend, apiKey: API_KEY }) 
@@ -432,7 +432,7 @@ function App() {
       setElapsedTime(0);
       const interval = setInterval(() => {
         setElapsedTime(prev => prev + 10);
-        fetch('https://bqlqurwvfvcbxlhrhune.supabase.co/functions/v1/check-optimization-status', {
+        fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/check-optimization-status', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ taskId: id, apiKey: API_KEY })
@@ -445,7 +445,7 @@ function App() {
             clearInterval(interval);
             setStatus('fetching_solution');
             const resourceId = result.resource?.resourceId || id;
-            fetch('https://bqlqurwvfvcbxlhrhune.supabase.co/functions/v1/get-optimization-solution', {
+            fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/get-optimization-solution', {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ taskId: resourceId, apiKey: API_KEY })
