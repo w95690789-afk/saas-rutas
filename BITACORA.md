@@ -375,3 +375,17 @@
 - **Impacto:** Conectividad restablecida instantáneamente con Zero-Downtime en entorno local. La aplicación recuperó su capacidad de optimización asíncrona.
 
 **Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+## 📅 SESIÓN 24: RESOLUCIÓN DE ERROR CRÍTICO EN UI (ArrowRight is not defined)
+**Estatus:** ✅ RESOLUCIÓN CERTIFICADA - UI RESTAURADA
+- [2026-04-28] - Corrección en LogisticAnalyst.jsx
+- **Problema Detectado:** El componente `LogisticAnalyst.jsx` fallaba en tiempo de ejecución con el error `ReferenceError: ArrowRight is not defined` impidiendo el renderizado de la lista de pedidos de los viajes y provocando que la aplicación mostrara una pantalla en blanco.
+- **Acciones Realizadas:**
+  1. Se inspeccionaron los imports del componente `src/components/LogisticAnalyst.jsx`.
+  2. Se añadió el componente de icono `ArrowRight` a las importaciones desestructuradas de la librería `lucide-react`.
+  3. Confirmación de los cambios (Commit & Push) para iniciar el despliegue automático en Vercel.
+- **Impacto:** Recuperación del despliegue visual de la hoja de ruta y de los detalles de paradas del viaje, estabilizando el entorno para el usuario final.
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
