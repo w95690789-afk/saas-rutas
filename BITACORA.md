@@ -429,3 +429,24 @@
 - [x] **URL de Producción:** [https://saas-rutas.vercel.app/](https://saas-rutas.vercel.app/)
 
 **Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+## 📅 SESIÓN 27: VISIBILIDAD DE DESCANSOS Y CLARIDAD EN GANTT (UI/UX)
+**Estatus:** ✅ Hito 16 Completado - VISUALIZACIÓN MEJORADA
+- [2026-04-29] - Actualización de visualización en lista de rutas y Gantt
+- **Acciones Realizadas:**
+  1. **Visibilidad de Descansos:** Extracción y renderizado de descansos (breaks) embebidos como pasos de línea de tiempo independientes y secuenciales en la lista de rutas (`LogisticAnalyst.jsx`).
+  2. **Mapeo de Tránsito:** Creación de bloques dinámicos de "En Tránsito / Conducción" para rellenar los espacios vacíos entre paradas programadas en el diagrama de Gantt.
+  3. **Claridad de Pedidos:** Reestructuración de la información del pedido en tarjetas independientes y desplazables con los campos: Cliente, Peso, Movimiento y Dirección.
+- **Impacto:** Claridad total para el despachador en la lectura de hojas de ruta y visualización continua del estado del viaje.
+
+## 🚀 INFORME DE DESPLIEGUE: VISUALIZACIÓN UX/UI
+**Estatus:** ✅ DESPLIEGUE EN PRODUCCIÓN
+- [x] **Repositorio:** Cambios sincronizados con GitHub (rama `main`).
+- [x] **Archivos Afectados:** `LogisticAnalyst.jsx`.
+- [x] **Mensaje de Commit:** `feat(ui): improve transit, breaks and wait time visualization in Logistic Analyst`
+- [x] **Plataforma:** Vercel.
+- [x] **URL de Producción:** [https://saas-rutas.vercel.app/](https://saas-rutas.vercel.app/)
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
