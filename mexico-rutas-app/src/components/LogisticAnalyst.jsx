@@ -345,11 +345,22 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
              if (s && e) serviceMs += (e - s);
           });
           breaks.forEach(act => {
+             // El HERE API v3 a veces retorna duration en lugar de time object para descansos
+             const duration = act.duration ? act.duration * 1000 : 0;
              const s = normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time);
              const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
-             if (s && e) breakMs += (e - s);
+             if (s && e) {
+               breakMs += (e - s);
+             } else if (duration > 0) {
+               breakMs += duration;
+             }
           });
           
+          // Si es explícitamente una parada de descanso y no logramos extraer el tiempo de las actividades
+          if (breaks.length > 0 && breakMs === 0 && deliveries.length === 0) {
+            breakMs = departureMs - arrivalMs;
+          }
+
           // Si no hay detalle de actividades (Mock), el servicio es la diferencia
           if (serviceMs === 0 && breakMs === 0) {
             serviceMs = departureMs - arrivalMs;
@@ -1113,6 +1124,104 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                             </span>
                                           </div>
                                         </div>
+
+                                        {/* Task 1: Route List Break Visibility (Embedded Breaks as full steps) */}
+                                        {stop.type !== 'break' && stop.breakMin > 0 && (
+                                          stop.breakDetails && stop.breakDetails.length > 0 ? (
+                                            stop.breakDetails.map((b, bIdx) => {
+                                              const bStart = b.start ? new Date(b.start) : null;
+                                              const bEnd = b.end ? new Date(b.end) : null;
+                                              const durationMin = bStart && bEnd ? Math.round((bEnd - bStart) / 60000) : stop.breakMin;
+                                              return (
+                                                <div key={`embedded-break-${sIdx}-${bIdx}`} className="itinerary-step break animate-fade-in" style={{ marginTop: '10px' }}>
+                                                  <div className="step-timeline">
+                                                    <div className="step-dot" style={{ background: '#3b82f6' }}>
+                                                      <span className="dot-number">☕</span>
+                                                    </div>
+                                                    <div className="step-line" style={{ background: '#bfdbfe' }}></div>
+                                                  </div>
+                                                  <div className="step-content" style={{ paddingLeft: '10px' }}>
+                                                    <div style={{ 
+                                                      padding: '12px 16px', 
+                                                      background: '#eff6ff', 
+                                                      borderRadius: '12px', 
+                                                      borderLeft: '4px solid #3b82f6',
+                                                      boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)'
+                                                    }}>
+                                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                        <span style={{ fontWeight: 800, color: '#1e40af', fontSize: '0.95rem' }}>
+                                                          ☕ {durationMin >= 480 ? 'Pausa Inter-jornada (Extendido)' : durationMin >= 240 ? 'Pausa Nocturna Automatizada' : 'Descanso Obligatorio'}
+                                                        </span>
+                                                        <span className="step-time" style={{ 
+                                                          fontWeight: 700, 
+                                                          color: '#2563eb', 
+                                                          fontSize: '0.8rem', 
+                                                          background: '#fff', 
+                                                          padding: '4px 10px', 
+                                                          borderRadius: '6px', 
+                                                          border: '1px solid #bfdbfe',
+                                                          marginLeft: 'auto'
+                                                        }}>
+                                                          {bStart && bEnd ? `${formatTime(bStart)} - ${formatTime(bEnd)}` : `${Math.round(durationMin)} min`}
+                                                        </span>
+                                                      </div>
+                                                      <p style={{ margin: '6px 0 0 0', fontSize: '0.75rem', color: '#64748b', lineHeight: '1.4' }}>
+                                                        {durationMin >= 480
+                                                          ? 'El vehículo se encuentra en un descanso prolongado entre jornadas operativas o esperando apertura del CEDI.'
+                                                          : durationMin >= 240 
+                                                            ? 'El vehículo se detiene debido al cierre del CEDI y para cumplir con las normativas de descanso obligatorio.' 
+                                                            : 'El vehículo pausará operaciones durante este tiempo para cumplir normativas de descanso.'}
+                                                      </p>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              );
+                                            })
+                                          ) : (
+                                            <div key={`embedded-break-${sIdx}-fallback`} className="itinerary-step break animate-fade-in" style={{ marginTop: '10px' }}>
+                                              <div className="step-timeline">
+                                                <div className="step-dot" style={{ background: '#3b82f6' }}>
+                                                  <span className="dot-number">☕</span>
+                                                </div>
+                                                <div className="step-line" style={{ background: '#bfdbfe' }}></div>
+                                              </div>
+                                              <div className="step-content" style={{ paddingLeft: '10px' }}>
+                                                <div style={{ 
+                                                  padding: '12px 16px', 
+                                                  background: '#eff6ff', 
+                                                  borderRadius: '12px', 
+                                                  borderLeft: '4px solid #3b82f6',
+                                                  boxShadow: '0 2px 8px rgba(37, 99, 235, 0.08)'
+                                                }}>
+                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                                                    <span style={{ fontWeight: 800, color: '#1e40af', fontSize: '0.95rem' }}>
+                                                      ☕ {stop.breakMin >= 480 ? 'Pausa Inter-jornada (Extendido)' : stop.breakMin >= 240 ? 'Pausa Nocturna Automatizada' : 'Descanso Obligatorio'}
+                                                    </span>
+                                                    <span className="step-time" style={{ 
+                                                      fontWeight: 700, 
+                                                      color: '#2563eb', 
+                                                      fontSize: '0.8rem', 
+                                                      background: '#fff', 
+                                                      padding: '4px 10px', 
+                                                      borderRadius: '6px', 
+                                                      border: '1px solid #bfdbfe',
+                                                      marginLeft: 'auto'
+                                                    }}>
+                                                      {Math.round(stop.breakMin)} min
+                                                    </span>
+                                                  </div>
+                                                  <p style={{ margin: '6px 0 0 0', fontSize: '0.75rem', color: '#64748b', lineHeight: '1.4' }}>
+                                                    {stop.breakMin >= 480
+                                                      ? 'El vehículo se encuentra en un descanso prolongado entre jornadas operativas o esperando apertura del CEDI.'
+                                                      : stop.breakMin >= 240 
+                                                        ? 'El vehículo se detiene debido al cierre del CEDI y para cumplir con las normativas de descanso obligatorio.' 
+                                                        : 'El vehículo pausará operaciones durante este tiempo para cumplir normativas de descanso.'}
+                                                  </p>
+                                                </div>
+                                              </div>
+                                            </div>
+                                          )
+                                        )}
                                           <div style={{ textAlign: 'right' }}>
                                             <div style={{ fontSize: '0.9rem', fontWeight: 900, color: '#0f172a' }}>
                                               {cycleInfo.totalWeight.toLocaleString()} kg
@@ -1143,14 +1252,15 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                                                 <span className="step-label" style={{ 
                                                   fontWeight: 800, 
-                                                  color: stop.type === 'reload' ? '#d97706' : '#0f172a', 
+                                                  color: stop.type === 'reload' ? '#d97706' : stop.type === 'break' ? '#2563eb' : '#0f172a', 
                                                   fontSize: '1rem',
                                                   display: 'flex',
                                                   alignItems: 'center',
                                                   gap: '8px'
                                                 }}>
                                                   {stop.type === 'reload' && <ChevronRight size={18} />}
-                                                  {stop.label}
+                                                  {stop.type === 'break' && <span style={{ fontSize: '1.2rem' }}>☕ </span>}
+                                                  {stop.label || (stop.type === 'break' ? 'Descanso Obligatorio' : '')}
                                                   {stop.type === 'delivery' && (
                                                     <span style={{ marginLeft: '10px', color: 'var(--primary-electric)', fontSize: '0.85rem' }}>
                                                       [Mov: {orders.length <= 3 
@@ -1203,6 +1313,35 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                                   <div style={{ fontWeight: 600 }}>
                                                     El vehículo retorna al CEDI para iniciar el <strong>Viaje #{stop.cycle}</strong>. 
                                                     Carga planeada para este bloque: <strong>{cycleInfo.totalWeight.toLocaleString()} kg</strong>
+                                                  </div>
+                                                </div>
+                                              )}
+
+                                              {stop.type === 'break' && (
+                                                <div style={{ 
+                                                  marginTop: '8px',
+                                                  padding: '10px 16px',
+                                                  background: '#eff6ff',
+                                                  borderRadius: '8px',
+                                                  border: '1px solid #bfdbfe',
+                                                  fontSize: '0.8rem',
+                                                  color: '#1e40af',
+                                                  display: 'flex',
+                                                  alignItems: 'center',
+                                                  gap: '12px',
+                                                  marginBottom: '12px'
+                                                }}>
+                                                  <div style={{ background: '#3b82f6', color: 'white', padding: '4px 8px', borderRadius: '4px', fontWeight: 900, fontSize: '0.7rem' }}>DESCANSO</div>
+                                                  <div style={{ fontWeight: 600 }}>
+                                                    {(() => {
+                                                      const arrDate = stop.arrival ? new Date(stop.arrival) : null;
+                                                      const depDate = stop.departure ? new Date(stop.departure) : null;
+                                                      const durationMin = arrDate && depDate ? Math.round((depDate - arrDate) / 60000) : stop.breakMin || 0;
+                                                      const isNocturnal = durationMin >= 240;
+                                                      return isNocturnal 
+                                                        ? `Pausa Nocturna Automatizada (${Math.round(durationMin)} min). El vehículo se detiene debido al cierre del CEDI y para cumplir las normativas de descanso obligatorio.` 
+                                                        : `Descanso de flota programado (${Math.round(durationMin)} min). El vehículo pausará operaciones para cumplir normativas de descanso.`;
+                                                    })()}
                                                   </div>
                                                 </div>
                                               )}
@@ -1282,6 +1421,36 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                                   </div>
                                                 </div>
                                               )}
+                                              
+                                              {/* Mostrar información de Descansos / Tiempos de Espera en la vista de lista */}
+                                              {stop.waitMin > 0 && (
+                                                <div style={{ 
+                                                  marginTop: '12px',
+                                                  display: 'flex',
+                                                  flexDirection: 'column',
+                                                  gap: '6px'
+                                                }}>
+                                                  <div style={{ 
+                                                    padding: '8px 12px', 
+                                                    background: '#fefce8', 
+                                                    borderRadius: '6px', 
+                                                    borderLeft: '3px solid #eab308',
+                                                    fontSize: '0.75rem', 
+                                                    color: '#854d0e',
+                                                    display: 'flex',
+                                                    alignItems: 'center',
+                                                    gap: '8px'
+                                                  }}>
+                                                    <span style={{ fontSize: '1rem' }}>⏳</span>
+                                                    <div>
+                                                      <strong>Tiempo de espera:</strong> {Math.round(stop.waitMin)} minutos.
+                                                      <span style={{ display: 'block', fontSize: '0.65rem', color: '#a16207', marginTop: '2px' }}>
+                                                        El vehículo llegó antes de que la ventana horaria del cliente se abriera, o está esperando el inicio de su turno.
+                                                      </span>
+                                                    </div>
+                                                  </div>
+                                                </div>
+                                              )}
                                             </div>
                                           </div>
                                           
@@ -1297,80 +1466,116 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                               boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.05)',
                                               marginBottom: '15px'
                                             }}>
-                                              {/* Encabezados de Tabla */}
+                                              {/* Vista de Flex-Cards para Pedidos */}
                                               <div style={{ 
                                                 display: 'grid', 
-                                                gridTemplateColumns: '80px 120px 120px 250px 1fr 100px', 
-                                                gap: '15px', 
-                                                padding: '12px 20px',
+                                                gridTemplateColumns: 'repeat(auto-fill, minmax(320px, 1fr))', 
+                                                gap: '16px', 
+                                                padding: '20px',
                                                 background: '#f8fafc',
                                                 borderBottom: '1px solid #e2e8f0',
-                                                fontSize: '0.65rem',
-                                                fontWeight: 800,
-                                                color: '#64748b',
-                                                textTransform: 'uppercase',
-                                                letterSpacing: '1px'
                                               }}>
-                                                <span>Secuencia</span>
-                                                <span>Movimiento</span>
-                                                <span>Pedido #</span>
-                                                <span>Cliente / Código</span>
-                                                <span>Dirección</span>
-                                                <span style={{ textAlign: 'right' }}>Peso (kg)</span>
+                                                {orders.map((order, oIdx) => (
+                                                  <div key={oIdx} style={{ 
+                                                    background: '#ffffff', 
+                                                    borderRadius: '12px', 
+                                                    border: '1px solid #e2e8f0',
+                                                    padding: '16px',
+                                                    boxShadow: '0 2px 4px rgba(0,0,0,0.02)',
+                                                    transition: 'all 0.2s ease',
+                                                    display: 'flex',
+                                                    flexDirection: 'column',
+                                                    gap: '12px',
+                                                    position: 'relative',
+                                                    overflow: 'hidden'
+                                                  }} className="order-card-hover">
+                                                    <div style={{ 
+                                                      position: 'absolute', 
+                                                      top: 0, 
+                                                      left: 0, 
+                                                      width: '4px', 
+                                                      height: '100%', 
+                                                      background: 'var(--primary-electric)' 
+                                                    }}></div>
+
+                                                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                                                      <div>
+                                                        <span style={{ 
+                                                          fontSize: '0.65rem', 
+                                                          color: '#64748b', 
+                                                          fontWeight: 800, 
+                                                          textTransform: 'uppercase',
+                                                          letterSpacing: '0.5px'
+                                                        }}>
+                                                          Secuencia {stop.sequence ? `${stop.sequence}.${oIdx + 1}` : `${oIdx + 1}`}
+                                                        </span>
+                                                        <h4 style={{ margin: '2px 0 0 0', color: '#0f172a', fontSize: '1rem', fontWeight: 800 }}>
+                                                          {getOrderId(order, mapping)}
+                                                        </h4>
+                                                      </div>
+                                                      <div style={{ 
+                                                        background: 'rgba(0, 88, 190, 0.1)', 
+                                                        color: 'var(--primary-electric)', 
+                                                        padding: '4px 10px', 
+                                                        borderRadius: '20px',
+                                                        fontSize: '0.75rem',
+                                                        fontWeight: 800
+                                                      }}>
+                                                        {order[mapping.movimiento] || 'N/A'}
+                                                      </div>
+                                                    </div>
+
+                                                    <div style={{ borderTop: '1px solid #f1f5f9', paddingTop: '10px' }}>
+                                                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px' }}>
+                                                        <span style={{ 
+                                                          fontSize: '0.75rem', 
+                                                          fontWeight: 800, 
+                                                          color: 'var(--primary-electric)', 
+                                                          background: 'rgba(0, 88, 190, 0.05)', 
+                                                          padding: '2px 6px', 
+                                                          borderRadius: '4px' 
+                                                        }}>
+                                                          {order[mapping.clientCode] || 'S/C'}
+                                                        </span>
+                                                        <span style={{ fontSize: '0.85rem', fontWeight: 700, color: '#1e293b' }}>
+                                                          {order[mapping.client] || 'Sin nombre'}
+                                                        </span>
+                                                      </div>
+                                                      <div style={{ fontSize: '0.75rem', color: '#64748b', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                        <MapPin size={12} color="#94a3b8" /> 
+                                                        <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                          {order[mapping.address] || 'N/A'}
+                                                        </span>
+                                                      </div>
+                                                    </div>
+
+                                                    <div style={{ 
+                                                      borderTop: '1px solid #f1f5f9', 
+                                                      paddingTop: '10px', 
+                                                      display: 'flex', 
+                                                      justifyContent: 'space-between', 
+                                                      alignItems: 'center',
+                                                      marginTop: 'auto'
+                                                    }}>
+                                                      <div style={{ fontSize: '0.65rem', color: '#64748b', fontWeight: 600 }}>PESO CARGA</div>
+                                                      <div style={{ fontSize: '1rem', fontWeight: 900, color: '#0f172a' }}>
+                                                        {parseNumber(order[mapping.weight] || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg
+                                                      </div>
+                                                    </div>
+                                                  </div>
+                                                ))}
                                               </div>
-
-                                              {orders.map((order, oIdx) => (
-                                                <div key={oIdx} style={{ 
-                                                  display: 'grid', 
-                                                  gridTemplateColumns: '80px 120px 120px 250px 1fr 100px', 
-                                                  gap: '15px', 
-                                                  alignItems: 'center',
-                                                  padding: '12px 20px',
-                                                  borderBottom: oIdx === orders.length - 1 ? 'none' : '1px solid #f1f5f9',
-                                                  transition: 'background 0.2s ease',
-                                                  textAlign: 'left'
-                                                }} className="order-row-hover">
-                                                  <div style={{ color: '#64748b', fontWeight: 600, fontSize: '0.8rem' }}>
-                                                    {stop.sequence ? `${stop.sequence}.${oIdx + 1}` : `${oIdx + 1}`}
-                                                  </div>
-                                                  
-                                                  <div style={{ fontWeight: 800, color: 'var(--primary-electric)', fontSize: '0.85rem' }}>
-                                                    {order[mapping.movimiento] || 'N/A'}
-                                                  </div>
-                                                  
-                                                  <div style={{ fontWeight: 700, color: '#0f172a', fontSize: '0.85rem' }}>
-                                                    {getOrderId(order, mapping)}
-                                                  </div>
-
-                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', overflow: 'hidden' }}>
-                                                    <span style={{ fontSize: '0.8rem', fontWeight: 800, color: 'var(--primary-electric)', background: 'rgba(0, 88, 190, 0.05)', padding: '2px 6px', borderRadius: '4px', flexShrink: 0 }}>
-                                                      {order[mapping.clientCode] || 'S/C'}
-                                                    </span>
-                                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: '#1e293b', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                      {order[mapping.client] || 'Sin nombre'}
-                                                    </span>
-                                                  </div>
-                                                  
-                                                  <div style={{ fontSize: '0.8rem', color: '#475569', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                    {order[mapping.address] || 'N/A'}
-                                                  </div>
-
-                                                  <div style={{ textAlign: 'right', fontWeight: 800, color: '#1e293b', fontSize: '0.85rem' }}>
-                                                    {parseNumber(order[mapping.weight] || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })}
-                                                  </div>
-                                                </div>
-                                              ))}
                                               
                                               <div style={{ 
-                                                display: 'grid', 
-                                                gridTemplateColumns: '1fr 100px', 
-                                                padding: '12px 20px',
+                                                display: 'flex', 
+                                                justifyContent: 'space-between', 
+                                                alignItems: 'center',
+                                                padding: '16px 24px',
                                                 background: '#f8fafc',
-                                                borderTop: '2px solid #e2e8f0',
-                                                alignItems: 'center'
+                                                borderTop: '1px solid #e2e8f0'
                                               }}>
-                                                <span style={{ fontSize: '0.7rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Total Parada</span>
-                                                <span style={{ textAlign: 'right', fontWeight: 900, color: '#0f172a', fontSize: '0.9rem' }}>
+                                                <span style={{ fontSize: '0.75rem', fontWeight: 800, color: '#64748b', textTransform: 'uppercase' }}>Total Parada</span>
+                                                <span style={{ fontWeight: 900, color: '#0f172a', fontSize: '1.1rem' }}>
                                                   {orders.reduce((acc, o) => acc + parseNumber(o[mapping.weight] || 0), 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg
                                                 </span>
                                               </div>
@@ -1495,12 +1700,50 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
 
                   {/* Bloques de actividad */}
                   {v.itinerary.map((stop, sIdx) => {
+                    const prevStop = sIdx > 0 ? v.itinerary[sIdx - 1] : null;
+                    const transitStart = prevStop ? (prevStop.departure || prevStop.arrival) : null;
+                    const transitEnd = stop.arrival || stop.departure;
+                    const transitStartPos = transitStart ? getGanttPos(transitStart) : 0;
+                    const transitEndPos = transitEnd ? getGanttPos(transitEnd) : 0;
+                    const transitWidth = Math.max(0, transitEndPos - transitStartPos);
+
                     const startPos = getGanttPos(stop.arrival || stop.departure);
                     const endPos = getGanttPos(stop.departure || stop.arrival);
                     const width = Math.max(0.5, endPos - startPos);
 
                     return (
                       <React.Fragment key={sIdx}>
+                        {/* Task 2: Transit Blocks (En Tránsito / Conducción) */}
+                        {transitWidth > 0.1 && (
+                          <div className="gantt-activity-block transit"
+                               style={{ 
+                                 left: `${transitStartPos}%`,
+                                 width: `${transitWidth}%`,
+                                 backgroundColor: 'rgba(148, 163, 184, 0.25)',
+                                 backgroundImage: 'repeating-linear-gradient(135deg, transparent, transparent 10px, rgba(148, 163, 184, 0.1) 10px, rgba(148, 163, 184, 0.1) 20px)',
+                                 border: '1px dashed rgba(148, 163, 184, 0.4)',
+                                 borderRadius: '4px',
+                                 zIndex: 10
+                               }}
+                               onMouseEnter={handleTooltipPosition}
+                               >
+                            <div className="activity-tooltip">
+                              <span className="tooltip-seq">🚚</span>
+                              <span className="tooltip-main">En Tránsito / Conducción</span>
+                              <span className="tooltip-time">
+                                {formatTime(transitStart)} - {formatTime(transitEnd)}
+                              </span>
+                              <div className="tooltip-breakdown">
+                                <span style={{ color: '#94a3b8' }}>⏱️ Duración: {Math.round((new Date(transitEnd) - new Date(transitStart)) / 60000)}m</span>
+                              </div>
+                            </div>
+                            {transitWidth > 5 && (
+                              <span className="block-label" style={{ color: '#94a3b8', fontSize: '0.65rem' }}>
+                                En Tránsito
+                              </span>
+                            )}
+                          </div>
+                        )}
                         {/* Bloque principal */}
                         <div className={`gantt-activity-block ${stop.type}`}
                              style={{ 
@@ -1514,19 +1757,73 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                               <span className="tooltip-seq">{stop.sequence || (stop.type === 'break' ? '☕' : 'R')}</span>
                               <span className="tooltip-main">
                                 {stop.label}
-                                {stop.type !== 'break' && stop.jobs?.[0]?.orders?.length > 0 && (
-                                  <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.6rem', color: '#cbd5e1' }}>
-                                    <strong>Movimientos:</strong> {stop.jobs[0].orders.map(o => o[mapping.movimiento]).filter(Boolean).join(', ')}
+                                {stop.type !== 'break' && stop.jobs?.length > 0 && (
+                                  <div style={{ 
+                                    marginTop: '10px', 
+                                    paddingTop: '10px', 
+                                    borderTop: '1px solid rgba(255,255,255,0.15)', 
+                                    display: 'flex', 
+                                    flexDirection: 'column', 
+                                    gap: '8px',
+                                    maxHeight: '220px',
+                                    overflowY: 'auto',
+                                    paddingRight: '4px'
+                                  }}>
+                                    <strong style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                                      Pedidos ({stop.jobs.flatMap(j => j.orders).length}):
+                                    </strong>
+                                    {stop.jobs.flatMap(j => j.orders).map((order, oIdx) => (
+                                      <div key={oIdx} style={{ 
+                                        background: 'rgba(255, 255, 255, 0.05)', 
+                                        borderRadius: '6px', 
+                                        border: '1px solid rgba(255, 255, 255, 0.1)', 
+                                        padding: '8px',
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        gap: '4px'
+                                      }}>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                          <span style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
+                                            {getOrderId(order, mapping)}
+                                          </span>
+                                          <span style={{ 
+                                            background: 'rgba(0, 88, 190, 0.3)', 
+                                            color: '#93c5fd', 
+                                            padding: '2px 6px', 
+                                            borderRadius: '4px',
+                                            fontSize: '0.65rem',
+                                            fontWeight: 700
+                                          }}>
+                                            {order[mapping.movimiento] || 'N/A'}
+                                          </span>
+                                        </div>
+                                        <div style={{ color: '#fff', fontSize: '0.7rem', fontWeight: 600 }}>
+                                          {order[mapping.client] || 'Sin nombre'}
+                                        </div>
+                                        <div style={{ color: '#cbd5e1', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                          <MapPin size={10} color="#94a3b8" /> 
+                                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
+                                            {order[mapping.address] || 'N/A'}
+                                          </span>
+                                        </div>
+                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
+                                          <span style={{ color: '#94a3b8', fontSize: '0.65rem' }}>Peso:</span>
+                                          <span style={{ color: '#fff', fontSize: '0.7rem', fontWeight: 700 }}>
+                                            {parseNumber(order[mapping.weight] || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg
+                                          </span>
+                                        </div>
+                                      </div>
+                                    ))}
                                   </div>
                                 )}
                               </span>
                               {stop.type !== 'break' && stop.address && (
-                                <span className="tooltip-address" style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', margin: '2px 0' }}>
+                                <span className="tooltip-address" style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', margin: '4px 0' }}>
                                   <MapPin size={8} /> {stop.address}
                                 </span>
                               )}
-                              <span className="tooltip-time" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
-                                <span>{formatTime(stop.arrival)} - {formatTime(stop.departure)} {analysis.dataDays > 1 && stop.arrival && `· ${formatDate(stop.arrival)}`}</span>
+                              <span className="tooltip-time" style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
+                                <span style={{ fontWeight: 800, color: '#fff' }}>{formatTime(stop.arrival)} - {formatTime(stop.departure)} {analysis.dataDays > 1 && stop.arrival && `· ${formatDate(stop.arrival)}`}</span>
                                 {stop.arrival && stop.departure && (
                                   <span style={{ fontSize: '0.65rem', color: '#cbd5e1', fontWeight: 600 }}>
                                     ⏱️ Tiempo total en sitio: {Math.round((stop.departure - stop.arrival) / 60000)}m
@@ -1534,14 +1831,23 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                 )}
                               </span>
                               {(stop.waitMin > 0 || stop.serviceMin > 0 || stop.breakMin > 0) && (
-                                <div className="tooltip-breakdown" style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                  {stop.serviceMin > 0 && <span style={{ color: '#4ade80' }}>🚚 Servicio: {Math.round(stop.serviceMin)}m</span>}
-                                  {stop.waitMin > 0 && <span style={{ color: '#fbbf24' }}>⏳ Espera: {Math.round(stop.waitMin)}m</span>}
+                                <div className="tooltip-breakdown" style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed rgba(255,255,255,0.2)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {stop.serviceMin > 0 && <span style={{ color: '#4ade80' }}>🚚 <strong>Servicio:</strong> {Math.round(stop.serviceMin)}m <span style={{fontSize: '0.6rem', color: '#94a3b8'}}>(Tiempo de descarga)</span></span>}
+                                  {stop.waitMin > 0 && (
+                                    <>
+                                      <span style={{ color: '#fbbf24' }}>⏳ <strong>Espera:</strong> {Math.round(stop.waitMin)}m</span>
+                                      <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontStyle: 'italic', whiteSpace: 'normal', maxWidth: '220px', lineHeight: '1.2' }}>
+                                        Llegó antes de que la ventana del cliente abriera o espera de turno.
+                                      </span>
+                                    </>
+                                  )}
                                   {stop.breakMin > 0 && (
                                     <>
-                                      <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>☕ Descanso de flota: {Math.round(stop.breakMin)}m</span>
-                                      <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontStyle: 'italic', whiteSpace: 'normal', maxWidth: '200px', lineHeight: '1.2' }}>
-                                        * Esta tarea se alargó porque el chofer tomó su descanso durante este periodo.
+                                      <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>☕ <strong>{stop.breakMin >= 240 ? 'Pausa Nocturna Automatizada:' : 'Descanso de flota:'}</strong> {Math.round(stop.breakMin)}m</span>
+                                      <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontStyle: 'italic', whiteSpace: 'normal', maxWidth: '220px', lineHeight: '1.2' }}>
+                                        {stop.breakMin >= 240 
+                                          ? 'El vehículo se detiene por cierre del CEDI y para cumplir con el descanso obligatorio.' 
+                                          : 'Pausa programada según la normativa del conductor en este horario.'}
                                       </span>
                                     </>
                                   )}
