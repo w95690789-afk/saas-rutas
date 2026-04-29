@@ -1283,9 +1283,14 @@ body {
   border-bottom: 1px solid #f1f5f9;
   min-height: 65px;
   transition: background 0.15s;
+  position: relative;
+  z-index: 1;
 }
 
-.gantt-row-v2:hover { background: #fafbfd; }
+.gantt-row-v2:hover { 
+  background: #fafbfd; 
+  z-index: 50;
+}
 
 .gantt-v-info {
   padding: 10px 20px;
@@ -1311,7 +1316,7 @@ body {
   display: flex;
   align-items: center;
   padding: 12px 0;
-  overflow: hidden;
+  overflow: visible;
 }
 
 .lane-grid {
@@ -1425,6 +1430,41 @@ body {
   transform: translateX(-50%);
   border: 6px solid transparent;
   border-top-color: #1e293b;
+}
+
+/* Dynamic JS Tooltip Positions (Fix for clipping) */
+.activity-tooltip.tooltip-down {
+  bottom: auto;
+  top: 100%;
+  margin-bottom: 0;
+  margin-top: 10px;
+}
+.gantt-activity-block:hover .activity-tooltip.tooltip-down {
+  transform: translateX(-50%) translateY(5px);
+}
+.activity-tooltip.tooltip-down::after {
+  top: auto;
+  bottom: 100%;
+  border-top-color: transparent;
+  border-bottom-color: #1e293b;
+}
+
+.activity-tooltip.tooltip-left {
+  left: auto;
+  right: 0;
+  transform: translateX(0) translateY(0);
+}
+.gantt-activity-block:hover .activity-tooltip.tooltip-left {
+  transform: translateX(0) translateY(-5px);
+}
+.activity-tooltip.tooltip-left::after {
+  left: auto;
+  right: 10px;
+  transform: none;
+}
+
+.gantt-activity-block:hover .activity-tooltip.tooltip-down.tooltip-left {
+  transform: translateX(0) translateY(5px);
 }
 
 /* Unassigned Banner */

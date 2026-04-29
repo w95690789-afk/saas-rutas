@@ -143,11 +143,16 @@ function App() {
         const dataDate = data[0]?.[mapping.date || 'FechaEmision'] || data[0]?.['Fecha'] || baseDateStr;
         let finalBaseDate = baseDateStr;
         
-        // Simple DD/MM/YYYY to YYYY-MM-DD
-        if (dataDate && typeof dataDate === 'string' && dataDate.includes('/')) {
-          const parts = dataDate.split('/');
-          if (parts.length === 3) {
-            finalBaseDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+        if (dataDate && typeof dataDate === 'string') {
+          // Simple DD/MM/YYYY to YYYY-MM-DD
+          if (dataDate.includes('/')) {
+            const parts = dataDate.split('/');
+            if (parts.length === 3) {
+              finalBaseDate = `${parts[2]}-${parts[1].padStart(2, '0')}-${parts[0].padStart(2, '0')}`;
+            }
+          } else if (dataDate.match(/^\d{4}-\d{2}-\d{2}$/)) {
+            // Already YYYY-MM-DD
+            finalBaseDate = dataDate;
           }
         }
 
@@ -215,13 +220,39 @@ function App() {
     // 2. Definir turnos por tipo de vehículo (respetando si recargan o no)
     const getShiftsForType = (vType) => {
       const loadDur = (parseInt(cediConfig.loadDuration) || 120) * 60;
+      const maxDays = parseInt(cediConfig.maxShiftDays) || 1;
+      
       const shift = {
         start: { time: formatTime(cediConfig.startTime), location: cediLoc },
         end: { 
-          time: formatTime(cediConfig.endTime, "2026-04-10", (parseInt(cediConfig.maxShiftDays) || 1) - 1), 
+          time: formatTime(cediConfig.endTime, undefined, maxDays - 1), 
           location: cediLoc
         }
       };
+
+      // Inyectar descansos nocturnos (breaks) si el rango es de varios días
+      if (maxDays > 1) {
+        shift.breaks = [];
+        for (let i = 0; i < maxDays - 1; i++) {
+          const breakStart = formatTime(cediConfig.endTime, undefined, i);     // Ej: Hoy a las 17:00
+          const breakEnd = formatTime(cediConfig.startTime, undefined, i + 1); // Ej: Mañana a las 06:00
+          
+          // Calcular la duración en segundos
+          const dStart = new Date(breakStart).getTime();
+          const dEnd = new Date(breakEnd).getTime();
+          const durationSeconds = Math.max(0, (dEnd - dStart) / 1000);
+          
+          if (durationSeconds > 0) {
+            shift.breaks.push({
+              duration: durationSeconds,
+              times: [
+                [breakStart, breakEnd]
+              ]
+            });
+          }
+        }
+      }
+
       if (vType.canReload) {
         shift.reloads = Array.from({ length: 5 }).map(() => ({
           location: cediLoc,

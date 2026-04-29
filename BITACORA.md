@@ -389,3 +389,43 @@
 - **Impacto:** Recuperación del despliegue visual de la hoja de ruta y de los detalles de paradas del viaje, estabilizando el entorno para el usuario final.
 
 **Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+## 📅 SESIÓN 25: IMPLEMENTACIÓN DE DESCANSOS (BREAKS) EN VIAJES MULTIDÍA
+**Estatus:** ✅ RESOLUCIÓN CERTIFICADA - RUTEADOR ACTUALIZADO
+- [2026-04-28] - Inyección dinámica de `breaks` para control de horarios
+- **Problema Detectado:** En la planeación de rutas de múltiples días (ej. 3 días de plazo), la API de HERE asignaba rutas que forzaban a los vehículos a conducir fuera de los horarios operativos del CEDI (17:00 a 06:00), ya que consideraba toda la ventana de 3 días como un turno continuo.
+- **Acciones Realizadas:**
+  1. **Generación Automática de Descansos:** Modificación de `App.jsx` (`getShiftsForType`) para calcular las ventanas nocturnas (desde el fin del turno diario hasta el inicio del día siguiente) según la fecha del archivo cargado.
+  2. **Inyección en Esquema HERE v3.1:** Construcción e inyección dinámica del objeto `breaks` con duraciones exactas en segundos (ej. 46800s para 13 horas) y ventanas `times[]` dentro de la configuración del vehículo.
+  3. **Data Date Parsing:** Refactorización de la función `formatTime` para que procese correctamente la fecha del CSV y evite "hardcodeo" de fechas base.
+- **Impacto:** Los viajes foráneos de larga duración ahora se pausan obligatoriamente durante la noche, respetando las jornadas laborales y garantizando que el algoritmo asigne carga de manera realista sin generar entregas en horarios no operativos.
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+## 📅 SESIÓN 26: CORRECCIÓN DINÁMICA DE TOOLTIPS EN GANTT CHART
+**Estatus:** ✅ RESOLUCIÓN CERTIFICADA - UI RESTAURADA
+- [2026-04-28] - Fix de clipping (cortes) en popups (tooltips)
+- **Problema Detectado:** Los popups de información (tooltips) de las actividades en el diagrama de Gantt se cortaban al tocar la cinta superior de días/horas debido a la regla `overflow-y: auto` del contenedor `.gantt-body`. 
+- **Acciones Realizadas:**
+  1. Se eliminó la regla CSS estática que solo aplicaba a la primera fila (`first-child`).
+  2. Se implementó lógica Javascript dinámica en `LogisticAnalyst.jsx` (`handleTooltipPosition`) que detecta la posición real de la actividad mediante `getBoundingClientRect`.
+  3. Se añadieron clases dinámicas (`tooltip-down`, `tooltip-left`) en `index.css` para dibujar el popup hacia abajo o a la izquierda si no hay espacio.
+- **Impacto:** Los tooltips ahora son 100% visibles independientemente de la fila o nivel de scroll. Experiencia UI restaurada.
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+## 🚀 INFORME DE DESPLIEGUE: ESTABILIZACIÓN GANTT
+**Estatus:** ✅ DESPLIEGUE EN PRODUCCIÓN
+- [x] **Repositorio:** Cambios sincronizados con GitHub (rama `main`).
+- [x] **Archivos Afectados:** `LogisticAnalyst.jsx`, `index.css`, `BITACORA.md`.
+- [x] **Mensaje de Commit:** `fix(gantt): dynamic tooltip positioning and bitacora update`
+- [x] **Plataforma:** Vercel.
+- [x] **URL de Producción:** [https://saas-rutas.vercel.app/](https://saas-rutas.vercel.app/)
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅

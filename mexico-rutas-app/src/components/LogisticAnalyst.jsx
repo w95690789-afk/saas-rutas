@@ -5,7 +5,7 @@ import {
   Clock, MapPin, AlertCircle, TrendingDown,
   Target, ShieldAlert, Info, ChevronDown, ChevronUp, 
   LayoutGrid, List, Calendar, ChevronLeft, ChevronRight,
-  ZoomIn, ZoomOut, Maximize2, Download, ArrowRight
+  ZoomIn, ZoomOut, Maximize2, Download
 } from 'lucide-react';
 
 const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
@@ -38,6 +38,29 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       n /= 10;
     }
     return n;
+  };
+
+  const handleTooltipPosition = (e) => {
+    const block = e.currentTarget;
+    const tooltip = block.querySelector('.activity-tooltip');
+    const bodyEl = block.closest('.gantt-body');
+    
+    if (tooltip && bodyEl) {
+      const blockRect = block.getBoundingClientRect();
+      const bodyRect = bodyEl.getBoundingClientRect();
+      
+      if (blockRect.top - bodyRect.top < 150) {
+        tooltip.classList.add('tooltip-down');
+      } else {
+        tooltip.classList.remove('tooltip-down');
+      }
+      
+      if (bodyRect.right - blockRect.right < 150) {
+        tooltip.classList.add('tooltip-left');
+      } else {
+        tooltip.classList.remove('tooltip-left');
+      }
+    }
   };
 
   // ─── Extractores universales de tiempo ───
@@ -243,6 +266,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         const activities = stop.activities || [];
         const deliveries = activities.filter(a => a.type === 'delivery');
         const reloads = activities.filter(a => a.type === 'reload');
+        const breaks = activities.filter(a => a.type === 'break' || a.type === 'rest');
         
         if (reloads.length > 0) {
           currentCycle++;
@@ -291,6 +315,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         const stopLabel = index === 0 ? 'Salida CEDI' : 
                           index === stops.length - 1 ? 'Retorno Final CEDI' : 
                           reloads.length > 0 ? 'Recarga en CEDI' : 
+                          (breaks.length > 0 && deliveries.length === 0) ? '☕ Descanso / Pausa' :
                           isMultiClient ? `Parada Multi-cliente (${totalOrdersInStop} pedidos)` :
                           isGrouped ? `${clientName} (${totalOrdersInStop} pedidos)` : 
                           (() => {
@@ -305,6 +330,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         
         let waitMs = 0;
         let serviceMs = 0;
+        let breakMs = 0;
         
         if (arrivalMs && departureMs) {
           // Sumar tiempo real de actividades
@@ -318,12 +344,17 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
              const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
              if (s && e) serviceMs += (e - s);
           });
+          breaks.forEach(act => {
+             const s = normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time);
+             const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
+             if (s && e) breakMs += (e - s);
+          });
           
           // Si no hay detalle de actividades (Mock), el servicio es la diferencia
-          if (serviceMs === 0) {
+          if (serviceMs === 0 && breakMs === 0) {
             serviceMs = departureMs - arrivalMs;
           } else {
-            waitMs = Math.max(0, (departureMs - arrivalMs) - serviceMs);
+            waitMs = Math.max(0, (departureMs - arrivalMs) - serviceMs - breakMs);
           }
         }
 
@@ -339,12 +370,17 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
           cycleLoadAtStart: cycleLoad - stopWeight, // Carga antes de esta parada (para entregas)
           cycleLoadAtEnd: cycleLoad, // Carga después de esta parada
           stopWeight, // Peso de esta parada específica
-          type: isDepot ? 'depot' : reloads.length > 0 ? 'reload' : 'delivery',
+          type: isDepot ? 'depot' : reloads.length > 0 ? 'reload' : (breaks.length > 0 && deliveries.length === 0) ? 'break' : 'delivery',
           location: stop.location,
           arrival: arrivalMs ? new Date(arrivalMs) : null,
           departure: departureMs ? new Date(departureMs) : null,
           waitMin: waitMs / 60000,
           serviceMin: serviceMs / 60000,
+          breakMin: breakMs / 60000,
+          breakDetails: breaks.map(act => ({
+             start: normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time),
+             end: normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time),
+          })),
           jobs: deliveries.map(d => ({
             jobId: d.jobId,
             orders: jobToOrdersMap[d.jobId] || []
@@ -1113,7 +1149,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                                   alignItems: 'center',
                                                   gap: '8px'
                                                 }}>
-                                                  {stop.type === 'reload' && <ArrowRight size={18} />}
+                                                  {stop.type === 'reload' && <ChevronRight size={18} />}
                                                   {stop.label}
                                                   {stop.type === 'delivery' && (
                                                     <span style={{ marginLeft: '10px', color: 'var(--primary-electric)', fontSize: '0.85rem' }}>
@@ -1403,6 +1439,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                 <span className="legend-item"><span className="legend-dot depot"></span>CEDI</span>
                 <span className="legend-item"><span className="legend-dot delivery"></span>Entrega</span>
                 <span className="legend-item"><span className="legend-dot reload"></span>Recarga</span>
+                <span className="legend-item"><span className="legend-dot break"></span>Descanso</span>
               </div>
             </div>
           </div>
@@ -1463,46 +1500,97 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                     const width = Math.max(0.5, endPos - startPos);
 
                     return (
-                      <div key={sIdx} 
-                           className={`gantt-activity-block ${stop.type}`}
-                           style={{ 
-                             left: `${startPos}%`,
-                             width: `${width}%`
-                           }}>
-                        {(stop.type === 'delivery' || stop.type === 'reload') && (
-                          <div className="activity-tooltip">
-                            <span className="tooltip-seq">{stop.sequence || 'R'}</span>
-                            <span className="tooltip-main">
-                              {stop.label}
-                              {stop.jobs?.[0]?.orders?.length > 0 && (
-                                <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.6rem', color: '#cbd5e1' }}>
-                                  <strong>Movimientos:</strong> {stop.jobs[0].orders.map(o => o[mapping.movimiento]).filter(Boolean).join(', ')}
+                      <React.Fragment key={sIdx}>
+                        {/* Bloque principal */}
+                        <div className={`gantt-activity-block ${stop.type}`}
+                             style={{ 
+                               left: `${startPos}%`,
+                               width: `${width}%`
+                             }}
+                             onMouseEnter={handleTooltipPosition}
+                             >
+                          {(stop.type === 'delivery' || stop.type === 'reload' || stop.type === 'break') && (
+                            <div className="activity-tooltip">
+                              <span className="tooltip-seq">{stop.sequence || (stop.type === 'break' ? '☕' : 'R')}</span>
+                              <span className="tooltip-main">
+                                {stop.label}
+                                {stop.type !== 'break' && stop.jobs?.[0]?.orders?.length > 0 && (
+                                  <div style={{ marginTop: '4px', paddingTop: '4px', borderTop: '1px solid rgba(255,255,255,0.1)', fontSize: '0.6rem', color: '#cbd5e1' }}>
+                                    <strong>Movimientos:</strong> {stop.jobs[0].orders.map(o => o[mapping.movimiento]).filter(Boolean).join(', ')}
+                                  </div>
+                                )}
+                              </span>
+                              {stop.type !== 'break' && stop.address && (
+                                <span className="tooltip-address" style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', margin: '2px 0' }}>
+                                  <MapPin size={8} /> {stop.address}
+                                </span>
+                              )}
+                              <span className="tooltip-time" style={{ display: 'flex', flexDirection: 'column', gap: '2px' }}>
+                                <span>{formatTime(stop.arrival)} - {formatTime(stop.departure)} {analysis.dataDays > 1 && stop.arrival && `· ${formatDate(stop.arrival)}`}</span>
+                                {stop.arrival && stop.departure && (
+                                  <span style={{ fontSize: '0.65rem', color: '#cbd5e1', fontWeight: 600 }}>
+                                    ⏱️ Tiempo total en sitio: {Math.round((stop.departure - stop.arrival) / 60000)}m
+                                  </span>
+                                )}
+                              </span>
+                              {(stop.waitMin > 0 || stop.serviceMin > 0 || stop.breakMin > 0) && (
+                                <div className="tooltip-breakdown" style={{ marginTop: '6px', display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                                  {stop.serviceMin > 0 && <span style={{ color: '#4ade80' }}>🚚 Servicio: {Math.round(stop.serviceMin)}m</span>}
+                                  {stop.waitMin > 0 && <span style={{ color: '#fbbf24' }}>⏳ Espera: {Math.round(stop.waitMin)}m</span>}
+                                  {stop.breakMin > 0 && (
+                                    <>
+                                      <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>☕ Descanso de flota: {Math.round(stop.breakMin)}m</span>
+                                      <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontStyle: 'italic', whiteSpace: 'normal', maxWidth: '200px', lineHeight: '1.2' }}>
+                                        * Esta tarea se alargó porque el chofer tomó su descanso durante este periodo.
+                                      </span>
+                                    </>
+                                  )}
                                 </div>
                               )}
+                            </div>
+                          )}
+                          {stop.type === 'delivery' && width > 2 && (
+                            <span className="block-label">
+                              {stop.sequence}
+                              {stop.breakMin > 0 && " ☕"}
                             </span>
-                            {stop.address && (
-                              <span className="tooltip-address" style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', margin: '2px 0' }}>
-                                <MapPin size={8} /> {stop.address}
-                              </span>
-                            )}
-                            <span className="tooltip-time">
-                              {formatTime(stop.arrival)} - {formatTime(stop.departure)}
-                              {analysis.dataDays > 1 && stop.arrival && (
-                                <> · {formatDate(stop.arrival)}</>
-                              )}
-                            </span>
-                            {(stop.waitMin > 1 || stop.serviceMin > 0) && (
-                              <div className="tooltip-breakdown">
-                                {stop.serviceMin > 0 && <span style={{ color: '#4ade80' }}>⚡ Servicio: {Math.round(stop.serviceMin)}m</span>}
-                                {stop.waitMin > 1 && <span style={{ color: '#fbbf24', marginLeft: '8px' }}>⏳ Espera: {Math.round(stop.waitMin)}m</span>}
+                          )}
+                        </div>
+
+                        {/* Bloques de descanso superpuestos/separados si existen */}
+                        {stop.breakDetails && stop.breakDetails.length > 0 && stop.breakDetails.map((b, bIdx) => {
+                          if (!b.start || !b.end) return null;
+                          const bStartPos = getGanttPos(new Date(b.start));
+                          const bEndPos = getGanttPos(new Date(b.end));
+                          const bWidth = Math.max(0.5, bEndPos - bStartPos);
+                          
+                          return (
+                            <div key={`break-${sIdx}-${bIdx}`} 
+                                 className="gantt-activity-block break-overlay"
+                                 style={{ 
+                                   left: `${bStartPos}%`,
+                                   width: `${bWidth}%`,
+                                   backgroundColor: '#3b82f6',
+                                   backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)',
+                                   border: '1px solid #2563eb',
+                                   zIndex: 15
+                                 }}
+                                 onMouseEnter={handleTooltipPosition}
+                                 >
+                              <div className="activity-tooltip">
+                                <span className="tooltip-seq">☕</span>
+                                <span className="tooltip-main">Descanso programado</span>
+                                <span className="tooltip-time">
+                                  {formatTime(new Date(b.start))} - {formatTime(new Date(b.end))}
+                                </span>
+                                <div className="tooltip-breakdown">
+                                  <span style={{ color: '#60a5fa' }}>☕ Duración: {Math.round((b.end - b.start) / 60000)}m</span>
+                                </div>
                               </div>
-                            )}
-                          </div>
-                        )}
-                        {stop.type === 'delivery' && width > 2 && (
-                          <span className="block-label">{stop.sequence}</span>
-                        )}
-                      </div>
+                            </div>
+                          );
+                        })}
+                      </React.Fragment>
                     );
                   })}
                 </div>
