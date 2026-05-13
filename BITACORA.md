@@ -464,4 +464,34 @@
   4. **Validación de Producción**: Verificación visual de los activos desplegados en Vercel.
 - **Impacto**: Blindaje total de la sesión bajo el protocolo Omnidireccional. La infraestructura local y productiva están ahora en paridad técnica.
 
+
+---
+
+## 📅 SESIÓN 29: RESOLUCIÓN DE ESQUEMA HERE v2 Y CUMPLIMIENTO NOM-087
+**Estatus:** ✅ ÉXITO TÉCNICO - VALIDACIÓN OPENAPI SUPERADA
+- [2026-05-13] - Estabilización de Contrato API y Cumplimiento Legal (NOM-087)
+- **Problema Detectado:** Error `E613200` (OpenApi validation error) debido a campos Alpha no soportados (`dutyRule`, `restTimes`) y estructura incorrecta de pausas.
+- **Acciones Realizadas:**
+  1. **Limpieza de Esquema**: Eliminación total de propiedades inválidas para garantizar compatibilidad con el validador de producción de HERE.
+  2. **Estrategia "Fixed Breaks"**: Implementación de pausas obligatorias inyectadas directamente en el array `breaks` (limitado a 5 elementos por restricción de esquema) con formato `times` (array de arrays).
+  3. **Verificación NOM-087**: Confirmación de que el motor detiene el vehículo 8 horas continuas (descanso diario) y 30 minutos (pausas cortas) según la normativa mexicana.
+  4. **Sincronización de CEDI**: Validación de que el vehículo respeta las ventanas de apertura/cierre de puertas (06:00 - 17:00) independientemente de la disponibilidad del conductor.
+  5. **Correcciones UI/UX**: Restauración de tooltips informativos en sidebar y corrección de lógica de zonas horarias (Zulu vs Local).
+- **Impacto:** Rutas foráneas legalmente precisas (ej. Tabasco) con ETAs reales que consideran descansos y ventanas de carga. Estabilidad total del sistema de ruteo.
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+## 📅 SESIÓN 30: OPTIMIZACIÓN TEMPORAL Y ESTABILIDAD OPERATIVA (GANTT PREMIUM)
+**Estatus:** ✅ ÉXITO TOTAL - PROTOCOLO DE VISUALIZACIÓN BLINDADO
+- [2026-05-13] - Estabilización de Visualización y Control Estricto de Reglas de Negocio
+- **Acciones Realizadas:**
+  1. **Soberanía Horaria (México)**: Implementación de normalización determinista a UTC nominal en `LogisticAnalyst.jsx`. El Gantt ahora es inmune a la zona horaria del navegador, resolviendo el desplazamiento de 12 horas (pedidos que "saltaban" a mediodía).
+  2. **Límite Operativo de 4 Días**: Imposición de restricción física en el Centro de Mando (`App.jsx`) impidiendo valores > 4 en el turno máximo. Actualización del selector de vistas del Gantt (reemplazo de "7D" por "4D").
+  3. **Carga Obligatoria CEDI (120 min)**: Restauración del bloque de carga forzada al inicio de la jornada (06:00 - 08:00 AM) y en recargas intermedias, asegurando ETAs realistas y visualización clara del tiempo en andén.
+  4. **Gantt Premium con Iconografía**: Inyección de emojis sólidos (🏠, 📦, 🔄, ☕) dentro de las barras para identificación inmediata de actividades sin necesidad de interacción.
+  5. **Corrección de Tooltips**: Resolución de problemas de clipping (`overflow: hidden`) y posicionamiento dinámico; los popups informativos ahora son visibles en todas las categorías y se adaptan al espacio disponible.
+- **Impacto:** El sistema ahora refleja fielmente las restricciones físicas y legales de la operación mexicana, proporcionando una herramienta de despacho visualmente infalible y alineada con la NOM-087.
+
 **Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
