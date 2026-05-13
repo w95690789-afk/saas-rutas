@@ -404,7 +404,7 @@ function App() {
                 })()]
               }]
             },
-            skills: ['normal']
+            skills: (row[mapping.skill] || 'normal').toString().split(',').map(s => sanitizeId(s.trim())).filter(Boolean)
           };
         }).filter(Boolean),
         shared: {
@@ -665,7 +665,8 @@ function App() {
               weight: ['peso', 'weight', 'kg', 'kilogramos', 'volumen', 'carga', 'PesoArticulo', 'Total Peso', 'Masa'],
               time: ['horario', 'ventana', 'entrega_time', 'time', 'HoraInicio'],
               date: ['fecha', 'date', 'FechaEmision', 'Fecha'],
-              address: ['Dirección', 'Address', 'Ubicación', 'Destino', 'Direccion', 'Calle']
+              address: ['Dirección', 'Address', 'Ubicación', 'Destino', 'Direccion', 'Calle'],
+              skill: ['Skill', 'Tipo', 'Especialidad', 'habilidad', 'capability']
             };
 
             Object.entries(detectionMap).forEach(([field, keywords]) => {
@@ -1057,9 +1058,9 @@ function App() {
                           </div>
                           <div className="form-item">
                             <label>Especialidad</label>
-                            <input type="text" value={v.skills[0]} onChange={(e) => {
+                            <input type="text" value={v.skills.join(', ')} onChange={(e) => {
                               const newFleet = [...fleet];
-                              newFleet[idx].skills[0] = e.target.value;
+                              newFleet[idx].skills = e.target.value.split(',').map(s => s.trim());
                               setFleet(newFleet);
                             }} />
                           </div>
@@ -1139,7 +1140,7 @@ function App() {
                 <div className="glass-card stat-main"><div className="stat-icon"><Route color="#0058be" /></div><div><span className="stat-value">{Math.round((result.solution?.tours?.reduce((acc, r) => acc + (r.statistic?.distance || 0), 0) || 0) / 1000)}</span><span className="stat-label">KM Totales</span></div></div>
               </div>
 
-              <LogisticAnalyst result={result} fullData={data} mapping={mapping} />
+              <LogisticAnalyst result={result} fullData={data} mapping={mapping} cediConfig={cediConfig} fleet={fleet} />
             </div>
           ) : !data.length ? (
             <div className="upload-empty-state animate-fade-in">

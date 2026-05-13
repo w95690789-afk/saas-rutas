@@ -8,7 +8,9 @@ import {
   ZoomIn, ZoomOut, Maximize2, Download, Home, Coffee, RefreshCw
 } from 'lucide-react';
 
-const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
+const LogisticAnalyst = ({ result, fullData = [], mapping = {}, cediConfig, fleet = [] }) => {
+  const cOpeningHour = cediConfig?.startTime ? parseInt(cediConfig.startTime.split(':')[0]) : 6;
+  const cLoadDurationMin = cediConfig?.loadDuration ? parseInt(cediConfig.loadDuration) : 120;
   const [expandedVehicles, setExpandedVehicles] = useState({});
   const [viewMode, setViewMode] = useState('list'); // 'list' or 'gantt'
   const [ganttZoom, setGanttZoom] = useState('auto'); // 'auto', '1d', '3d', '7d'
@@ -297,6 +299,8 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         : (rawType.includes('tracto') ? 31000 : 
            rawType.includes('torton') ? 18000 : 
            rawType.includes('camioneta') ? 7000 : 18000);
+      
+      const vehicleSkills = fleet.find(f => f.id === (tour.vehicleId || '').split('_')[0])?.skills || [];
 
       let deliveryIndex = 0;
       let currentCycle = 1;
@@ -310,45 +314,27 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         
         if (reloads.length > 0) {
           currentCycle++;
-          cycleLoad = 0; // Reiniciar carga para el nuevo ciclo
-        }
-
-        // Si es el primer stop (salida CEDI), también es el inicio del ciclo 1
-        if (index === 0) {
           cycleLoad = 0;
         }
+        if (index === 0) cycleLoad = 0;
 
-        let clientName = 'CEDI';
-        let address = '';
-        let isGrouped = false;
-        let isMultiClient = false;
-        let totalOrdersInStop = 0;
-        let stopWeight = 0;
+        let clientName = 'CEDI', address = '', isGrouped = false, isMultiClient = false, totalOrdersInStop = 0, stopWeight = 0;
 
         if (deliveries.length > 0) {
           deliveryIndex++;
           const allOrders = deliveries.flatMap(d => jobToOrdersMap[d.jobId] || []);
           totalOrdersInStop = allOrders.length;
           isGrouped = totalOrdersInStop > 1;
-          
           stopWeight = deliveries.reduce((acc, d) => acc + (jobWeightMap[d.jobId] || 0), 0);
           cycleLoad += stopWeight;
-
-          // Identificadores únicos de cliente en esta parada (chequeando código y nombre)
           const clientEntities = new Set(allOrders.map(o => {
-            const code = (o[mapping.clientCode] || o['Cliente'] || o['CLIENTE'] || '').toString().trim();
-            const name = (o[mapping.client] || o['Nombre'] || o['NOMBRE'] || '').toString().trim();
+            const code = (o[mapping.clientCode] || o['Cliente'] || '').toString().trim();
+            const name = (o[mapping.client] || o['Nombre'] || '').toString().trim();
             return `${code}|${name}`;
           }).filter(s => s !== '|'));
-          
           isMultiClient = clientEntities.size > 1;
-
           const firstOrder = allOrders[0] || {};
-          const codeVal = (firstOrder[mapping.clientCode] || firstOrder['Cliente'] || firstOrder['CLIENTE'] || '').toString().trim();
-          const nameVal = (firstOrder[mapping.client] || firstOrder['Nombre'] || firstOrder['NOMBRE'] || '').toString().trim();
-          
-          // El identificador para el título será prioritariamente el Código
-          clientName = codeVal || nameVal || 'Cliente S/N';
+          clientName = (firstOrder[mapping.clientCode] || firstOrder[mapping.client] || firstOrder['Cliente'] || 'Cliente S/N').toString().trim();
           address = firstOrder[mapping.address] || '';
         }
 
@@ -357,143 +343,87 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                           reloads.length > 0 ? 'Recarga en CEDI' : 
                           (breaks.length > 0 && deliveries.length === 0) ? '☕ Descanso / Pausa' :
                           isMultiClient ? `Parada Multi-cliente (${totalOrdersInStop} pedidos)` :
-                          isGrouped ? `${clientName} (${totalOrdersInStop} pedidos)` : 
-                          (() => {
-                            const firstOrder = (deliveries.flatMap(d => jobToOrdersMap[d.jobId] || []))[0] || {};
-                            const mov = firstOrder[mapping.movimiento] || firstOrder['Movimiento'] || firstOrder['MOVIMIENTO'] || '';
-                            return mov ? `${clientName} - ${mov}` : clientName;
-                          })();
+                          isGrouped ? `${clientName} (${totalOrdersInStop} pedidos)` : clientName;
 
-        // FIX: Identificar Service vs Waiting time
-        const arrivalMs = normalizeToMs(getStopArrival(stop));
-        let departureMs = normalizeToMs(getStopDeparture(stop));
+        // --- RECALIBRACIÓN SOBERANA (FOOLPROOF) ---
+        const originalArrival = normalizeToMs(getStopArrival(stop));
+        const originalDeparture = normalizeToMs(getStopDeparture(stop));
         
-        // --- RESTAURACIÓN: CARGA OBLIGATORIA CEDI (2 HORAS) ---
-        // El negocio exige que cada carga o recarga en CEDI dure al menos 120 minutos.
-        // Para el viaje inicial, esto empieza a partir de la apertura (06:00 AM).
-        if ((index === 0 || reloads.length > 0) && arrivalMs) {
-          const twoHoursMs = 120 * 60 * 1000;
-          
-          // Para el viaje inicial, forzamos que la carga termine al menos a las 08:00 AM (06:00 + 2h)
-          if (index === 0) {
-            const baseOpening = new Date(arrivalMs);
-            baseOpening.setUTCHours(6, 0, 0, 0); // 06:00 AM "Sovereign UTC"
-            const openingMs = baseOpening.getTime();
-            const minDeparture = Math.max(arrivalMs, openingMs) + twoHoursMs;
-            if (!departureMs || departureMs < minDeparture) {
-              departureMs = minDeparture;
-            }
-          } else {
-            // Para recargas intermedias, simplemente aseguramos los 120 min desde la llegada
-            if (!departureMs || (departureMs - arrivalMs < twoHoursMs)) {
-              departureMs = arrivalMs + twoHoursMs;
-            }
-          }
-        }
-        
-        let waitMs = 0;
-        let serviceMs = 0;
-        let breakMs = 0;
-        
-        if (arrivalMs && departureMs) {
-          // Sumar tiempo real de actividades
-          deliveries.forEach(act => {
-             const s = normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time);
-             const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
-             if (s && e) serviceMs += (e - s);
-          });
-          reloads.forEach(act => {
-             const s = normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time);
-             const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
-             if (s && e) serviceMs += (e - s);
-          });
-          breaks.forEach(act => {
-             // El HERE API v3 a veces retorna duration en lugar de time object para descansos
-             const duration = act.duration ? act.duration * 1000 : 0;
-             const s = normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time);
-             const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
-             if (s && e) {
-               breakMs += (e - s);
-             } else if (duration > 0) {
-               breakMs += duration;
-             }
-          });
-          
-          // Si es explícitamente una parada de descanso y no logramos extraer el tiempo de las actividades
-          if (breaks.length > 0 && breakMs === 0 && deliveries.length === 0) {
-            breakMs = departureMs - arrivalMs;
-          }
-
-          // Si no hay detalle de actividades (Mock), el servicio es la diferencia
-          if (serviceMs === 0 && breakMs === 0) {
-            serviceMs = departureMs - arrivalMs;
-          } else {
-            waitMs = Math.max(0, (departureMs - arrivalMs) - serviceMs - breakMs);
-          }
+        let transitMs = 0;
+        if (index > 0) {
+          const prevStopRaw = stops[index - 1];
+          const prevDepRaw = normalizeToMs(getStopDeparture(prevStopRaw));
+          if (prevDepRaw && originalArrival) transitMs = Math.max(0, originalArrival - prevDepRaw);
         }
 
-        // ─── SEGMENTACIÓN DETALLADA PARA GANTT ───
+        let arrivalMs, departureMs;
+        if (index === 0) {
+          // Anclaje absoluto al inicio de jornada configurado
+          const baseDate = new Date(originalArrival || analysis.dataMinMs || Date.now());
+          baseDate.setUTCHours(cOpeningHour, 0, 0, 0);
+          arrivalMs = baseDate.getTime();
+          departureMs = arrivalMs + (cLoadDurationMin * 60000);
+          stop._shiftedDeparture = departureMs;
+        } else {
+          const prevShiftedDep = stops[index - 1]._shiftedDeparture;
+          arrivalMs = (prevShiftedDep || 0) + transitMs;
+          let serviceMsRaw = Math.max(0, originalDeparture - originalArrival);
+          // Si es una recarga, aseguramos la ventana de carga configurada
+          if (reloads.length > 0) serviceMsRaw = Math.max(serviceMsRaw, cLoadDurationMin * 60000);
+          departureMs = arrivalMs + serviceMsRaw;
+          stop._shiftedDeparture = departureMs;
+        }
+
+        const shiftOffset = arrivalMs - originalArrival;
+        let waitMs = 0, serviceMs = 0, breakMs = 0;
+        
         const stopSegments = [];
         if (arrivalMs && departureMs) {
           let lastTime = arrivalMs;
-          
-          // Extraer y normalizar todas las actividades internas de la parada
           const sortedActivities = activities
-            .map(act => ({
-              ...act,
-              start: normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time),
-              end: normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time)
-            }))
-            .filter(act => act.start && act.end)
+            .map(act => {
+              const s = normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time);
+              const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
+              return { ...act, start: s + shiftOffset, end: e + shiftOffset };
+            })
+            // FILTRO CRÍTICO: No permitimos actividades que terminen antes del inicio real de la jornada
+            // o descansos que el API "inventa" para el tiempo de espera inicial.
+            .filter(act => {
+              if (index === 0 && (act.type === 'break' || act.type === 'rest')) return false;
+              return act.start && act.end && act.end > arrivalMs;
+            })
             .sort((a, b) => a.start - b.start);
 
           sortedActivities.forEach((act) => {
-            // 1. Detectar Tiempo de Espera (Gap antes de la actividad)
-            if (act.start > lastTime + 60000) { // Tolerancia de 1 minuto para evitar micro-gaps
-              stopSegments.push({
-                type: 'wait',
-                start: lastTime,
-                end: act.start,
-                label: 'Espera en Sitio'
-              });
+            if (act.start > lastTime + 60000) {
+              stopSegments.push({ type: 'wait', start: lastTime, end: act.start, label: 'Preparación / Carga' });
             }
-            
-            // 2. La actividad real (Entrega, Recarga, Descanso)
             stopSegments.push({
-              type: act.type === 'rest' || act.type === 'break' 
-                    ? (index === 0 ? 'depot' : 'break') // Si es al inicio en el CEDI, es carga, no descanso
-                    : act.type === 'reload' ? 'reload' : act.type,
+              type: (act.type === 'rest' || act.type === 'break') ? 'break' : (act.type === 'reload' ? 'reload' : act.type),
               start: act.start,
               end: act.end,
-              label: index === 0 && (act.type === 'break' || act.type === 'rest') ? 'Carga Inicial CEDI' :
-                     act.type === 'delivery' ? 'Operación de Entrega' : 
-                     act.type === 'reload' ? 'Operación de Recarga' : 
-                     act.type === 'break' || act.type === 'rest' ? 'Descanso Reglamentario' : stopLabel,
+              label: index === 0 ? 'Carga Inicial Mercancía' :
+                     act.type === 'delivery' ? 'Entrega de Pedido' : 
+                     act.type === 'reload' ? 'Recarga de Unidad' : 
+                     act.type === 'break' || act.type === 'rest' ? 'Pausa Obligatoria' : stopLabel,
               jobId: act.jobId
             });
-            
             lastTime = act.end;
+            if (act.type === 'delivery' || act.type === 'reload') serviceMs += (act.end - act.start);
+            if (act.type === 'break' || act.type === 'rest') breakMs += (act.end - act.start);
           });
           
-          // 3. Gap final hasta la salida del sitio
           if (departureMs > lastTime + 60000) {
-            stopSegments.push({
-              type: 'wait',
-              start: lastTime,
-              end: departureMs,
-              label: 'Espera / Preparación Salida'
-            });
+            stopSegments.push({ type: 'wait', start: lastTime, end: departureMs, label: 'Salida de Patio' });
           }
-          
-          // Fallback: Si no hay actividades detalladas pero hay duración
           if (stopSegments.length === 0) {
-             stopSegments.push({
-               type: isDepot ? 'depot' : reloads.length > 0 ? 'reload' : (breaks.length > 0 && deliveries.length === 0) ? 'break' : 'delivery',
-               start: arrivalMs,
-               end: departureMs,
-               label: stopLabel
-             });
+            stopSegments.push({
+              type: isDepot ? 'depot' : reloads.length > 0 ? 'reload' : 'delivery',
+              start: arrivalMs, end: departureMs, label: stopLabel
+            });
+            serviceMs = departureMs - arrivalMs;
           }
+          waitMs = Math.max(0, (departureMs - arrivalMs) - serviceMs - breakMs);
         }
 
         return {
@@ -516,14 +446,12 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
           serviceMin: serviceMs / 60000,
           breakMin: breakMs / 60000,
           segments: stopSegments,
-          breakDetails: breaks.map(act => ({
-             start: normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time),
-             end: normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time),
-          })),
-          jobs: deliveries.map(d => ({
-            jobId: d.jobId,
-            orders: jobToOrdersMap[d.jobId] || []
-          }))
+          breakDetails: breaks.map(act => {
+            const s = normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time);
+            const e = normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time);
+            return { start: s + shiftOffset, end: e + shiftOffset };
+          }).filter(b => b.start >= arrivalMs), // Filtro extra para breaks
+          jobs: deliveries.map(d => ({ jobId: d.jobId, orders: jobToOrdersMap[d.jobId] || [] }))
         };
       });
 
@@ -575,10 +503,10 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         id: tour.vehicleId,
         typeId: rawType,
         type: displayType,
-        startTime: startMs ? new Date(startMs) : null,
-        endTime: endMs ? new Date(endMs) : null,
-        startMs,
-        endMs,
+        startTime: itinerary[0]?.arrival || (startMs ? new Date(startMs) : null),
+        endTime: itinerary[itinerary.length - 1]?.departure || (endMs ? new Date(endMs) : null),
+        startMs: itinerary[0]?.arrival?.getTime() || startMs,
+        endMs: itinerary[itinerary.length - 1]?.departure?.getTime() || endMs,
         stopsCount: itinerary.filter(s => s.type === 'delivery').length,
         totalOrdersCount,
         load: totalLoad,
@@ -588,6 +516,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         maxCycle,
         cycleSummaries,
         distance: Math.round((tour.statistic?.distance || 0) / 1000),
+        skills: vehicleSkills,
         itinerary
       };
     });
@@ -1133,6 +1062,23 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                             </span>
                           )}
                         </div>
+                        {v.skills && v.skills.length > 0 && (
+                          <div style={{ display: 'flex', gap: '4px', marginTop: '6px', flexWrap: 'wrap' }}>
+                            {v.skills.map(s => (
+                              <span key={s} style={{ 
+                                fontSize: '0.6rem', 
+                                background: 'rgba(0, 88, 190, 0.05)', 
+                                color: 'var(--primary-electric)', 
+                                padding: '2px 6px', 
+                                borderRadius: '4px',
+                                fontWeight: 700,
+                                border: '1px solid rgba(0, 88, 190, 0.1)'
+                              }}>
+                                {s.toUpperCase()}
+                              </span>
+                            ))}
+                          </div>
+                        )}
                       </td>
                       <td>
                         <div className="time-cell">
@@ -1374,12 +1320,31 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                                                   {stop.type === 'break' && <span style={{ fontSize: '1.2rem' }}>☕ </span>}
                                                   {stop.label || (stop.type === 'break' ? 'Descanso Obligatorio' : '')}
                                                   {stop.type === 'delivery' && (
-                                                    <span style={{ marginLeft: '10px', color: 'var(--primary-electric)', fontSize: '0.85rem' }}>
-                                                      [Mov: {orders.length <= 3 
-                                                        ? orders.map(o => o[mapping.movimiento]).join(', ') 
-                                                        : `${orders.slice(0, 3).map(o => o[mapping.movimiento]).join(', ')}... (+${orders.length - 3})`}
-                                                      ]
-                                                    </span>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '10px' }}>
+                                                      <span style={{ color: 'var(--primary-electric)', fontSize: '0.85rem' }}>
+                                                        [Mov: {orders.length <= 3 
+                                                          ? orders.map(o => o[mapping.movimiento]).join(', ') 
+                                                          : `${orders.slice(0, 3).map(o => o[mapping.movimiento]).join(', ')}... (+${orders.length - 3})`}
+                                                        ]
+                                                      </span>
+                                                      {(() => {
+                                                        const stopSkills = [...new Set(orders.map(o => o[mapping.skill]).filter(Boolean))];
+                                                        return stopSkills.map(s => (
+                                                          <span key={s} style={{ 
+                                                            fontSize: '0.65rem', 
+                                                            background: 'rgba(239, 68, 68, 0.1)', 
+                                                            color: '#ef4444', 
+                                                            padding: '2px 8px', 
+                                                            borderRadius: '4px',
+                                                            fontWeight: 800,
+                                                            border: '1px solid rgba(239, 68, 68, 0.2)',
+                                                            textTransform: 'uppercase'
+                                                          }}>
+                                                            {s}
+                                                          </span>
+                                                        ));
+                                                      })()}
+                                                    </div>
                                                   )}
                                                 </span>
                                                 {stop.isGrouped && (
@@ -1790,6 +1755,16 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                     <span>{v.stopsCount} paradas</span>
                     <span className={v.utilization > 85 ? 'high' : ''}>{Math.round(v.utilization)}% cap.</span>
                   </div>
+                  {v.skills && v.skills.length > 0 && (
+                    <div style={{ display: 'flex', gap: '2px', marginTop: '4px', flexWrap: 'wrap' }}>
+                      {v.skills.slice(0, 2).map(s => (
+                        <span key={s} style={{ fontSize: '0.55rem', background: '#f1f5f9', color: '#64748b', padding: '1px 4px', borderRadius: '3px', border: '1px solid #e2e8f0' }}>
+                          {s}
+                        </span>
+                      ))}
+                      {v.skills.length > 2 && <span style={{ fontSize: '0.55rem', color: '#94a3b8' }}>+{v.skills.length - 2}</span>}
+                    </div>
+                  )}
                 </div>
                 <div className="gantt-lane">
                   {/* Grid lines alineadas con los ticks */}
@@ -2104,7 +2079,23 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                             {clientName}
                           </td>
                           <td style={{ padding: '6px 8px', color: '#94a3b8', fontSize: '0.68rem' }}>{firstOrder?.[mapping.address] || 'N/A'}</td>
-                          <td style={{ padding: '6px 8px', color: '#c4b5fd' }}>{skill}</td>
+                          <td style={{ padding: '6px 8px' }}>
+                            {skill !== 'N/A' ? (
+                              <span style={{ 
+                                fontSize: '0.6rem', 
+                                background: 'rgba(196, 181, 253, 0.1)', 
+                                color: '#c4b5fd', 
+                                padding: '2px 6px', 
+                                borderRadius: '4px',
+                                fontWeight: 700,
+                                border: '1px solid rgba(196, 181, 253, 0.2)'
+                              }}>
+                                {skill.toUpperCase()}
+                              </span>
+                            ) : (
+                              <span style={{ color: '#64748b' }}>N/A</span>
+                            )}
+                          </td>
                           <td style={{ padding: '6px 8px', color: '#fca5a5' }}>{item.reasonEs}</td>
                           <td style={{ padding: '6px 8px', fontWeight: '800', color: '#f9fafb' }}>{totalJobWeight.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg</td>
                           <td style={{ padding: '6px 8px', color: '#94a3b8' }}>{codeText || 'Sin código'}</td>
