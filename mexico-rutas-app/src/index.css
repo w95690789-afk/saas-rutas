@@ -283,6 +283,47 @@ body {
   color: var(--text-main);
 }
 
+/* Premium Tooltip System */
+.nav-item-btn {
+  position: relative;
+}
+
+.nav-item-btn:hover {
+  z-index: 1001;
+}
+
+.nav-item-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 8px;
+  background: var(--primary-deep);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  width: 100%;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  z-index: 1000;
+  line-height: 1.5;
+  pointer-events: none;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.nav-item-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
 /* Modal Layout */
 .modal-overlay {
   position: fixed;
@@ -1244,7 +1285,58 @@ body {
 
 .hour-mark {
   position: absolute;
-  top: 0;
+}
+
+.nav-item-btn .title {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--text-main);
+}
+
+/* Premium Tooltip System */
+.nav-item-btn {
+  position: relative;
+}
+
+.nav-item-btn:hover {
+  z-index: 1001;
+}
+
+.nav-item-btn::after {
+  content: attr(data-tooltip);
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 100%;
+  margin-top: 8px;
+  background: var(--primary-deep);
+  color: white;
+  padding: 12px 16px;
+  border-radius: 8px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  width: 100%;
+  white-space: normal;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(10px);
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+  z-index: 1000;
+  line-height: 1.5;
+  pointer-events: none;
+  border: 1px solid rgba(255,255,255,0.1);
+}
+
+.nav-item-btn:hover::after {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+/* Modal Layout */
+.modal-overlay {
+  position: fixed;
   height: 100%;
   display: flex;
   align-items: center;
@@ -1368,11 +1460,25 @@ body {
   z-index: 20;
 }
 
-.gantt-activity-block.depot { background: #1e293b; width: 5px !important; border-radius: 2px; }
+.gantt-activity-block.depot { 
+  background: #0f172a; 
+  border: 1px solid rgba(255,255,255,0.1);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
 .gantt-activity-block.reload { background: linear-gradient(135deg, #f59e0b, #d97706); border: 1px solid rgba(255,255,255,0.3); }
 .gantt-activity-block.delivery { 
   background: linear-gradient(135deg, var(--primary-electric, #0058be), #2563eb);
   border: 1px solid rgba(255,255,255,0.15);
+}
+.gantt-activity-block.break { 
+  background: linear-gradient(135deg, #22c55e, #16a34a);
+  border: 1px solid rgba(255,255,255,0.2);
+}
+.gantt-activity-block.wait {
+  background: rgba(148, 163, 184, 0.1);
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  background-image: repeating-linear-gradient(135deg, transparent, transparent 5px, rgba(148, 163, 184, 0.05) 5px, rgba(148, 163, 184, 0.05) 10px);
+  z-index: 5 !important;
 }
 
 .block-label {

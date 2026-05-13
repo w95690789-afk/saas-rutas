@@ -5,7 +5,7 @@ import {
   Clock, MapPin, AlertCircle, TrendingDown,
   Target, ShieldAlert, Info, ChevronDown, ChevronUp, 
   LayoutGrid, List, Calendar, ChevronLeft, ChevronRight,
-  ZoomIn, ZoomOut, Maximize2, Download
+  ZoomIn, ZoomOut, Maximize2, Download, Home, Coffee, RefreshCw
 } from 'lucide-react';
 
 const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
@@ -63,10 +63,58 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
     }
   };
 
+  // ─── SOBERANÍA HORARIA: MÉXICO (-06:00) ───
+  // Forzamos a que todo se procese en la zona horaria de la operación
+  const MEXICO_TZ = 'America/Mexico_City';
+
+  const formatTime = (date) => {
+    if (!date) return "--:--";
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return "--:--";
+    // Usamos métodos UTC porque los datos ya vienen normalizados a "Hora México como UTC"
+    return d.getUTCHours().toString().padStart(2, '0') + ":" + 
+           d.getUTCMinutes().toString().padStart(2, '0');
+  };
+
+  const formatDate = (date) => {
+    if (!date) return "";
+    const d = date instanceof Date ? date : new Date(date);
+    if (isNaN(d.getTime())) return "";
+    // Usamos UTC para mantener la coherencia con la normalización
+    return d.toLocaleDateString('es-MX', { 
+      weekday: 'short', 
+      day: 'numeric', 
+      month: 'short',
+      timeZone: 'UTC'
+    });
+  };
+
+  // Helper para obtener milisegundos "ajustados" a la zona horaria de México
+  // Esto permite que el Gantt posicione los bloques basándose en la hora operativa, no la del navegador
+  const getMexicoMs = (dateInput) => {
+    if (!dateInput) return null;
+    const d = new Date(dateInput);
+    if (isNaN(d.getTime())) return null;
+    
+    // Obtenemos los componentes de la hora en México
+    const fmt = new Intl.DateTimeFormat('en-US', {
+      timeZone: MEXICO_TZ,
+      year: 'numeric', month: '2-digit', day: '2-digit',
+      hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false
+    });
+    const parts = fmt.formatToParts(d).reduce((acc, p) => ({ ...acc, [p.type]: p.value }), {});
+    
+    // IMPORTANTE: Construimos un timestamp en UTC que represente nominalmente la hora de México.
+    // Esto hace que el Gantt sea inmune a la zona horaria del navegador del usuario.
+    return new Date(`${parts.year}-${parts.month}-${parts.day}T${parts.hour}:${parts.minute}:${parts.second}Z`).getTime();
+  };
+
+  // Convierte cualquier timestamp a milisegundos ajustados
+  const normalizeToMs = (dateInput) => {
+    return getMexicoMs(dateInput);
+  };
+
   // ─── Extractores universales de tiempo ───
-  // HERE API v3 devuelve: stop.time.arrival / stop.time.departure
-  // Mock/simulador devuelve: stop.arrival.time / stop.departure.time
-  // Esta función prueba ambos caminos
   const getStopArrival = (stop) => {
     if (!stop) return null;
     return stop.arrival?.time || stop.time?.arrival || 
@@ -77,14 +125,6 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
     if (!stop) return null;
     return stop.departure?.time || stop.time?.departure || 
            (typeof stop.departure === 'string' ? stop.departure : null);
-  };
-
-  // Convierte cualquier timestamp a milisegundos UTC
-  const normalizeToMs = (dateInput) => {
-    if (!dateInput) return null;
-    if (dateInput instanceof Date) return dateInput.getTime();
-    const ms = new Date(dateInput).getTime();
-    return isNaN(ms) ? null : ms;
   };
 
   const translateReason = (reasonCode = '', reasonText = '') => {
@@ -326,7 +366,30 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
 
         // FIX: Identificar Service vs Waiting time
         const arrivalMs = normalizeToMs(getStopArrival(stop));
-        const departureMs = normalizeToMs(getStopDeparture(stop));
+        let departureMs = normalizeToMs(getStopDeparture(stop));
+        
+        // --- RESTAURACIÓN: CARGA OBLIGATORIA CEDI (2 HORAS) ---
+        // El negocio exige que cada carga o recarga en CEDI dure al menos 120 minutos.
+        // Para el viaje inicial, esto empieza a partir de la apertura (06:00 AM).
+        if ((index === 0 || reloads.length > 0) && arrivalMs) {
+          const twoHoursMs = 120 * 60 * 1000;
+          
+          // Para el viaje inicial, forzamos que la carga termine al menos a las 08:00 AM (06:00 + 2h)
+          if (index === 0) {
+            const baseOpening = new Date(arrivalMs);
+            baseOpening.setUTCHours(6, 0, 0, 0); // 06:00 AM "Sovereign UTC"
+            const openingMs = baseOpening.getTime();
+            const minDeparture = Math.max(arrivalMs, openingMs) + twoHoursMs;
+            if (!departureMs || departureMs < minDeparture) {
+              departureMs = minDeparture;
+            }
+          } else {
+            // Para recargas intermedias, simplemente aseguramos los 120 min desde la llegada
+            if (!departureMs || (departureMs - arrivalMs < twoHoursMs)) {
+              departureMs = arrivalMs + twoHoursMs;
+            }
+          }
+        }
         
         let waitMs = 0;
         let serviceMs = 0;
@@ -369,6 +432,70 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
           }
         }
 
+        // ─── SEGMENTACIÓN DETALLADA PARA GANTT ───
+        const stopSegments = [];
+        if (arrivalMs && departureMs) {
+          let lastTime = arrivalMs;
+          
+          // Extraer y normalizar todas las actividades internas de la parada
+          const sortedActivities = activities
+            .map(act => ({
+              ...act,
+              start: normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time),
+              end: normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time)
+            }))
+            .filter(act => act.start && act.end)
+            .sort((a, b) => a.start - b.start);
+
+          sortedActivities.forEach((act) => {
+            // 1. Detectar Tiempo de Espera (Gap antes de la actividad)
+            if (act.start > lastTime + 60000) { // Tolerancia de 1 minuto para evitar micro-gaps
+              stopSegments.push({
+                type: 'wait',
+                start: lastTime,
+                end: act.start,
+                label: 'Espera en Sitio'
+              });
+            }
+            
+            // 2. La actividad real (Entrega, Recarga, Descanso)
+            stopSegments.push({
+              type: act.type === 'rest' || act.type === 'break' 
+                    ? (index === 0 ? 'depot' : 'break') // Si es al inicio en el CEDI, es carga, no descanso
+                    : act.type === 'reload' ? 'reload' : act.type,
+              start: act.start,
+              end: act.end,
+              label: index === 0 && (act.type === 'break' || act.type === 'rest') ? 'Carga Inicial CEDI' :
+                     act.type === 'delivery' ? 'Operación de Entrega' : 
+                     act.type === 'reload' ? 'Operación de Recarga' : 
+                     act.type === 'break' || act.type === 'rest' ? 'Descanso Reglamentario' : stopLabel,
+              jobId: act.jobId
+            });
+            
+            lastTime = act.end;
+          });
+          
+          // 3. Gap final hasta la salida del sitio
+          if (departureMs > lastTime + 60000) {
+            stopSegments.push({
+              type: 'wait',
+              start: lastTime,
+              end: departureMs,
+              label: 'Espera / Preparación Salida'
+            });
+          }
+          
+          // Fallback: Si no hay actividades detalladas pero hay duración
+          if (stopSegments.length === 0) {
+             stopSegments.push({
+               type: isDepot ? 'depot' : reloads.length > 0 ? 'reload' : (breaks.length > 0 && deliveries.length === 0) ? 'break' : 'delivery',
+               start: arrivalMs,
+               end: departureMs,
+               label: stopLabel
+             });
+          }
+        }
+
         return {
           label: stopLabel,
           clientName,
@@ -378,9 +505,9 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
           totalOrdersInStop,
           sequence: deliveries.length > 0 ? deliveryIndex : null,
           cycle: currentCycle,
-          cycleLoadAtStart: cycleLoad - stopWeight, // Carga antes de esta parada (para entregas)
-          cycleLoadAtEnd: cycleLoad, // Carga después de esta parada
-          stopWeight, // Peso de esta parada específica
+          cycleLoadAtStart: cycleLoad - stopWeight,
+          cycleLoadAtEnd: cycleLoad,
+          stopWeight,
           type: isDepot ? 'depot' : reloads.length > 0 ? 'reload' : (breaks.length > 0 && deliveries.length === 0) ? 'break' : 'delivery',
           location: stop.location,
           arrival: arrivalMs ? new Date(arrivalMs) : null,
@@ -388,6 +515,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
           waitMin: waitMs / 60000,
           serviceMin: serviceMs / 60000,
           breakMin: breakMs / 60000,
+          segments: stopSegments,
           breakDetails: breaks.map(act => ({
              start: normalizeToMs(act.time?.start || act.startTime || act.time?.arrival || act.arrival?.time),
              end: normalizeToMs(act.time?.end || act.endTime || act.time?.departure || act.departure?.time),
@@ -759,23 +887,13 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
     setExpandedVehicles(prev => ({ ...prev, [vId]: !prev[vId] }));
   };
 
-  const formatTime = (date) => {
-    if (!date) return "--:--";
-    return date.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' });
-  };
-
-  const formatDate = (date) => {
-    if (!date) return "";
-    return date.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', month: 'short' });
-  };
-
   // ─── GANTT: Cálculo dinámico del rango visible ───
   const ganttView = useMemo(() => {
     if (!analysis.dataMinMs) return null;
 
-    // Fecha base: inicio de los datos (a las 00:00 de ese día)
+    // Fecha base: inicio de los datos (ya ajustados a México por normalizeToMs)
     const baseDate = new Date(analysis.dataMinMs);
-    baseDate.setHours(0, 0, 0, 0);
+    baseDate.setUTCHours(0, 0, 0, 0);
 
     // Determinar cuántos días mostrar
     let daysToShow;
@@ -783,10 +901,10 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       daysToShow = Math.max(1, analysis.dataDays);
     } else if (ganttZoom === '1d') {
       daysToShow = 1;
-    } else if (ganttZoom === '3d') {
-      daysToShow = 3;
+    } else if (ganttZoom === '4d') {
+      daysToShow = 4;
     } else {
-      daysToShow = 7;
+      daysToShow = 4; // Fallback
     }
 
     // Aplicar offset de navegación
@@ -794,7 +912,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
     
     let viewStartMs, viewEndMs;
     if (daysToShow === 1) {
-      // Vista de un solo día: 05:00 a 23:00
+      // Vista de un solo día: 05:00 a 23:00 (Hora Operativa México)
       viewStartMs = viewStartDate.getTime() + 5 * 3600000;
       viewEndMs = viewStartDate.getTime() + 23 * 3600000;
     } else {
@@ -803,10 +921,9 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       viewEndMs = viewStartDate.getTime() + daysToShow * 86400000;
     }
 
-    // Generar marcas de tiempo para el header
+    // Generar marcas de tiempo para el header (ya son "milisegundos México")
     const ticks = [];
     if (daysToShow === 1) {
-      // Cada hora de 05:00 a 23:00
       for (let h = 5; h <= 23; h++) {
         const tickMs = viewStartDate.getTime() + h * 3600000;
         ticks.push({
@@ -817,13 +934,11 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         });
       }
     } else if (daysToShow <= 3) {
-      // Cada 3 horas con separadores de día
       for (let d = 0; d < daysToShow; d++) {
         const dayStart = viewStartDate.getTime() + d * 86400000;
-        const dayDate = new Date(dayStart);
         ticks.push({
           ms: dayStart,
-          label: dayDate.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' }),
+          label: new Date(dayStart).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', timeZone: 'UTC' }),
           isMajor: true,
           isDay: true
         });
@@ -837,13 +952,11 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
         }
       }
     } else {
-      // Semana: un tick por día + marcas a las 6, 12, 18
       for (let d = 0; d < daysToShow; d++) {
         const dayStart = viewStartDate.getTime() + d * 86400000;
-        const dayDate = new Date(dayStart);
         ticks.push({
           ms: dayStart,
-          label: dayDate.toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric' }),
+          label: new Date(dayStart).toLocaleDateString('es-MX', { weekday: 'short', day: 'numeric', timeZone: 'UTC' }),
           isMajor: true,
           isDay: true
         });
@@ -858,7 +971,6 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
       }
     }
 
-    // Separadores de día para las líneas verticales fuertes
     const daySeparators = [];
     for (let d = 0; d <= daysToShow; d++) {
       daySeparators.push(viewStartDate.getTime() + d * 86400000);
@@ -870,7 +982,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
   // Posición en % dentro del rango visible del Gantt
   const getGanttPos = (date) => {
     if (!date || !ganttView) return 0;
-    const ms = date instanceof Date ? date.getTime() : new Date(date).getTime();
+    const ms = normalizeToMs(date);
     const range = ganttView.viewEndMs - ganttView.viewStartMs;
     if (range <= 0) return 0;
     return Math.max(0, Math.min(100, ((ms - ganttView.viewStartMs) / range) * 100));
@@ -888,7 +1000,7 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
   const canGoForward = ganttView && ganttDayOffset < (analysis.dataDays - 1);
 
   const handleGanttNav = (direction) => {
-    const step = ganttZoom === '1d' ? 1 : ganttZoom === '3d' ? 3 : 7;
+    const step = ganttZoom === '1d' ? 1 : ganttZoom === '3d' ? 3 : 4;
     setGanttDayOffset(prev => Math.max(0, prev + direction * step));
   };
 
@@ -1613,8 +1725,8 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                 <button className={ganttZoom === '3d' ? 'active' : ''} onClick={() => { setGanttZoom('3d'); setGanttDayOffset(0); }}>
                   3D
                 </button>
-                <button className={ganttZoom === '7d' ? 'active' : ''} onClick={() => { setGanttZoom('7d'); setGanttDayOffset(0); }}>
-                  7D
+                <button className={ganttZoom === '4d' ? 'active' : ''} onClick={() => { setGanttZoom('4d'); setGanttDayOffset(0); }}>
+                  4D
                 </button>
               </div>
             </div>
@@ -1641,10 +1753,10 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                 <ChevronRight size={16} />
               </button>
               <div className="gantt-legend">
-                <span className="legend-item"><span className="legend-dot depot"></span>CEDI</span>
+                <span className="legend-item"><span className="legend-dot depot" style={{ background: '#0f172a' }}></span>CEDI</span>
                 <span className="legend-item"><span className="legend-dot delivery"></span>Entrega</span>
                 <span className="legend-item"><span className="legend-dot reload"></span>Recarga</span>
-                <span className="legend-item"><span className="legend-dot break"></span>Descanso</span>
+                <span className="legend-item"><span className="legend-dot break" style={{ background: 'linear-gradient(135deg, #22c55e, #16a34a)' }}></span>Descanso</span>
               </div>
             </div>
           </div>
@@ -1707,13 +1819,9 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                     const transitEndPos = transitEnd ? getGanttPos(transitEnd) : 0;
                     const transitWidth = Math.max(0, transitEndPos - transitStartPos);
 
-                    const startPos = getGanttPos(stop.arrival || stop.departure);
-                    const endPos = getGanttPos(stop.departure || stop.arrival);
-                    const width = Math.max(0.5, endPos - startPos);
-
                     return (
                       <React.Fragment key={sIdx}>
-                        {/* Task 2: Transit Blocks (En Tránsito / Conducción) */}
+                        {/* Bloques de Tránsito */}
                         {transitWidth > 0.1 && (
                           <div className="gantt-activity-block transit"
                                style={{ 
@@ -1744,154 +1852,92 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {} }) => {
                             )}
                           </div>
                         )}
-                        {/* Bloque principal */}
-                        <div className={`gantt-activity-block ${stop.type}`}
-                             style={{ 
-                               left: `${startPos}%`,
-                               width: `${width}%`
-                             }}
-                             onMouseEnter={handleTooltipPosition}
-                             >
-                          {(stop.type === 'delivery' || stop.type === 'reload' || stop.type === 'break') && (
-                            <div className="activity-tooltip">
-                              <span className="tooltip-seq">{stop.sequence || (stop.type === 'break' ? '☕' : 'R')}</span>
-                              <span className="tooltip-main">
-                                {stop.label}
-                                {stop.type !== 'break' && stop.jobs?.length > 0 && (
-                                  <div style={{ 
-                                    marginTop: '10px', 
-                                    paddingTop: '10px', 
-                                    borderTop: '1px solid rgba(255,255,255,0.15)', 
-                                    display: 'flex', 
-                                    flexDirection: 'column', 
-                                    gap: '8px',
-                                    maxHeight: '220px',
-                                    overflowY: 'auto',
-                                    paddingRight: '4px'
-                                  }}>
-                                    <strong style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
-                                      Pedidos ({stop.jobs.flatMap(j => j.orders).length}):
-                                    </strong>
-                                    {stop.jobs.flatMap(j => j.orders).map((order, oIdx) => (
-                                      <div key={oIdx} style={{ 
-                                        background: 'rgba(255, 255, 255, 0.05)', 
-                                        borderRadius: '6px', 
-                                        border: '1px solid rgba(255, 255, 255, 0.1)', 
-                                        padding: '8px',
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        gap: '4px'
-                                      }}>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                          <span style={{ color: '#60a5fa', fontWeight: 700, fontSize: '0.75rem' }}>
-                                            {getOrderId(order, mapping)}
-                                          </span>
-                                          <span style={{ 
-                                            background: 'rgba(0, 88, 190, 0.3)', 
-                                            color: '#93c5fd', 
-                                            padding: '2px 6px', 
-                                            borderRadius: '4px',
-                                            fontSize: '0.65rem',
-                                            fontWeight: 700
-                                          }}>
-                                            {order[mapping.movimiento] || 'N/A'}
-                                          </span>
-                                        </div>
-                                        <div style={{ color: '#fff', fontSize: '0.7rem', fontWeight: 600 }}>
-                                          {order[mapping.client] || 'Sin nombre'}
-                                        </div>
-                                        <div style={{ color: '#cbd5e1', fontSize: '0.65rem', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                                          <MapPin size={10} color="#94a3b8" /> 
-                                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', maxWidth: '180px' }}>
-                                            {order[mapping.address] || 'N/A'}
-                                          </span>
-                                        </div>
-                                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px' }}>
-                                          <span style={{ color: '#94a3b8', fontSize: '0.65rem' }}>Peso:</span>
-                                          <span style={{ color: '#fff', fontSize: '0.7rem', fontWeight: 700 }}>
-                                            {parseNumber(order[mapping.weight] || 0).toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 2 })} kg
-                                          </span>
-                                        </div>
-                                      </div>
-                                    ))}
-                                  </div>
-                                )}
-                              </span>
-                              {stop.type !== 'break' && stop.address && (
-                                <span className="tooltip-address" style={{ fontSize: '0.65rem', color: '#94a3b8', display: 'block', margin: '4px 0' }}>
-                                  <MapPin size={8} /> {stop.address}
-                                </span>
-                              )}
-                              <span className="tooltip-time" style={{ display: 'flex', flexDirection: 'column', gap: '2px', marginTop: '4px' }}>
-                                <span style={{ fontWeight: 800, color: '#fff' }}>{formatTime(stop.arrival)} - {formatTime(stop.departure)} {analysis.dataDays > 1 && stop.arrival && `· ${formatDate(stop.arrival)}`}</span>
-                                {stop.arrival && stop.departure && (
-                                  <span style={{ fontSize: '0.65rem', color: '#cbd5e1', fontWeight: 600 }}>
-                                    ⏱️ Tiempo total en sitio: {Math.round((stop.departure - stop.arrival) / 60000)}m
-                                  </span>
-                                )}
-                              </span>
-                              {(stop.waitMin > 0 || stop.serviceMin > 0 || stop.breakMin > 0) && (
-                                <div className="tooltip-breakdown" style={{ marginTop: '8px', paddingTop: '6px', borderTop: '1px dashed rgba(255,255,255,0.2)', display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                                  {stop.serviceMin > 0 && <span style={{ color: '#4ade80' }}>🚚 <strong>Servicio:</strong> {Math.round(stop.serviceMin)}m <span style={{fontSize: '0.6rem', color: '#94a3b8'}}>(Tiempo de descarga)</span></span>}
-                                  {stop.waitMin > 0 && (
-                                    <>
-                                      <span style={{ color: '#fbbf24' }}>⏳ <strong>Espera:</strong> {Math.round(stop.waitMin)}m</span>
-                                      <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontStyle: 'italic', whiteSpace: 'normal', maxWidth: '220px', lineHeight: '1.2' }}>
-                                        Llegó antes de que la ventana del cliente abriera o espera de turno.
-                                      </span>
-                                    </>
-                                  )}
-                                  {stop.breakMin > 0 && (
-                                    <>
-                                      <span style={{ color: '#60a5fa', fontWeight: 'bold' }}>☕ <strong>{stop.breakMin >= 240 ? 'Pausa Nocturna Automatizada:' : 'Descanso de flota:'}</strong> {Math.round(stop.breakMin)}m</span>
-                                      <span style={{ fontSize: '0.6rem', color: '#94a3b8', fontStyle: 'italic', whiteSpace: 'normal', maxWidth: '220px', lineHeight: '1.2' }}>
-                                        {stop.breakMin >= 240 
-                                          ? 'El vehículo se detiene por cierre del CEDI y para cumplir con el descanso obligatorio.' 
-                                          : 'Pausa programada según la normativa del conductor en este horario.'}
-                                      </span>
-                                    </>
-                                  )}
-                                </div>
-                              )}
-                            </div>
-                          )}
-                          {stop.type === 'delivery' && width > 2 && (
-                            <span className="block-label">
-                              {stop.sequence}
-                              {stop.breakMin > 0 && " ☕"}
-                            </span>
-                          )}
-                        </div>
+                        
+                        {/* SEGMENTOS DE LA PARADA */}
+                        {(stop.segments || []).map((seg, segIdx) => {
+                          const sPos = getGanttPos(seg.start);
+                          const ePos = getGanttPos(seg.end);
+                          const sWidth = Math.max(0.5, ePos - sPos);
+                          const segOrders = seg.jobId ? (stop.jobs.find(j => j.jobId === seg.jobId)?.orders || []) : stop.jobs.flatMap(j => j.orders);
 
-                        {/* Bloques de descanso superpuestos/separados si existen */}
-                        {stop.breakDetails && stop.breakDetails.length > 0 && stop.breakDetails.map((b, bIdx) => {
-                          if (!b.start || !b.end) return null;
-                          const bStartPos = getGanttPos(new Date(b.start));
-                          const bEndPos = getGanttPos(new Date(b.end));
-                          const bWidth = Math.max(0.5, bEndPos - bStartPos);
-                          
                           return (
-                            <div key={`break-${sIdx}-${bIdx}`} 
-                                 className="gantt-activity-block break-overlay"
+                            <div key={`${sIdx}-${segIdx}`} 
+                                 className={`gantt-activity-block ${seg.type}`}
                                  style={{ 
-                                   left: `${bStartPos}%`,
-                                   width: `${bWidth}%`,
-                                   backgroundColor: '#3b82f6',
-                                   backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 5px, rgba(255,255,255,0.2) 5px, rgba(255,255,255,0.2) 10px)',
-                                   border: '1px solid #2563eb',
-                                   zIndex: 15
+                                   left: `${sPos}%`,
+                                   width: `${sWidth}%`,
+                                   zIndex: seg.type === 'wait' ? 5 : 20,
+                                   display: 'flex',
+                                   alignItems: 'center',
+                                   justifyContent: 'center'
                                  }}
                                  onMouseEnter={handleTooltipPosition}
                                  >
-                              <div className="activity-tooltip">
-                                <span className="tooltip-seq">☕</span>
-                                <span className="tooltip-main">Descanso programado</span>
-                                <span className="tooltip-time">
-                                  {formatTime(new Date(b.start))} - {formatTime(new Date(b.end))}
-                                </span>
-                                <div className="tooltip-breakdown">
-                                  <span style={{ color: '#60a5fa' }}>☕ Duración: {Math.round((b.end - b.start) / 60000)}m</span>
+                              {sWidth > 2 && (
+                                <div style={{ fontSize: '0.8rem', pointerEvents: 'none', userSelect: 'none' }}>
+                                  {seg.type === 'depot' && '🏠'}
+                                  {seg.type === 'delivery' && '📦'}
+                                  {seg.type === 'reload' && '🔄'}
+                                  {seg.type === 'break' && '☕'}
                                 </div>
+                              )}
+                              <div className="activity-tooltip">
+                                <span className="tooltip-seq">
+                                  {seg.type === 'wait' ? '⏳' : seg.type === 'break' ? '☕' : (stop.sequence || 'R')}
+                                </span>
+                                <span className="tooltip-main">
+                                  {seg.label}
+                                  {segOrders.length > 0 && (
+                                    <div style={{ 
+                                      marginTop: '10px', 
+                                      paddingTop: '10px', 
+                                      borderTop: '1px solid rgba(255,255,255,0.15)', 
+                                      display: 'flex', 
+                                      flexDirection: 'column', 
+                                      gap: '8px',
+                                      maxHeight: '220px',
+                                      overflowY: 'auto'
+                                    }}>
+                                      <strong style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
+                                        Pedidos ({segOrders.length}):
+                                      </strong>
+                                      {segOrders.map((order, oIdx) => (
+                                        <div key={oIdx} className="tooltip-order-mini">
+                                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                                            <span style={{ color: '#60a5fa', fontWeight: 700 }}>{getOrderId(order, mapping)}</span>
+                                            <span style={{ color: '#93c5fd', fontSize: '0.65rem' }}>{order[mapping.movimiento] || 'N/A'}</span>
+                                          </div>
+                                          <div style={{ color: '#fff', fontSize: '0.7rem' }}>{order[mapping.client] || 'Sin nombre'}</div>
+                                        </div>
+                                      ))}
+                                    </div>
+                                  )}
+                                </span>
+                                {stop.type !== 'break' && stop.address && (
+                                  <span className="tooltip-address">
+                                    <MapPin size={8} /> {stop.address}
+                                  </span>
+                                )}
+                                <span className="tooltip-time">
+                                  {formatTime(seg.start)} - {formatTime(seg.end)}
+                                  <span style={{ color: '#94a3b8', fontSize: '0.7rem', display: 'block', marginTop: '2px' }}>
+                                    Duración: {Math.round((seg.end - seg.start) / 60000)} min
+                                  </span>
+                                </span>
+                                
+                                {seg.type === 'wait' && (
+                                  <div className="tooltip-note" style={{ 
+                                    marginTop: '8px', 
+                                    padding: '8px', 
+                                    background: 'rgba(245, 158, 11, 0.1)', 
+                                    border: '1px solid rgba(245, 158, 11, 0.2)',
+                                    borderRadius: '4px',
+                                    fontSize: '0.7rem',
+                                    color: '#f59e0b'
+                                  }}>
+                                    <strong>Nota:</strong> El vehículo llegó antes de la ventana horaria del cliente o está esperando la apertura del CEDI.
+                                  </div>
+                                )}
                               </div>
                             </div>
                           );

@@ -222,41 +222,74 @@ function App() {
       const loadDur = (parseInt(cediConfig.loadDuration) || 120) * 60;
       const maxDays = parseInt(cediConfig.maxShiftDays) || 1;
       
-      const shift = {
-        start: { time: formatTime(cediConfig.startTime), location: cediLoc },
-        end: { 
-          time: formatTime(cediConfig.endTime, undefined, maxDays - 1), 
-          location: cediLoc
-        }
+      const addSecondsToLocal = (isoStr, seconds) => {
+        const d = new Date(isoStr);
+        d.setSeconds(d.getSeconds() + seconds);
+        const local = new Date(d.getTime() - (6 * 60 * 60 * 1000));
+        const pad = (n) => String(n).padStart(2, '0');
+        return `${local.getUTCFullYear()}-${pad(local.getUTCMonth() + 1)}-${pad(local.getUTCDate())}T${pad(local.getUTCHours())}:${pad(local.getUTCMinutes())}:${pad(local.getUTCSeconds())}-06:00`;
       };
 
-      // Inyectar descansos nocturnos (breaks) si el rango es de varios días
+      const baseStart = formatTime(cediConfig.startTime);
+      const departureTime = addSecondsToLocal(baseStart, loadDur);
+
+      // Generar pausas NOM-087 limitadas a 5 elementos para cumplir con el esquema del servidor
+      const fixedBreaks = [];
+      
+      // Día 1: Pausas obligatorias cada 5h
+      fixedBreaks.push({
+        duration: 1800,
+        times: [[addSecondsToLocal(baseStart, 5 * 3600), addSecondsToLocal(baseStart, 5.5 * 3600)]]
+      });
+      fixedBreaks.push({
+        duration: 1800,
+        times: [[addSecondsToLocal(baseStart, 10.5 * 3600), addSecondsToLocal(baseStart, 11 * 3600)]]
+      });
+
+      // Descanso de 8h entre Día 1 y Día 2 (Si aplica)
       if (maxDays > 1) {
-        shift.breaks = [];
-        for (let i = 0; i < maxDays - 1; i++) {
-          const breakStart = formatTime(cediConfig.endTime, undefined, i);     // Ej: Hoy a las 17:00
-          const breakEnd = formatTime(cediConfig.startTime, undefined, i + 1); // Ej: Mañana a las 06:00
-          
-          // Calcular la duración en segundos
-          const dStart = new Date(breakStart).getTime();
-          const dEnd = new Date(breakEnd).getTime();
-          const durationSeconds = Math.max(0, (dEnd - dStart) / 1000);
-          
-          if (durationSeconds > 0) {
-            shift.breaks.push({
-              duration: durationSeconds,
-              times: [
-                [breakStart, breakEnd]
-              ]
-            });
-          }
+        const day2Start = formatTime(cediConfig.startTime, undefined, 1);
+        fixedBreaks.push({
+          duration: 28800,
+          times: [[addSecondsToLocal(baseStart, 14.5 * 3600), addSecondsToLocal(baseStart, 22.5 * 3600)]]
+        });
+
+        // Día 2: Una pausa adicional
+        fixedBreaks.push({
+          duration: 1800,
+          times: [[addSecondsToLocal(day2Start, 5 * 3600), addSecondsToLocal(day2Start, 5.5 * 3600)]]
+        });
+
+        // Descanso de 8h entre Día 2 y Día 3 (Si aplica)
+        if (maxDays > 2) {
+          const day3Start = formatTime(cediConfig.startTime, undefined, 2);
+          fixedBreaks.push({
+            duration: 28800,
+            times: [[addSecondsToLocal(day2Start, 14.5 * 3600), addSecondsToLocal(day2Start, 22.5 * 3600)]]
+          });
         }
       }
 
+      const shift = {
+        start: { 
+          time: departureTime, 
+          location: cediLoc 
+        },
+        end: { 
+          time: formatTime(cediConfig.endTime, undefined, maxDays - 1), 
+          location: cediLoc
+        },
+        breaks: fixedBreaks.slice(0, 5) // Garantizar límite de 5 elementos
+      };
+
       if (vType.canReload) {
-        shift.reloads = Array.from({ length: 5 }).map(() => ({
+        shift.reloads = Array.from({ length: 5 }).map((_, dayIdx) => ({
           location: cediLoc,
-          duration: loadDur
+          duration: loadDur,
+          times: Array.from({ length: maxDays }).map((_, d) => [
+            formatTime(cediConfig.startTime, undefined, d),
+            formatTime(cediConfig.endTime, undefined, d)
+          ])
         }));
       }
       return [shift];
@@ -289,6 +322,8 @@ function App() {
             time: 0.0048 
           },
           shifts: getShiftsForType(v),
+          
+          
           // Escalar capacidades
           capacity: (v.capacity || [18000]).map(cap => Math.round(parseNumber(cap) * SCALING_FACTOR)),
           skills: (() => {
@@ -715,9 +750,22 @@ function App() {
             <label className="nav-label">OPERACIÓN ACTIVA</label>
             <div className="nav-card" style={{ padding: '24px' }}>
               <div style={{ display: 'grid', gap: '12px' }}>
+                <button
+                  className={`nav-item-btn ${activeWorkspace === 'georef' ? 'active' : ''}`}
+                  onClick={() => setActiveWorkspace('georef')}
+                  data-tooltip="Mapeo preciso de clientes y puntos de entrega para asegurar que las coordenadas coincidan con la realidad operativa."
+                >
+                  <div className="icon-wrap"><Target size={20} /></div>
+                  <div className="text-wrap">
+                    <span className="label">Calidad de Datos</span>
+                    <span className="title">Georreferenciación</span>
+                  </div>
+                </button>
+
                 <button 
                   className="nav-item-btn" 
                   onClick={() => { setConfigTab('cedi'); setShowConfigModal(true); }}
+                  data-tooltip="Establecimiento de horarios de apertura, tiempos de carga y capacidad de andenes para sincronizar el almacén con la flota."
                 >
                   <div className="icon-wrap"><MapPin size={20} /></div>
                   <div className="text-wrap">
@@ -727,8 +775,9 @@ function App() {
                 </button>
                 
                 <button 
-                  className="nav-item-btn active" 
+                  className="nav-item-btn" 
                   onClick={() => { setConfigTab('fleet'); setShowConfigModal(true); }}
+                  data-tooltip="Configuración técnica de vehículos, capacidades y perfiles de conducción bajo normativas legales."
                 >
                   <div className="icon-wrap"><Truck size={20} /></div>
                   <div className="text-wrap">
@@ -736,19 +785,11 @@ function App() {
                     <span className="title">Gestión de Flota</span>
                   </div>
                 </button>
-                <button
-                  className={`nav-item-btn ${activeWorkspace === 'georef' ? 'active' : ''}`}
-                  onClick={() => setActiveWorkspace('georef')}
-                >
-                  <div className="icon-wrap"><Target size={20} /></div>
-                  <div className="text-wrap">
-                    <span className="label">Calidad de Datos</span>
-                    <span className="title">Georreferenciación</span>
-                  </div>
-                </button>
+
                 <button
                   className={`nav-item-btn ${activeWorkspace === 'optimizer' ? 'active' : ''}`}
                   onClick={() => setActiveWorkspace('optimizer')}
+                  data-tooltip="Cálculo avanzado de rutas para maximizar la ocupación, reducir kilómetros y cumplir con las ventanas de entrega."
                 >
                   <div className="icon-wrap"><Route size={20} /></div>
                   <div className="text-wrap">
@@ -861,11 +902,25 @@ function App() {
                       <input 
                         type="number" 
                         min="1" 
-                        max="7"
+                        max="4"
                         value={cediConfig.maxShiftDays} 
-                        onChange={(e) => setCediConfig({ ...cediConfig, maxShiftDays: e.target.value })} 
+                        onChange={(e) => {
+                          const val = parseInt(e.target.value);
+                          if (val > 4) {
+                            setCediConfig({ ...cediConfig, maxShiftDays: 4 });
+                          } else {
+                            setCediConfig({ ...cediConfig, maxShiftDays: e.target.value });
+                          }
+                        }} 
                       />
-                      <small style={{color: '#64748b', fontSize: '0.65rem'}}>1 = Entrega inmediata (mismo día)</small>
+                      <div style={{ marginTop: '4px' }}>
+                        <small style={{color: '#64748b', fontSize: '0.65rem', display: 'block'}}>1 = Entrega inmediata (mismo día)</small>
+                        {parseInt(cediConfig.maxShiftDays) >= 4 && (
+                          <small style={{color: '#f59e0b', fontSize: '0.65rem', fontWeight: 700, display: 'block', marginTop: '2px'}}>
+                            ⚠️ Capacidad máxima de planeación (4 días).
+                          </small>
+                        )}
+                      </div>
                     </div>
 
                     {/* Fila 4: Ventanas Horarias Especiales */}
