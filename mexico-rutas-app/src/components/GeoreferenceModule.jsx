@@ -677,7 +677,7 @@ const GeoreferenceModule = ({ apiKey }) => {
             <div style={{ height: '55vh', borderBottom: '1px solid #e2e8f0' }}>
               <MapContainer center={{ lat: selected.lat || DEFAULT_CENTER.lat, lng: selected.lng || DEFAULT_CENTER.lng }} zoom={16} style={{ height: '100%' }}>
                 <TileLayer 
-                  url={`https://2.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?apiKey=${apiKey}`}
+                  url={`https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png8?style=explore.day&apiKey=${apiKey}`}
                   attribution='&copy; <a href="https://legal.here.com/en-gb/privacy">HERE</a> 2024'
                 />
                 <MarkerDragController
