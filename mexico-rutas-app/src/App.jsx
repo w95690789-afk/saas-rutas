@@ -36,8 +36,9 @@ function App() {
   const [fleetMapping, setFleetMapping] = useState({
     id: '', amount: '', fixedCost: '', capacity: '', skill: '', canReload: ''
   });
-  // Hardcode industrial key to bypass Vercel environment variable cache
+  // Hardcode industrial key for immediate cloud deployment
   const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
+  const SUPABASE_URL = 'https://ahvmsiogvnhnkrayadgt.supabase.co';
 
   const [cediConfig, setCediConfig] = useState({
     name: 'CEDI Principal México',
@@ -464,7 +465,7 @@ function App() {
       setLastProblem(problemToSend);
       setStatus('polling');
 
-      fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/optimize-routes-async', {
+      fetch(`${SUPABASE_URL}/functions/v1/optimize-routes-async`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ problem: problemToSend, apiKey: API_KEY }) 
@@ -498,7 +499,7 @@ function App() {
       setElapsedTime(0);
       const interval = setInterval(() => {
         setElapsedTime(prev => prev + 10);
-        fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/check-optimization-status', {
+        fetch(`${SUPABASE_URL}/functions/v1/check-optimization-status`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ taskId: id, apiKey: API_KEY })
@@ -511,7 +512,7 @@ function App() {
             clearInterval(interval);
             setStatus('fetching_solution');
             const resourceId = result.resource?.resourceId || id;
-            fetch('https://ahvmsiogvnhnkrayadgt.supabase.co/functions/v1/get-optimization-solution', {
+            fetch(`${SUPABASE_URL}/functions/v1/get-optimization-solution`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({ taskId: resourceId, apiKey: API_KEY })

@@ -5,6 +5,7 @@ import {
   Upload, Plus, MapPin, AlertTriangle, CheckCircle2, Target, FileDown, LocateFixed, Settings, PlayCircle, RefreshCw
 } from 'lucide-react';
 import { MapContainer, TileLayer, Marker, useMapEvents, Popup } from 'react-leaflet';
+import MarkerClusterGroup from 'react-leaflet-cluster';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import markerIcon2x from 'leaflet/dist/images/marker-icon-2x.png';
@@ -45,6 +46,34 @@ const createRiskIcon = (riesgo) => {
     ">?</div>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22]
+  });
+};
+
+const createCheckIcon = (riesgo) => {
+  let color = '#22c55e'; // Verde (Bajo)
+  if (riesgo === 'Critico') color = '#ef4444'; // Rojo
+  else if (riesgo === 'Alto') color = '#f97316'; // Naranja
+  else if (riesgo === 'Moderado') color = '#3b82f6'; // Azul
+
+  return L.divIcon({
+    className: 'custom-check-marker',
+    html: `<div style="
+      background: ${color}; 
+      width: 26px; 
+      height: 26px; 
+      border-radius: 50%; 
+      border: 3px solid white; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 900;
+      font-size: 14px;
+      font-family: sans-serif;
+    ">✓</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15]
   });
 };
 
@@ -126,6 +155,7 @@ const MarkerDragController = ({ position, onChange, icon }) => {
 
 const GeoreferenceModule = ({ apiKey }) => {
   const [rows, setRows] = useState([]);
+  const [filters, setFilters] = useState({ risk: 'all', status: 'all', search: '' });
   const [isProcessing, setIsProcessing] = useState(false);
   const [manual, setManual] = useState({ address: '', city: '', state: '', postalCode: '', country: 'MX' });
   const [selected, setSelected] = useState(null);
@@ -318,13 +348,14 @@ const GeoreferenceModule = ({ apiKey }) => {
   }, [rows]);
   
   const displayedRows = useMemo(() => {
-    return rows.filter(r => 
-      r.riesgo === 'Critico' || 
-      r.riesgo === 'Alto' || 
-      r.riesgo === 'Moderado' ||
-      r.riesgo === 'Pendiente'
-    );
-  }, [rows]);
+    return rows.filter(r => {
+      const matchSearch = r.fullAddress.toLowerCase().includes(filters.search.toLowerCase()) || 
+                          (r.providerLabel || '').toLowerCase().includes(filters.search.toLowerCase());
+      const matchRisk = filters.risk === 'all' || r.riesgo === filters.risk;
+      const matchStatus = filters.status === 'all' || r.geocodeStatus === filters.status;
+      return matchSearch && matchRisk && matchStatus;
+    });
+  }, [rows, filters]);
 
   const exportCSV = () => {
     const data = rows.map(r => ({
@@ -574,24 +605,90 @@ const GeoreferenceModule = ({ apiKey }) => {
         </div>
 
         {!isMapping && (
-          <div className="nav-card" style={{ padding: '16px', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
-            <div style={{ fontWeight: 700, marginBottom: 10, fontSize: '0.85rem' }}>Métricas de Procesamiento</div>
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-              <div className="glass-card" style={{ padding: '15px', textAlign: 'center', background: 'white' }}>
-                <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 700 }}>TOTAL</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900 }}>{stats.total}</div>
+          <div className="nav-card" style={{ padding: '24px', background: 'linear-gradient(135deg, #ffffff 0%, #f8fafc 100%)', position: 'relative', overflow: 'hidden' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <div style={{ fontWeight: 800, fontSize: '1rem', color: '#0f172a', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Target size={20} color="var(--primary-electric)" />
+                Inteligencia de Procesamiento Geográfico
               </div>
-              <div className="glass-card" style={{ padding: '15px', textAlign: 'center', background: 'rgba(0,88,190,0.05)', border: '1px solid rgba(0,88,190,0.1)' }}>
-                <div style={{ fontSize: '0.65rem', color: 'var(--primary-electric)', fontWeight: 700 }}>LISTO</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: 'var(--primary-electric)' }}>{stats.done}</div>
+              <div style={{ padding: '4px 12px', background: '#e2e8f0', borderRadius: '20px', fontSize: '0.7rem', fontWeight: 700, color: '#475569' }}>
+                LIVE FEED
               </div>
-              <div className="glass-card" style={{ padding: '15px', textAlign: 'center', background: 'rgba(22,163,74,0.05)', border: '1px solid rgba(22,163,74,0.1)' }}>
-                <div style={{ fontSize: '0.65rem', color: '#16a34a', fontWeight: 700 }}>CALIDAD ALTA</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#16a34a' }}>{stats.exactas}</div>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1.2fr 3fr', gap: '24px', alignItems: 'center' }}>
+              {/* SVG DONUT CHART */}
+              <div style={{ position: 'relative', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                <svg width="140" height="140" viewBox="0 0 140 140">
+                  <circle cx="70" cy="70" r="60" fill="transparent" stroke="#e2e8f0" strokeWidth="12" />
+                  <circle 
+                    cx="70" cy="70" r="60" fill="transparent" stroke="var(--primary-electric)" strokeWidth="12" 
+                    strokeDasharray={`${(stats.done / (stats.total || 1)) * 377} 377`}
+                    strokeLinecap="round"
+                    transform="rotate(-90 70 70)"
+                  />
+                </svg>
+                <div style={{ position: 'absolute', textAlign: 'center' }}>
+                  <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#031636' }}>
+                    {Math.round((stats.done / (stats.total || 1)) * 100)}%
+                  </div>
+                  <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Efectividad</div>
+                </div>
               </div>
-              <div className="glass-card" style={{ padding: '15px', textAlign: 'center', background: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.1)' }}>
-                <div style={{ fontSize: '0.65rem', color: '#dc2626', fontWeight: 700 }}>RIESGO/FALLO</div>
-                <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#dc2626' }}>{stats.alto}</div>
+
+              {/* METRIC CARDS */}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                <div className="glass-card" style={{ padding: '16px', background: 'white', border: '1px solid #e2e8f0', transition: 'transform 0.2s' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '0.65rem', color: '#94a3b8', fontWeight: 800, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Universo de Datos</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#1e293b' }}>{stats.total}</div>
+                    </div>
+                    <FileDown size={18} color="#94a3b8" />
+                  </div>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '0.65rem', color: '#64748b', lineHeight: 1.3 }}>
+                    Total de puntos cargados desde tu archivo para ser procesados.
+                  </p>
+                </div>
+
+                <div className="glass-card" style={{ padding: '16px', background: 'rgba(0,88,190,0.02)', border: '1px solid rgba(0,88,190,0.1)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '0.65rem', color: 'var(--primary-electric)', fontWeight: 800, textTransform: 'uppercase' }}>Pedidos Listos</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: 'var(--primary-electric)' }}>{stats.done}</div>
+                    </div>
+                    <CheckCircle2 size={18} color="var(--primary-electric)" />
+                  </div>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '0.65rem', color: '#64748b', lineHeight: 1.3 }}>
+                    Registros con coordenadas válidas listos para ser enviados al ruteador.
+                  </p>
+                </div>
+
+                <div className="glass-card" style={{ padding: '16px', background: 'rgba(22,163,74,0.02)', border: '1px solid rgba(22,163,74,0.1)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '0.65rem', color: '#16a34a', fontWeight: 800, textTransform: 'uppercase' }}>Precisión Puerta</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#16a34a' }}>{stats.exactas}</div>
+                    </div>
+                    <MapPin size={18} color="#16a34a" />
+                  </div>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '0.65rem', color: '#64748b', lineHeight: 1.3 }}>
+                    Direcciones de alta confianza. Garantizan que el chofer llegará al número exacto.
+                  </p>
+                </div>
+
+                <div className="glass-card" style={{ padding: '16px', background: 'rgba(220,38,38,0.02)', border: '1px solid rgba(220,38,38,0.1)' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                    <div>
+                      <div style={{ fontSize: '0.65rem', color: '#dc2626', fontWeight: 800, textTransform: 'uppercase' }}>Zona de Auditoría</div>
+                      <div style={{ fontSize: '1.6rem', fontWeight: 900, color: '#dc2626' }}>{stats.alto}</div>
+                    </div>
+                    <AlertTriangle size={18} color="#dc2626" />
+                  </div>
+                  <p style={{ margin: '8px 0 0 0', fontSize: '0.65rem', color: '#64748b', lineHeight: 1.3 }}>
+                    Alertas críticas o de baja precisión. **Requieren tu validación manual.**
+                  </p>
+                </div>
               </div>
             </div>
           </div>
@@ -600,14 +697,75 @@ const GeoreferenceModule = ({ apiKey }) => {
 
       {/* RESULTS TABLE */}
       <div className="nav-card" style={{ padding: '0', overflow: 'hidden', boxShadow: '0 10px 15px -3px rgba(0,0,0,0.05)' }}>
-        <div style={{ padding: '18px 24px', borderBottom: '1px solid #f1f5f9', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#fff' }}>
-          <strong style={{ fontSize: '0.9rem', color: '#334155' }}>Visor de Resultados Geocodificados</strong>
-          {isProcessing && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-              <div className="loader-dots"></div>
-              <span style={{ fontSize: '0.75rem', color: 'var(--primary-electric)', fontWeight: 800 }}>PROCESANDO BATCH...</span>
+        <div style={{ padding: '18px 24px', borderBottom: '1px solid #f1f5f9', background: '#fff' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px' }}>
+            <div>
+              <strong style={{ fontSize: '1rem', color: '#1e293b', display: 'block' }}>Panel de Auditoría y Control de Calidad</strong>
+              <span style={{ fontSize: '0.75rem', color: '#64748b' }}>Visualizando {displayedRows.length} de {rows.length} registros</span>
             </div>
-          )}
+            {isProcessing && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div className="loader-dots"></div>
+                <span style={{ fontSize: '0.75rem', color: 'var(--primary-electric)', fontWeight: 800 }}>PROCESANDO BATCH...</span>
+              </div>
+            )}
+          </div>
+
+          <div style={{ display: 'flex', gap: '15px', flexWrap: 'wrap', alignItems: 'center' }}>
+            {/* Search Bar */}
+            <div style={{ flex: 1, minWidth: '250px', position: 'relative' }}>
+              <input 
+                type="text" 
+                placeholder="Buscar por dirección o resultado API..." 
+                value={filters.search}
+                onChange={(e) => setFilters(prev => ({ ...prev, search: e.target.value }))}
+                style={{ 
+                  width: '100%', padding: '10px 15px', paddingLeft: '40px', 
+                  borderRadius: '10px', border: '1px solid #e2e8f0', background: '#f8fafc',
+                  fontSize: '0.85rem'
+                }}
+              />
+              <Settings size={16} style={{ position: 'absolute', left: '15px', top: '50%', transform: 'translateY(-50%)', color: '#94a3b8' }} />
+            </div>
+
+            {/* Risk Filters */}
+            <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
+              {['all', 'Critico', 'Alto', 'Moderado', 'Bajo'].map(r => (
+                <button
+                  key={r}
+                  onClick={() => setFilters(prev => ({ ...prev, risk: r }))}
+                  style={{
+                    padding: '6px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                    fontSize: '0.75rem', fontWeight: 800, transition: 'all 0.2s',
+                    background: filters.risk === r ? (r === 'Critico' ? '#ef4444' : r === 'Alto' ? '#f97316' : r === 'Moderado' ? '#3b82f6' : r === 'Bajo' ? '#22c55e' : '#031636') : 'transparent',
+                    color: filters.risk === r ? 'white' : '#64748b',
+                    boxShadow: filters.risk === r ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none'
+                  }}
+                >
+                  {r === 'all' ? 'TODOS' : r.toUpperCase()}
+                </button>
+              ))}
+            </div>
+
+            {/* Status Filters */}
+            <div style={{ display: 'flex', gap: '6px', background: '#f1f5f9', padding: '4px', borderRadius: '10px' }}>
+              {['all', 'ok', 'error', 'pendiente'].map(s => (
+                <button
+                  key={s}
+                  onClick={() => setFilters(prev => ({ ...prev, status: s }))}
+                  style={{
+                    padding: '6px 12px', borderRadius: '8px', border: 'none', cursor: 'pointer',
+                    fontSize: '0.75rem', fontWeight: 800, transition: 'all 0.2s',
+                    background: filters.status === s ? '#031636' : 'transparent',
+                    color: filters.status === s ? 'white' : '#64748b',
+                    boxShadow: filters.status === s ? '0 4px 6px -1px rgba(0,0,0,0.1)' : 'none'
+                  }}
+                >
+                  {s === 'all' ? 'STATUS' : s.toUpperCase()}
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
         <div style={{ maxHeight: '480px', overflow: 'auto' }}>
           <table className="industrial-table">
@@ -772,30 +930,58 @@ const GeoreferenceModule = ({ apiKey }) => {
                 style={{ height: '100%', width: '100%' }}
               >
                 <TileLayer 
-                  url={`https://2.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?apiKey=${apiKey}`}
+                  url={`https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png8?style=explore.day&apiKey=${apiKey}`}
                   attribution='&copy; <a href="https://legal.here.com/en-gb/privacy">HERE</a> 2024'
                 />
-                {rows.filter(r => r.lat).map(r => (
-                  <Marker 
-                    key={r.id} 
-                    position={{ lat: r.lat, lng: r.lng }} 
-                    icon={createRiskIcon(r.riesgo)}
-                  >
-                    <Popup>
-                      <div style={{ padding: '4px' }}>
-                        <strong style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>{r.fullAddress}</strong>
-                        <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
-                          <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>RIESGO:</span>
-                          <span style={{ 
-                            fontSize: '0.7rem', 
-                            color: r.riesgo === 'Critico' ? '#dc2626' : r.riesgo === 'Alto' ? '#ea580c' : r.riesgo === 'Moderado' ? '#3b82f6' : '#16a34a',
-                            fontWeight: 900
-                          }}>{r.riesgo.toUpperCase()}</span>
+                <MarkerClusterGroup
+                  chunkedLoading
+                  maxClusterRadius={50}
+                  iconCreateFunction={(cluster) => {
+                    const count = cluster.getChildCount();
+                    return L.divIcon({
+                      html: `<div style="
+                        background: #031636;
+                        color: white;
+                        width: 32px;
+                        height: 32px;
+                        border-radius: 50%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        font-weight: 800;
+                        font-size: 13px;
+                        border: 2px solid white;
+                        box-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                      ">
+                        ${count}
+                      </div>`,
+                      className: 'custom-cluster-icon',
+                      iconSize: [32, 32]
+                    });
+                  }}
+                >
+                  {rows.filter(r => r.lat).map(r => (
+                    <Marker 
+                      key={r.id} 
+                      position={{ lat: r.lat, lng: r.lng }} 
+                      icon={createCheckIcon(r.riesgo)}
+                    >
+                      <Popup>
+                        <div style={{ padding: '4px' }}>
+                          <strong style={{ fontSize: '0.85rem', display: 'block', marginBottom: '4px' }}>{r.fullAddress}</strong>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '5px' }}>
+                            <span style={{ fontSize: '0.65rem', fontWeight: 800, color: '#64748b' }}>RIESGO:</span>
+                            <span style={{ 
+                              fontSize: '0.7rem', 
+                              color: r.riesgo === 'Critico' ? '#dc2626' : r.riesgo === 'Alto' ? '#ea580c' : r.riesgo === 'Moderado' ? '#3b82f6' : '#16a34a',
+                              fontWeight: 900
+                            }}>{r.riesgo.toUpperCase()}</span>
+                          </div>
                         </div>
-                      </div>
-                    </Popup>
-                  </Marker>
-                ))}
+                      </Popup>
+                    </Marker>
+                  ))}
+                </MarkerClusterGroup>
               </MapContainer>
             </div>
 
