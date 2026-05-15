@@ -30,21 +30,21 @@ const createRiskIcon = (riesgo) => {
     className: 'custom-risk-marker',
     html: `<div style="
       background: ${color}; 
-      width: 28px; 
-      height: 28px; 
+      width: 40px; 
+      height: 40px; 
       border-radius: 50%; 
-      border: 3px solid white; 
-      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      border: 4px solid white; 
+      box-shadow: 0 6px 15px rgba(0,0,0,0.5);
       display: flex;
       align-items: center;
       justify-content: center;
       color: white;
       font-weight: 900;
-      font-size: 16px;
+      font-size: 22px;
       font-family: sans-serif;
     ">?</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16]
+    iconSize: [44, 44],
+    iconAnchor: [22, 22]
   });
 };
 
@@ -712,9 +712,17 @@ const GeoreferenceModule = ({ apiKey }) => {
                 ) : (
                   <AlertTriangle size={18} color="#ea580c" />
                 )}
-                <span style={{ fontWeight: isSuccessfullySaved ? 700 : 400, color: isSuccessfullySaved ? '#166534' : '#475569' }}>
+                <span style={{ fontWeight: isSuccessfullySaved ? 700 : 400, color: isSuccessfullySaved ? '#166534' : '#475569', lineHeight: 1.4 }}>
                   {isSuccessfullySaved 
-                    ? `¡Punto guardado! Dirección detectada: ${lastValidatedAddress}` 
+                    ? (
+                      <>
+                        <div style={{ fontSize: '0.85rem' }}>¡Punto guardado exitosamente!</div>
+                        <div style={{ fontSize: '0.75rem', opacity: 0.9 }}>{lastValidatedAddress}</div>
+                        <div style={{ fontSize: '0.7rem', fontFamily: 'monospace', marginTop: '2px' }}>
+                          Coords: {draftPoint?.lat.toFixed(5)}, {draftPoint?.lng.toFixed(5)}
+                        </div>
+                      </>
+                    ) 
                     : "Mueve el marcador al punto exacto. El estado en la tabla cambiará a OK al confirmar."
                   }
                 </span>
@@ -736,7 +744,7 @@ const GeoreferenceModule = ({ apiKey }) => {
                 onClick={confirmPointerLocation} 
                 disabled={isConfirmingPoint}
               >
-                {isConfirmingPoint ? 'GUARDANDO...' : (isSuccessfullySaved ? 'CERRAR' : 'CONFIRMAR Y GUARDAR')}
+                {isConfirmingPoint ? 'GUARDANDO...' : (isSuccessfullySaved ? 'CERRAR' : 'CONFIRMAR')}
               </button>
             </div>
           </div>
