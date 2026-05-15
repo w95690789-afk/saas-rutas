@@ -676,7 +676,10 @@ const GeoreferenceModule = ({ apiKey }) => {
 
             <div style={{ height: '55vh', borderBottom: '1px solid #e2e8f0' }}>
               <MapContainer center={{ lat: selected.lat || DEFAULT_CENTER.lat, lng: selected.lng || DEFAULT_CENTER.lng }} zoom={16} style={{ height: '100%' }}>
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <TileLayer 
+                  url={`https://2.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?apiKey=${apiKey}`}
+                  attribution='&copy; <a href="https://legal.here.com/en-gb/privacy">HERE</a> 2024'
+                />
                 <MarkerDragController
                   position={{ lat: draftPoint?.lat || selected.lat || DEFAULT_CENTER.lat, lng: draftPoint?.lng || selected.lng || DEFAULT_CENTER.lng }}
                   onChange={(pos) => setDraftPoint(pos)}
@@ -733,7 +736,10 @@ const GeoreferenceModule = ({ apiKey }) => {
                 zoom={10} 
                 style={{ height: '100%', width: '100%' }}
               >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
+                <TileLayer 
+                  url={`https://2.base.maps.ls.hereapi.com/maptile/2.1/maptile/newest/normal.day/{z}/{x}/{y}/256/png8?apiKey=${apiKey}`}
+                  attribution='&copy; <a href="https://legal.here.com/en-gb/privacy">HERE</a> 2024'
+                />
                 {rows.filter(r => r.lat).map(r => (
                   <Marker 
                     key={r.id} 
