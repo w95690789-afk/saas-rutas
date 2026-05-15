@@ -632,7 +632,7 @@ const GeoreferenceModule = ({ apiKey }) => {
                   <div style={{ fontSize: '1.4rem', fontWeight: 900, color: '#031636' }}>
                     {Math.round((stats.done / (stats.total || 1)) * 100)}%
                   </div>
-                  <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Efectividad</div>
+                  <div style={{ fontSize: '0.6rem', color: '#64748b', fontWeight: 700, textTransform: 'uppercase' }}>Procesado</div>
                 </div>
               </div>
 

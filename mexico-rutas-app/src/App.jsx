@@ -760,7 +760,7 @@ function App() {
                   <div className="icon-wrap"><Target size={20} /></div>
                   <div className="text-wrap">
                     <span className="label">Calidad de Datos</span>
-                    <span className="title">Georreferenciación</span>
+                    <span className="title">Geocodificación</span>
                   </div>
                 </button>
 
