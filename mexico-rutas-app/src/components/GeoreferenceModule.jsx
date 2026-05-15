@@ -30,14 +30,21 @@ const createRiskIcon = (riesgo) => {
     className: 'custom-risk-marker',
     html: `<div style="
       background: ${color}; 
-      width: 14px; 
-      height: 14px; 
+      width: 28px; 
+      height: 28px; 
       border-radius: 50%; 
-      border: 2.5px solid white; 
-      box-shadow: 0 2px 5px rgba(0,0,0,0.3);
-    "></div>`,
-    iconSize: [20, 20],
-    iconAnchor: [10, 10]
+      border: 3px solid white; 
+      box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 900;
+      font-size: 16px;
+      font-family: sans-serif;
+    ">?</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16]
   });
 };
 
@@ -126,6 +133,8 @@ const GeoreferenceModule = ({ apiKey }) => {
   const [isConfirmingPoint, setIsConfirmingPoint] = useState(false);
   const [showGlobalMap, setShowGlobalMap] = useState(false);
   const [mapCenter, setMapCenter] = useState(DEFAULT_CENTER);
+  const [lastValidatedAddress, setLastValidatedAddress] = useState('');
+  const [isSuccessfullySaved, setIsSuccessfullySaved] = useState(false);
 
   // States for Batch Mapping
   const [fileHeaders, setFileHeaders] = useState([]);
@@ -363,9 +372,17 @@ const GeoreferenceModule = ({ apiKey }) => {
     const center = record?.lat && record?.lng ? { lat: record.lat, lng: record.lng } : DEFAULT_CENTER;
     setSelected({ ...record });
     setDraftPoint({ lat: record?.lat || center.lat, lng: record?.lng || center.lng });
+    setLastValidatedAddress('');
+    setIsSuccessfullySaved(false);
   };
 
   const confirmPointerLocation = async () => {
+    if (isSuccessfullySaved) {
+      setSelected(null);
+      setDraftPoint(null);
+      return;
+    }
+    
     if (!selected || !draftPoint) return;
     setIsConfirmingPoint(true);
     try {
@@ -387,8 +404,8 @@ const GeoreferenceModule = ({ apiKey }) => {
       };
 
       setRows(prev => prev.map(r => (r.id === selected.id ? updated : r)));
-      setSelected(null);
-      setDraftPoint(null);
+      setLastValidatedAddress(item?.title || 'Ubicación confirmada manualmente');
+      setIsSuccessfullySaved(true);
     } catch (err) {
       console.error('Reverse Geocode error:', err);
       alert(`No se pudo validar la ubicación: ${err.message}`);
@@ -671,7 +688,7 @@ const GeoreferenceModule = ({ apiKey }) => {
                   <p style={{ margin: 0, fontSize: '0.8rem' }}>Ajusta el marcador para {selected.fullAddress}</p>
                 </div>
               </div>
-              <button className="close-btn" onClick={() => { setSelected(null); setDraftPoint(null); }}>&times;</button>
+              <button className="close-btn" onClick={() => { setSelected(null); setDraftPoint(null); setIsSuccessfullySaved(false); }}>&times;</button>
             </header>
 
             <div style={{ height: '55vh', borderBottom: '1px solid #e2e8f0' }}>
@@ -688,28 +705,38 @@ const GeoreferenceModule = ({ apiKey }) => {
               </MapContainer>
             </div>
 
-            <div className="audit-toolbar" style={{ padding: '20px 30px', background: '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#475569', fontSize: '0.8rem' }}>
-                <AlertTriangle size={18} color="#ea580c" />
-                <span>Mueve el marcador al punto exacto. El estado en la tabla cambiará a OK al confirmar.</span>
+            <div className="audit-toolbar" style={{ padding: '20px 30px', background: isSuccessfullySaved ? '#f0fdf4' : '#f8fafc', borderTop: '1px solid #e2e8f0', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, color: '#475569', fontSize: '0.8rem', flex: 1, marginRight: '20px' }}>
+                {isSuccessfullySaved ? (
+                  <CheckCircle2 size={18} color="#16a34a" />
+                ) : (
+                  <AlertTriangle size={18} color="#ea580c" />
+                )}
+                <span style={{ fontWeight: isSuccessfullySaved ? 700 : 400, color: isSuccessfullySaved ? '#166534' : '#475569' }}>
+                  {isSuccessfullySaved 
+                    ? `¡Punto guardado! Dirección detectada: ${lastValidatedAddress}` 
+                    : "Mueve el marcador al punto exacto. El estado en la tabla cambiará a OK al confirmar."
+                  }
+                </span>
               </div>
               <button 
                 className="btn-primary" 
                 style={{ 
                   width: 'auto', 
                   padding: '0.8rem 3rem', 
-                  background: 'var(--primary-electric)', 
+                  background: isSuccessfullySaved ? '#031636' : 'var(--primary-electric)', 
                   color: 'white',
                   border: 'none',
                   borderRadius: '8px',
                   fontWeight: 800,
                   cursor: 'pointer',
-                  boxShadow: '0 4px 10px rgba(0, 88, 190, 0.3)'
+                  boxShadow: isSuccessfullySaved ? '0 4px 10px rgba(3, 22, 54, 0.3)' : '0 4px 10px rgba(0, 88, 190, 0.3)',
+                  transition: 'all 0.2s ease'
                 }} 
                 onClick={confirmPointerLocation} 
                 disabled={isConfirmingPoint}
               >
-                {isConfirmingPoint ? 'GUARDANDO...' : 'CONFIRMAR Y CERRAR'}
+                {isConfirmingPoint ? 'GUARDANDO...' : (isSuccessfullySaved ? 'CERRAR' : 'CONFIRMAR Y GUARDAR')}
               </button>
             </div>
           </div>
