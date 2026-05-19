@@ -668,4 +668,57 @@
 
 **Firmado y Validado:** Antigravity AI - Business Intelligence Architect ✅
 
+### Sesión 39: Refinamiento de Terminología Técnica
+**Fecha:** 14 de Mayo, 2026
+**Estatus:** ✅ COMPLETADO - CONSISTENCIA DE MARCA
+
+#### Ajustes de Interfaz:
+1.  **Estandarización GIS**:
+    *   Renombrado global de "Georeferenciación" a **"Geocodificación"** en el menú de navegación y módulos.
+2.  **Ajuste de KPIs Operativos**:
+    *   Cambio de etiqueta en gráfico de dona: de "Efectividad" a **"Procesado"** para reflejar el volumen de trabajo ejecutado.
+
+#### Estatus de Despliegue (Cloud):
+*   **Despliegue Funcional**: ✅ EXITOSO. Refleja los nuevos nombres en Vercel.
+
+**Firmado y Validado:** Antigravity AI - UX & Data Strategist ✅
+
 ---
+
+### Sesión 40: Ignición DDO MASTER ULTIMATE V4.0
+**Fecha:** 19 de Mayo, 2026
+**Estatus:** ✅ HITO COMPLETADO - SOBERANÍA TOTAL ACTIVA
+
+#### Acciones Realizadas:
+1. **Auditoría de Entorno (Pre-0):** Validación de archivo `.env` existente y poblado. Sin placeholders.
+2. **Auditoría de Arsenal:** Conectividad redundante vía `arsenal_gateway.py` confirmada (GROQ Activo).
+3. **Carga de Contexto:** `BITACORA.md` leída para mantener continuidad operativa.
+
+#### Resultado Operativo:
+* El sistema se encuentra bajo la doctrina de Soberanía Técnica. Preparado para ejecutar instrucciones C-Level.
+
+**Firmado y Validado:** Antigravity AI Lead Architect - DDO Core Powered ✅
+
+---
+
+### Sesión 41: Evolución del Motor de Optimización y UI de Flota
+**Fecha:** 2026-05-19
+**Ejecutor:** AI Lead Architect - Antigravity (DDO Core Powered)
+
+**Cambios Implementados:**
+1. **Descentralización del Tiempo de Carga**: Se eliminó `loadDuration` global de la configuración del CEDI y se asignó como una propiedad nativa (`loadDuration`) de cada vehículo en el estado `fleet`.
+2. **Dimensiones Duales y Precisión de Costos**:
+   - Se inyectó a cada tipo de vehículo la capacidad de volumen en **Pallets**, además del peso.
+   - Se habilitó el **Costo por Distancia** (MXN/metro) y el **Porcentaje de Uso de Capacidad** (`capacityUsage`).
+   - El payload de HERE API fue ajustado para procesar arreglos duales de demanda y capacidad escalando los valores con el porcentaje de uso asignado.
+3. **Blindaje de Ventana de Operación (Recargas)**:
+   - En `transformDataToHERE`, se actualizó el cálculo de la ventana `times` en las `reloads`. Ahora restamos el tiempo particular de carga del cierre del CEDI (`endTime - loadDuration`). Esto previene contundentemente que los camiones empiecen a cargar a horas que los llevarían fuera del horario hábil.
+4. **Rediseño Industrial de Interfaz (UX)**:
+   - Se refactorizó la interfaz de "Gestión de Flota", abandonando el modelo de "Card por vehículo" que causaba un extenso scroll, sustituyéndolo por un diseño en malla de datos densa (`Data Grid` style). Todos los vehículos y sus 9 parámetros se editan desde una sola vista en tabla, ideal para logística.
+5. **Mapeador de CSV en la Nube**:
+   - Se insertó la lógica y los selectores para auto-detectar y mapear columnas de "Pallets" (`tarimas`, `paletas`, etc.) directamente en la ingesta del archivo.
+
+**Resultado:**
+- Rutas altamente precisas en la restricción de horarios.
+- UX ultra-eficiente para el control de decenas de tipologías de vehículos.
+- La herramienta de SaaS Rutas es ahora capaz de calcular el impacto de volumetría.

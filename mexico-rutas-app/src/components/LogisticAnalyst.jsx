@@ -396,7 +396,13 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {}, cediConfig, flee
 
           sortedActivities.forEach((act) => {
             if (act.start > lastTime + 60000) {
-              stopSegments.push({ type: 'wait', start: lastTime, end: act.start, label: 'Preparación / Carga' });
+              let waitLabel = 'Tiempo de Espera';
+              if (act.start - lastTime > 3 * 3600000) {
+                 waitLabel = 'Pernocta / Espera Larga';
+              } else if (isDepot || reloads.length > 0) {
+                 waitLabel = 'Maniobras / Preparación';
+              }
+              stopSegments.push({ type: 'wait', start: lastTime, end: act.start, label: waitLabel });
             }
             stopSegments.push({
               type: (act.type === 'rest' || act.type === 'break') ? 'break' : (act.type === 'reload' ? 'reload' : act.type),
@@ -841,9 +847,9 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {}, cediConfig, flee
     
     let viewStartMs, viewEndMs;
     if (daysToShow === 1) {
-      // Vista de un solo día: 05:00 a 23:00 (Hora Operativa México)
-      viewStartMs = viewStartDate.getTime() + 5 * 3600000;
-      viewEndMs = viewStartDate.getTime() + 23 * 3600000;
+      // Vista de un solo día: 00:00 a 24:00 (Hora Operativa México completa)
+      viewStartMs = viewStartDate.getTime();
+      viewEndMs = viewStartDate.getTime() + 24 * 3600000;
     } else {
       // Vista multi-día: 00:00 del primer día hasta 24:00 del último
       viewStartMs = viewStartDate.getTime();
@@ -853,12 +859,12 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {}, cediConfig, flee
     // Generar marcas de tiempo para el header (ya son "milisegundos México")
     const ticks = [];
     if (daysToShow === 1) {
-      for (let h = 5; h <= 23; h++) {
+      for (let h = 0; h <= 24; h += 2) {
         const tickMs = viewStartDate.getTime() + h * 3600000;
         ticks.push({
           ms: tickMs,
-          label: `${String(h).padStart(2, '0')}:00`,
-          isMajor: h % 3 === 0,
+          label: h === 24 ? '00:00' : `${String(h).padStart(2, '0')}:00`,
+          isMajor: h % 6 === 0,
           isDay: false
         });
       }
@@ -911,7 +917,8 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {}, cediConfig, flee
   // Posición en % dentro del rango visible del Gantt
   const getGanttPos = (date) => {
     if (!date || !ganttView) return 0;
-    const ms = normalizeToMs(date);
+    // Si date es un número, ya está normalizado a milisegundos México
+    const ms = typeof date === 'number' ? date : normalizeToMs(date);
     const range = ganttView.viewEndMs - ganttView.viewStartMs;
     if (range <= 0) return 0;
     return Math.max(0, Math.min(100, ((ms - ganttView.viewStartMs) / range) * 100));
@@ -1781,8 +1788,8 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {}, cediConfig, flee
                   {/* Línea base de la jornada */}
                   <div className="journey-path-base" 
                        style={{ 
-                         left: `${getGanttPos(v.startTime)}%`, 
-                         width: `${Math.max(0, getGanttPos(v.endTime) - getGanttPos(v.startTime))}%` 
+                         left: `${getGanttPos(v.startMs)}%`, 
+                         width: `${Math.max(0, getGanttPos(v.endMs) - getGanttPos(v.startMs))}%` 
                        }}></div>
 
                   {/* Bloques de actividad */}
@@ -1876,15 +1883,22 @@ const LogisticAnalyst = ({ result, fullData = [], mapping = {}, cediConfig, flee
                                       <strong style={{ color: '#94a3b8', fontSize: '0.75rem' }}>
                                         Pedidos ({segOrders.length}):
                                       </strong>
-                                      {segOrders.map((order, oIdx) => (
-                                        <div key={oIdx} className="tooltip-order-mini">
-                                          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                            <span style={{ color: '#60a5fa', fontWeight: 700 }}>{getOrderId(order, mapping)}</span>
-                                            <span style={{ color: '#93c5fd', fontSize: '0.65rem' }}>{order[mapping.movimiento] || 'N/A'}</span>
+                                      {segOrders.map((order, oIdx) => {
+                                        const primaryId = getOrderId(order, mapping);
+                                        const movId = order[mapping.movimiento] || '';
+                                        const clientName = order[mapping.cliente] || order['Cliente'] || order['cliente'] || 'Cliente Sin Nombre';
+                                        return (
+                                          <div key={oIdx} className="tooltip-order-mini" style={{ marginBottom: '6px', paddingBottom: '6px', borderBottom: oIdx < segOrders.length - 1 ? '1px solid rgba(255,255,255,0.1)' : 'none' }}>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2px' }}>
+                                              <span style={{ color: '#60a5fa', fontWeight: 800 }}>Pedido {primaryId}</span>
+                                              {movId && movId !== primaryId && (
+                                                <span style={{ color: '#93c5fd', fontSize: '0.65rem' }}>Ref: {movId}</span>
+                                              )}
+                                            </div>
+                                            <div style={{ color: '#fff', fontSize: '0.7rem', whiteSpace: 'normal', lineHeight: '1.2' }}>{clientName}</div>
                                           </div>
-                                          <div style={{ color: '#fff', fontSize: '0.7rem' }}>{order[mapping.client] || 'Sin nombre'}</div>
-                                        </div>
-                                      ))}
+                                        );
+                                      })}
                                     </div>
                                   )}
                                 </span>

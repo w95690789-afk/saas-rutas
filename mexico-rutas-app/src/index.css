@@ -1497,18 +1497,21 @@ body {
   transform: translateX(-50%) translateY(0);
   background: #1e293b;
   color: white;
-  padding: 10px 14px;
+  padding: 12px 16px;
   border-radius: 8px;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  white-space: nowrap;
+  gap: 6px;
+  white-space: normal;
+  min-width: 260px;
+  max-width: 340px;
   opacity: 0;
   visibility: hidden;
   transition: all 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   margin-bottom: 10px;
   z-index: 100;
   box-shadow: 0 10px 20px -3px rgba(0,0,0,0.25);
+  pointer-events: none;
 }
 
 .gantt-activity-block:hover .activity-tooltip {
@@ -2435,5 +2438,67 @@ body {
   outline: none;
   border-color: var(--primary-electric);
   box-shadow: 0 0 0 2px rgba(0, 88, 190, 0.1);
+}
+
+/* Fleet Data Grid */
+.fleet-grid-input {
+  width: 100%;
+  padding: 6px 10px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-family: inherit;
+  font-size: 0.85rem;
+  color: var(--text-primary);
+  transition: all 0.2s ease;
+  box-sizing: border-box;
+}
+
+.fleet-grid-input:hover {
+  background: rgba(0, 88, 190, 0.04);
+  border-color: rgba(0, 88, 190, 0.1);
+}
+
+.fleet-grid-input:focus {
+  outline: none;
+  background: white;
+  border-color: var(--primary-electric);
+  box-shadow: 0 0 0 3px rgba(0, 88, 190, 0.1);
+}
+
+.fleet-grid-checkbox {
+  width: 16px;
+  height: 16px;
+  accent-color: var(--primary-electric);
+  cursor: pointer;
+  margin: 0 auto;
+  display: block;
+}
+
+.fleet-grid-row {
+  transition: background-color 0.2s ease;
+}
+
+.fleet-grid-row:hover {
+  background-color: #f8fafc;
+}
+
+.btn-icon-danger {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: 6px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto;
+}
+
+.btn-icon-danger:hover {
+  background: rgba(220, 38, 38, 0.1);
+  color: #dc2626;
 }
 

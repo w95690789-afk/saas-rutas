@@ -3,14 +3,18 @@ import Papa from 'papaparse';
 import { 
   Upload, Database, Settings, ArrowRight, Route, CheckCircle, 
   AlertTriangle, Terminal, Truck, MapPin, Hash, Package, Clock, Target,
-  PanelLeftClose, PanelLeftOpen
+  PanelLeftClose, PanelLeftOpen, LogOut, Shield, Download, Trash2
 } from 'lucide-react';
 import AuditPanel from './components/AuditPanel';
 import LogisticAnalyst from './components/LogisticAnalyst';
 import GeoreferenceModule from './components/GeoreferenceModule';
+import UserManagement from './components/Admin/UserManagement';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import AuthModule from './components/Auth/AuthModule';
 import './index.css';
 
-function App() {
+function MainApp() {
+  const { signOut, profile } = useAuth();
   const [data, setData] = useState([]);
   const [headers, setHeaders] = useState([]);
   const [status, setStatus] = useState('idle');
@@ -25,16 +29,16 @@ function App() {
   const [cediAddress, setCediAddress] = useState('');
   const [suggestions, setSuggestions] = useState([]);
   const [fleet, setFleet] = useState([
-    { id: 'Torton', amount: 15, costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], canReload: true },
-    { id: 'Tracto camion', amount: 3, costs: { fixed: 140 }, capacity: [30000], skills: ['normal'], canReload: true },
-    { id: 'Camioneta4', amount: 1, costs: { fixed: 110 }, capacity: [4000], skills: ['normal'], canReload: true },
-    { id: 'Camioneta7', amount: 4, costs: { fixed: 110 }, capacity: [7000], skills: ['normal'], canReload: true }
+    { id: 'Torton', amount: 15, costs: { fixed: 100, distance: 0.0001 }, capacityWeight: 18000, capacityPallets: 10, capacityUsage: 100, loadDuration: 120, skills: ['normal'], canReload: true },
+    { id: 'Tracto camion', amount: 3, costs: { fixed: 140, distance: 0.0001 }, capacityWeight: 30000, capacityPallets: 22, capacityUsage: 100, loadDuration: 180, skills: ['normal'], canReload: true },
+    { id: 'Camioneta4', amount: 1, costs: { fixed: 110, distance: 0.0001 }, capacityWeight: 4000, capacityPallets: 4, capacityUsage: 100, loadDuration: 60, skills: ['normal'], canReload: true },
+    { id: 'Camioneta7', amount: 4, costs: { fixed: 110, distance: 0.0001 }, capacityWeight: 7000, capacityPallets: 6, capacityUsage: 100, loadDuration: 90, skills: ['normal'], canReload: true }
   ]);
   const [fleetData, setFleetData] = useState([]);
   const [fleetHeaders, setFleetHeaders] = useState([]);
   const [showFleetMapping, setShowFleetMapping] = useState(false);
   const [fleetMapping, setFleetMapping] = useState({
-    id: '', amount: '', fixedCost: '', capacity: '', skill: '', canReload: ''
+    id: '', amount: '', fixedCost: '', costDistance: '', capacityWeight: '', capacityPallets: '', capacityUsage: '', loadDuration: '', skill: '', canReload: ''
   });
   // Hardcode industrial key for immediate cloud deployment
   const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
@@ -46,7 +50,6 @@ function App() {
     lng: '-97.00091430169718',
     startTime: '06:00',
     endTime: '17:00',
-    loadDuration: '120', // Minutos de cargue
     useFileLocation: false,
     globalJobStart: '08:00',
     globalJobEnd: '18:00',
@@ -99,6 +102,7 @@ function App() {
     latitude: 'latitude',
     longitude: 'longitude',
     weight: 'weight',
+    pallets: 'pallets',
     time: 'time',
     date: 'date',
     serviceTime: '30',
@@ -220,7 +224,7 @@ function App() {
 
     // 2. Definir turnos por tipo de vehículo (respetando si recargan o no)
     const getShiftsForType = (vType) => {
-      const loadDur = (parseInt(cediConfig.loadDuration) || 120) * 60;
+      const loadDur = (parseInt(vType.loadDuration) || 120) * 60;
       const maxDays = parseInt(cediConfig.maxShiftDays) || 1;
       
       const addSecondsToLocal = (isoStr, seconds) => {
@@ -287,10 +291,12 @@ function App() {
         shift.reloads = Array.from({ length: 5 }).map((_, dayIdx) => ({
           location: cediLoc,
           duration: loadDur,
-          times: Array.from({ length: maxDays }).map((_, d) => [
-            formatTime(cediConfig.startTime, undefined, d),
-            formatTime(cediConfig.endTime, undefined, d)
-          ])
+          times: Array.from({ length: maxDays }).map((_, d) => {
+            const startStr = formatTime(cediConfig.startTime, undefined, d);
+            const endStr = formatTime(cediConfig.endTime, undefined, d);
+            const latestStart = addSecondsToLocal(endStr, -loadDur);
+            return [startStr, latestStart];
+          })
         }));
       }
       return [shift];
@@ -319,16 +325,17 @@ function App() {
           profile: v.id.toLowerCase().includes('camioneta') ? "perfil_camioneta_ligera" : "perfil_camion_estandar",
           costs: { 
             fixed: parseFloat(v.costs?.fixed) || 0, 
-            distance: 0.0001, 
+            distance: parseFloat(v.costs?.distance) || 0.0001, 
             time: 0.0048 
           },
           shifts: getShiftsForType(v),
-          
-          
-          // Escalar capacidades
-          capacity: (v.capacity || [18000]).map(cap => Math.round(parseNumber(cap) * SCALING_FACTOR)),
+          // Escalar capacidades multiplicadas por el % de uso
+          capacity: [
+            Math.round((parseFloat(v.capacityWeight) || 18000) * ((parseFloat(v.capacityUsage) || 100) / 100) * SCALING_FACTOR),
+            Math.round((parseFloat(v.capacityPallets) || 10) * ((parseFloat(v.capacityUsage) || 100) / 100) * SCALING_FACTOR)
+          ],
           skills: (() => {
-            const raw = (v.skills || ["normal"]).map(s => sanitizeId(s.trim())).filter(Boolean);
+            const raw = (v.skills || ["normal"]).map(s => sanitizeId(s.trim().toLowerCase())).filter(Boolean);
             return raw.length > 0 ? raw : ["normal"];
           })(),
           amount: parseInt(v.amount) || 1
@@ -394,18 +401,23 @@ function App() {
                   } : {})
                 }],
                 // Escalar demanda (Individual por pedido)
-                demand: [(() => {
-                  const rawWeight = Math.round(parseNumber(row[mapping.weight] || 0) * SCALING_FACTOR);
-                  const MAX_HERE_INT = 2147483647;
-                  if (rawWeight > MAX_HERE_INT) {
-                    console.warn(`⚠️ ALERTA DE DATOS: El peso escalado del pedido ${orderId} (${rawWeight}) excede el límite.`);
-                    return MAX_HERE_INT;
-                  }
-                  return rawWeight;
-                })()]
+                demand: [
+                  (() => {
+                    const rawWeight = Math.round(parseNumber(row[mapping.weight] || 0) * SCALING_FACTOR);
+                    const MAX_HERE_INT = 2147483647;
+                    if (rawWeight > MAX_HERE_INT) return MAX_HERE_INT;
+                    return rawWeight;
+                  })(),
+                  (() => {
+                    const rawPallets = Math.round(parseNumber(row[mapping.pallets] || 0) * SCALING_FACTOR);
+                    const MAX_HERE_INT = 2147483647;
+                    if (rawPallets > MAX_HERE_INT) return MAX_HERE_INT;
+                    return rawPallets;
+                  })()
+                ]
               }]
             },
-            skills: (row[mapping.skill] || 'normal').toString().split(',').map(s => sanitizeId(s.trim())).filter(Boolean)
+            skills: (row[mapping.skill] || 'normal').toString().split(',').map(s => sanitizeId(s.trim().toLowerCase())).filter(Boolean)
           };
         }).filter(Boolean),
         shared: {
@@ -664,6 +676,7 @@ function App() {
               latitude: ['latLong', 'coordenadas', 'ubicacion', 'location', 'posicion', 'latitud', 'lat'],
               longitude: ['longitud', 'longitude', 'lng', 'lon'],
               weight: ['peso', 'weight', 'kg', 'kilogramos', 'volumen', 'carga', 'PesoArticulo', 'Total Peso', 'Masa'],
+              pallets: ['pallets', 'paletas', 'tarimas', 'pallet'],
               time: ['horario', 'ventana', 'entrega_time', 'time', 'HoraInicio'],
               date: ['fecha', 'date', 'FechaEmision', 'Fecha'],
               address: ['Dirección', 'Address', 'Ubicación', 'Destino', 'Direccion', 'Calle'],
@@ -688,6 +701,18 @@ function App() {
     }
   };
 
+  const downloadFleetTemplate = () => {
+    const csvContent = "ID,Cantidad,Costo Fijo,Costo metro,Capacidad Peso,Pallets,Uso,Tiempo de Carga,Especialidad,Recargas\nTipo_1,1,100,0.0001,18000,10,100,120,normal,SI\n";
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'plantilla_flota.csv';
+    link.style.display = 'none';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   const handleFleetFileUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
@@ -706,8 +731,12 @@ function App() {
             const fleetDetectionMap = {
               id: ['ID', 'Vehiculo', 'Unit', 'unidad', 'placa', 'nombre'],
               amount: ['Amount', 'Cantidad', 'unidades', 'count'],
-              fixedCost: ['Fixed Cost', 'Costo', 'Costo Fijo', 'costo_fijo', 'rate'],
-              capacity: ['Capacity', 'Capacidad', 'KG', 'peso_max', 'volume'],
+              fixedCost: ['Fixed Cost', 'Costo Fijo', 'costo_fijo'],
+              costDistance: ['Costo Distancia', 'Costo km', 'Costo metro', 'cost_distance'],
+              capacityWeight: ['Capacity', 'Capacidad Peso', 'KG', 'peso_max', 'peso'],
+              capacityPallets: ['Pallets', 'Tarimas', 'Paletas'],
+              capacityUsage: ['Uso', 'Porcentaje', 'Usage'],
+              loadDuration: ['Tiempo de Carga', 'Load Duration', 'Cargue'],
               skill: ['Skill', 'Tipo', 'Especialidad', 'habilidad', 'capability'],
               canReload: ['Reload', 'Recargas', 'permite_recarga', 'can_reload']
             };
@@ -730,8 +759,14 @@ function App() {
     const newFleet = fleetData.map(row => ({
       id: row[fleetMapping.id] || 'v_unidentified',
       amount: parseInt(row[fleetMapping.amount]) || 1,
-      costs: { fixed: parseInt(row[fleetMapping.fixedCost]) || 0 },
-      capacity: [parseInt(row[fleetMapping.capacity]) || 18000],
+      costs: { 
+        fixed: parseInt(row[fleetMapping.fixedCost]) || 0,
+        distance: parseFloat(row[fleetMapping.costDistance]) || 0.0001
+      },
+      capacityWeight: parseFloat(row[fleetMapping.capacityWeight]) || 18000,
+      capacityPallets: parseFloat(row[fleetMapping.capacityPallets]) || 10,
+      capacityUsage: parseFloat(row[fleetMapping.capacityUsage]) || 100,
+      loadDuration: parseInt(row[fleetMapping.loadDuration]) || 120,
       skills: (row[fleetMapping.skill] || 'normal').split(',').map(s => s.trim()).filter(Boolean),
       canReload: row[fleetMapping.canReload] === 'SI' || row[fleetMapping.canReload] === 'true' || row[fleetMapping.canReload] === '1' || true
     }));
@@ -799,12 +834,31 @@ function App() {
                     <span className="title">Optimización de Flota</span>
                   </div>
                 </button>
+
+                {profile?.role === 'admin' && (
+                  <button
+                    className={`nav-item-btn ${activeWorkspace === 'admin' ? 'active' : ''}`}
+                    onClick={() => setActiveWorkspace('admin')}
+                    data-tooltip="Panel de Control: Activar/Desactivar accesos y cambiar roles del sistema."
+                  >
+                    <div className="icon-wrap"><Shield size={20} /></div>
+                    <div className="text-wrap">
+                      <span className="label">Seguridad</span>
+                      <span className="title">Control de Usuarios</span>
+                    </div>
+                  </button>
+                )}
               </div>
             </div>
             
             <button className="btn-secondary" style={{ marginTop: '12px', justifyContent: 'flex-start' }} onClick={() => setShowAudit(true)}>
               <Terminal size={16} />
               <span>Consola de Auditoría</span>
+            </button>
+
+            <button className="btn-secondary" style={{ marginTop: '12px', justifyContent: 'flex-start', background: '#fee2e2', color: '#b91c1c', border: '1px solid #fca5a5' }} onClick={signOut}>
+              <LogOut size={16} />
+              <span>Cerrar Sesión</span>
             </button>
           </div>
 
@@ -892,14 +946,7 @@ function App() {
                     </div>
 
                     {/* Fila 3: Parámetros Logísticos */}
-                    <div className="form-item">
-                      <label><Package size={14} style={{ marginRight: 6 }} /> Tiempo de Carga Promedio</label>
-                      <div style={{ position: 'relative' }}>
-                        <input type="number" value={cediConfig.loadDuration} onChange={(e) => setCediConfig({ ...cediConfig, loadDuration: e.target.value })} style={{ paddingRight: '45px' }} />
-                        <span style={{ position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)', fontSize: '0.7rem', color: '#64748b', fontWeight: 600 }}>MIN</span>
-                      </div>
-                    </div>
-                    <div className="form-item">
+                    <div className="form-item modal-full-width">
                       <label><Target size={14} style={{ marginRight: 6 }} /> Días Máximos de Turno</label>
                       <input 
                         type="number" 
@@ -948,12 +995,16 @@ function App() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
                     <div className="modal-section-title" style={{ margin: 0, border: 0 }}>Gestión de Flota</div>
                     <div style={{ display: 'flex', gap: '8px' }}>
+                      <button className="btn-mini" onClick={downloadFleetTemplate} style={{ background: 'white', color: '#64748b', border: '1px solid #cbd5e1' }}>
+                        <Download size={14} style={{ marginRight: 6 }} />
+                        Plantilla
+                      </button>
                       <label className="btn-mini" style={{ cursor: 'pointer', background: 'white', color: 'var(--primary-electric)', border: '1px solid var(--primary-electric)' }}>
                         <Upload size={14} style={{ marginRight: 6 }} />
                         Importar CSV
                         <input type="file" accept=".csv" style={{ display: 'none' }} onChange={handleFleetFileUpload} />
                       </label>
-                      <button className="btn-mini" onClick={() => setFleet([...fleet, { id: 'Tipo_' + (fleet.length + 1), costs: { fixed: 100 }, capacity: [18000], skills: ['normal'], amount: 5, canReload: true }])}>
+                      <button className="btn-mini" onClick={() => setFleet([...fleet, { id: 'Tipo_' + (fleet.length + 1), amount: 1, costs: { fixed: 100, distance: 0.0001 }, capacityWeight: 18000, capacityPallets: 10, capacityUsage: 100, loadDuration: 120, skills: ['normal'], canReload: true }])}>
                         + Agregar Tipo de Vehículo
                       </button>
                     </div>
@@ -992,8 +1043,36 @@ function App() {
                           </select>
                         </div>
                         <div className="form-item">
-                          <label style={{ fontSize: '0.65rem' }}>Capacidad (KG)</label>
-                          <select value={fleetMapping.capacity} onChange={e => setFleetMapping({...fleetMapping, capacity: e.target.value})}>
+                          <label style={{ fontSize: '0.65rem' }}>Costo/m</label>
+                          <select value={fleetMapping.costDistance} onChange={e => setFleetMapping({...fleetMapping, costDistance: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Peso (KG)</label>
+                          <select value={fleetMapping.capacityWeight} onChange={e => setFleetMapping({...fleetMapping, capacityWeight: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Pallets</label>
+                          <select value={fleetMapping.capacityPallets} onChange={e => setFleetMapping({...fleetMapping, capacityPallets: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Uso (%)</label>
+                          <select value={fleetMapping.capacityUsage} onChange={e => setFleetMapping({...fleetMapping, capacityUsage: e.target.value})}>
+                            <option value="">-- Seleccionar --</option>
+                            {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
+                          </select>
+                        </div>
+                        <div className="form-item">
+                          <label style={{ fontSize: '0.65rem' }}>Carga (min)</label>
+                          <select value={fleetMapping.loadDuration} onChange={e => setFleetMapping({...fleetMapping, loadDuration: e.target.value})}>
                             <option value="">-- Seleccionar --</option>
                             {fleetHeaders.map(h => <option key={h} value={h}>{h}</option>)}
                           </select>
@@ -1016,75 +1095,90 @@ function App() {
                     </div>
                   )}
                   
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px' }}>
-                    {fleet.length === 0 && (
-                      <div className="modal-full-width" style={{ textAlign: 'center', padding: '60px', color: '#8293ba', border: '1px dashed #d1d9e6', borderRadius: '12px' }}>
-                        No hay vehículos configurados. Comienza agregando uno.
-                      </div>
-                    )}
-                    {fleet.map((v, idx) => (
-                      <div key={idx} className="nav-card" style={{ padding: '24px', background: '#f8fafc', border: '1px solid #e2e8f0' }}>
-                        <div className="modal-grid">
-                          <div className="form-item">
-                            <label>Identificador</label>
-                            <input type="text" value={v.id} onChange={(e) => {
-                              const newFleet = [...fleet];
-                              newFleet[idx].id = e.target.value;
-                              setFleet(newFleet);
-                            }} />
-                          </div>
-                          <div className="form-item">
-                            <label>Cantidad</label>
-                            <input type="number" value={v.amount} onChange={(e) => {
-                              const newFleet = [...fleet];
-                              newFleet[idx].amount = parseInt(e.target.value);
-                              setFleet(newFleet);
-                            }} />
-                          </div>
-                          <div className="form-item">
-                            <label>Costo Fijo ($)</label>
-                            <input type="number" value={v.costs.fixed} onChange={(e) => {
-                              const newFleet = [...fleet];
-                              newFleet[idx].costs.fixed = parseInt(e.target.value);
-                              setFleet(newFleet);
-                            }} />
-                          </div>
-                          <div className="form-item">
-                            <label>Capacidad (Kg)</label>
-                            <input type="number" value={v.capacity[0]} onChange={(e) => {
-                              const newFleet = [...fleet];
-                              newFleet[idx].capacity[0] = parseInt(e.target.value);
-                              setFleet(newFleet);
-                            }} />
-                          </div>
-                          <div className="form-item">
-                            <label>Especialidad</label>
-                            <input type="text" value={v.skills.join(', ')} onChange={(e) => {
-                              const newFleet = [...fleet];
-                              newFleet[idx].skills = e.target.value.split(',').map(s => s.trim());
-                              setFleet(newFleet);
-                            }} />
-                          </div>
-                          <div className="form-item" style={{ alignSelf: 'center', paddingTop: '10px' }}>
-                            <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
-                              <input 
-                                type="checkbox" 
-                                checked={v.canReload !== false} 
-                                onChange={(e) => {
-                                  const newFleet = [...fleet];
-                                  newFleet[idx].canReload = e.target.checked;
-                                  setFleet(newFleet);
-                                }} 
-                              />
-                              <span style={{ fontSize: '0.8rem', fontWeight: 600 }}>Habilitar Recargas</span>
-                            </label>
-                          </div>
-                          <div className="modal-full-width" style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '10px' }}>
-                            <button className="btn-text-danger" onClick={() => setFleet(fleet.filter((_, i) => i !== idx))}>Eliminar este tipo</button>
-                          </div>
-                        </div>
-                      </div>
-                    ))}
+                  <div className="industrial-table-wrapper" style={{ maxHeight: '60vh', overflowY: 'auto', border: '1px solid #e2e8f0', borderRadius: '8px', overflowX: 'auto' }}>
+                    <table className="industrial-table" style={{ width: '100%', fontSize: '0.8rem', minWidth: '1000px', borderCollapse: 'collapse' }}>
+                      <thead style={{ position: 'sticky', top: 0, background: '#f8fafc', zIndex: 10 }}>
+                        <tr style={{ borderBottom: '2px solid #e2e8f0', textAlign: 'left' }}>
+                          <th style={{ padding: '12px 16px' }}>ID/Tipo</th>
+                          <th style={{ width: '70px', padding: '12px 8px' }}>Cant.</th>
+                          <th style={{ width: '100px', padding: '12px 8px' }}>Costo Fijo ($)</th>
+                          <th style={{ width: '100px', padding: '12px 8px' }}>Costo/m ($)</th>
+                          <th style={{ width: '100px', padding: '12px 8px' }}>Peso (Kg)</th>
+                          <th style={{ width: '80px', padding: '12px 8px' }}>Pallets</th>
+                          <th style={{ width: '80px', padding: '12px 8px' }}>Uso (%)</th>
+                          <th style={{ width: '90px', padding: '12px 8px' }}>Carga (min)</th>
+                          <th style={{ padding: '12px 8px' }}>Especialidad</th>
+                          <th style={{ width: '80px', padding: '12px 8px', textAlign: 'center' }}>Recargas</th>
+                          <th style={{ width: '50px', padding: '12px 8px' }}></th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {fleet.length === 0 && (
+                          <tr>
+                            <td colSpan="11" style={{ textAlign: 'center', padding: '60px', color: '#8293ba', fontSize: '0.9rem' }}>No hay vehículos configurados. Comienza agregando uno.</td>
+                          </tr>
+                        )}
+                        {fleet.map((v, idx) => (
+                          <tr key={idx} className="fleet-grid-row" style={{ borderBottom: '1px solid #f1f5f9' }}>
+                            <td style={{ padding: '6px 12px' }}>
+                              <input className="fleet-grid-input" type="text" value={v.id} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].id = e.target.value; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="number" value={v.amount} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].amount = parseInt(e.target.value) || 0; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="number" value={v.costs?.fixed || 0} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].costs.fixed = parseInt(e.target.value) || 0; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="number" value={v.costs?.distance || 0} step="0.0001" onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].costs.distance = parseFloat(e.target.value) || 0; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="number" value={v.capacityWeight} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].capacityWeight = parseInt(e.target.value) || 0; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="number" value={v.capacityPallets} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].capacityPallets = parseInt(e.target.value) || 0; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="number" value={v.capacityUsage} max="100" onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].capacityUsage = parseInt(e.target.value) || 100; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="number" value={v.loadDuration} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].loadDuration = parseInt(e.target.value) || 0; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px' }}>
+                              <input className="fleet-grid-input" type="text" value={v.skills?.join(', ') || ''} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].skills = e.target.value.split(',').map(s => s.trim()); setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ textAlign: 'center', padding: '6px 4px', verticalAlign: 'middle' }}>
+                              <input className="fleet-grid-checkbox" type="checkbox" checked={v.canReload !== false} onChange={(e) => {
+                                const newFleet = [...fleet]; newFleet[idx].canReload = e.target.checked; setFleet(newFleet);
+                              }} />
+                            </td>
+                            <td style={{ padding: '6px 4px', verticalAlign: 'middle', textAlign: 'center' }}>
+                              <button className="btn-icon-danger" onClick={() => setFleet(fleet.filter((_, i) => i !== idx))}>
+                                <Trash2 size={16} />
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
                   </div>
                 </div>
               ) : null}
@@ -1131,7 +1225,9 @@ function App() {
         </header>
 
         <section className="content-area">
-          {activeWorkspace === 'georef' ? (
+          {activeWorkspace === 'admin' && profile?.role === 'admin' ? (
+            <UserManagement />
+          ) : activeWorkspace === 'georef' ? (
             <GeoreferenceModule apiKey={API_KEY} />
           ) : status === 'success' && result ? (
             <div className="results-grid animate-fade-in">
@@ -1195,6 +1291,13 @@ function App() {
                   </select>
                 </div>
                 <div className="form-item">
+                  <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Pallets (Volumen)</label>
+                  <select value={mapping.pallets} onChange={e => setMapping({...mapping, pallets: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }}>
+                    <option value="">-- Opcional --</option>
+                    {headers.map(h => <option key={h}>{h}</option>)}
+                  </select>
+                </div>
+                <div className="form-item">
                   <label style={{ fontSize: '0.65rem', fontWeight: 800, color: '#8293ba', textTransform: 'uppercase', marginBottom: '8px', display: 'block' }}>Svc. Entrega (min)</label>
                   <input type="number" value={mapping.serviceTime} onChange={e => setMapping({...mapping, serviceTime: e.target.value})} style={{ width: '100%', background: '#fff', border: '1px solid rgba(0,0,0,0.08)' }} />
                 </div>
@@ -1249,4 +1352,22 @@ function App() {
   );
 }
 
-export default App;
+function AppWrapper() {
+  const { user } = useAuth();
+  
+  // Guard de seguridad: Si no hay usuario, forzamos la pantalla de Login
+  if (!user) {
+    return <AuthModule />;
+  }
+  
+  // Si hay usuario, renderizamos la aplicación completa
+  return <MainApp />;
+}
+
+export default function App() {
+  return (
+    <AuthProvider>
+      <AppWrapper />
+    </AuthProvider>
+  );
+}
