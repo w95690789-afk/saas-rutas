@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { supabase } from '../../supabaseClient';
-import { Mail, Lock, LogIn, UserPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { Mail, Lock, LogIn, UserPlus, AlertCircle, CheckCircle2, Eye, EyeOff, KeyRound } from 'lucide-react';
 
 const AuthModule = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -9,6 +9,32 @@ const AuthModule = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [message, setMessage] = useState(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [isResetMode, setIsResetMode] = useState(false);
+
+  const handleResetPassword = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      setError("Por favor, ingresa tu correo electrónico para recuperar tu contraseña.");
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    setMessage(null);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: window.location.origin + '/reset-password',
+      });
+      if (error) throw error;
+      setMessage("Se han enviado las instrucciones de recuperación a tu correo electrónico.");
+    } catch (error) {
+      let errorMsg = error.message;
+      if (errorMsg.includes('User not found')) errorMsg = 'No encontramos una cuenta con este correo.';
+      setError(errorMsg);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleAuth = async (e) => {
     e.preventDefault();
@@ -71,10 +97,10 @@ const AuthModule = () => {
             display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px',
             color: 'var(--primary-electric)'
           }}>
-            {isLogin ? <LogIn size={32} /> : <UserPlus size={32} />}
+            {isResetMode ? <KeyRound size={32} /> : (isLogin ? <LogIn size={32} /> : <UserPlus size={32} />)}
           </div>
           <h2 style={{ fontSize: '1.8rem', fontWeight: 900, color: '#0f172a', margin: 0, letterSpacing: '-0.5px' }}>
-            {isLogin ? 'Acceso Corporativo' : 'Crear Cuenta'}
+            {isResetMode ? 'Recuperar Contraseña' : (isLogin ? 'Acceso Corporativo' : 'Crear Cuenta')}
           </h2>
           <p style={{ color: '#64748b', fontSize: '0.9rem', marginTop: '8px' }}>
             SaaS Rutas - Plataforma de Inteligencia Logística
@@ -95,7 +121,7 @@ const AuthModule = () => {
           </div>
         )}
 
-        <form onSubmit={handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+        <form onSubmit={isResetMode ? handleResetPassword : handleAuth} style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
           <div>
             <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>CORREO EMPRESARIAL</label>
             <div style={{ position: 'relative' }}>
@@ -116,25 +142,48 @@ const AuthModule = () => {
             </div>
           </div>
 
-          <div>
-            <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', marginBottom: '8px' }}>CONTRASEÑA</label>
-            <div style={{ position: 'relative' }}>
-              <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
-              <input 
-                type="password" 
-                required
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                style={{
-                  width: '100%', padding: '14px 16px 14px 44px', borderRadius: '12px', border: '2px solid #e2e8f0',
-                  fontSize: '0.95rem', transition: 'border-color 0.2s', outline: 'none'
-                }}
-                onFocus={(e) => e.target.style.borderColor = 'var(--primary-electric)'}
-                onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
-              />
+          {!isResetMode && (
+            <div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                <label style={{ display: 'block', fontSize: '0.8rem', fontWeight: 700, color: '#475569', margin: 0 }}>CONTRASEÑA</label>
+                {isLogin && (
+                  <button 
+                    type="button" 
+                    onClick={() => { setIsResetMode(true); setError(null); setMessage(null); }}
+                    style={{ background: 'none', border: 'none', color: 'var(--primary-electric)', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </button>
+                )}
+              </div>
+              <div style={{ position: 'relative' }}>
+                <Lock size={18} color="#94a3b8" style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)' }} />
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  required
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  style={{
+                    width: '100%', padding: '14px 44px 14px 44px', borderRadius: '12px', border: '2px solid #e2e8f0',
+                    fontSize: '0.95rem', transition: 'border-color 0.2s', outline: 'none'
+                  }}
+                  onFocus={(e) => e.target.style.borderColor = 'var(--primary-electric)'}
+                  onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  style={{ 
+                    position: 'absolute', right: '12px', top: '50%', transform: 'translateY(-50%)',
+                    background: 'none', border: 'none', cursor: 'pointer', color: '#94a3b8', display: 'flex', alignItems: 'center', justifyContent: 'center'
+                  }}
+                >
+                  {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                </button>
+              </div>
             </div>
-          </div>
+          )}
 
           <button 
             type="submit" 
@@ -146,21 +195,30 @@ const AuthModule = () => {
               opacity: loading ? 0.7 : 1, display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '10px'
             }}
           >
-            {loading ? <div className="loader-dots"></div> : (isLogin ? 'Iniciar Sesión' : 'Registrar Cuenta')}
+            {loading ? <div className="loader-dots"></div> : (isResetMode ? 'Enviar Instrucciones' : (isLogin ? 'Iniciar Sesión' : 'Registrar Cuenta'))}
           </button>
         </form>
 
         <div style={{ textAlign: 'center', marginTop: '24px', paddingTop: '24px', borderTop: '1px solid #f1f5f9' }}>
           <p style={{ color: '#64748b', fontSize: '0.85rem', margin: 0 }}>
-            {isLogin ? "¿No tienes una cuenta?" : "¿Ya tienes una cuenta?"}
+            {isResetMode ? "¿Recordaste tu contraseña?" : (isLogin ? "¿No tienes una cuenta?" : "¿Ya tienes una cuenta?")}
             <button 
-              onClick={() => { setIsLogin(!isLogin); setError(null); setMessage(null); }}
+              onClick={() => { 
+                if (isResetMode) {
+                  setIsResetMode(false);
+                  setIsLogin(true);
+                } else {
+                  setIsLogin(!isLogin); 
+                }
+                setError(null); 
+                setMessage(null); 
+              }}
               style={{
                 background: 'none', border: 'none', color: 'var(--primary-electric)', fontWeight: 800,
                 cursor: 'pointer', marginLeft: '6px', fontSize: '0.85rem'
               }}
             >
-              {isLogin ? "Regístrate aquí" : "Inicia Sesión"}
+              {isResetMode ? "Vuelve a Iniciar Sesión" : (isLogin ? "Regístrate aquí" : "Inicia Sesión")}
             </button>
           </p>
         </div>
