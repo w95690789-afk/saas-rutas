@@ -1355,6 +1355,11 @@ function MainApp() {
 function AppWrapper() {
   const { user } = useAuth();
   
+  // Si la ruta es para restablecer contraseña, mostramos la pantalla dedicada
+  if (window.location.pathname === '/reset-password') {
+    return <AuthModule isUpdatePassword={true} />;
+  }
+  
   // Guard de seguridad: Si no hay usuario, forzamos la pantalla de Login
   if (!user) {
     return <AuthModule />;
