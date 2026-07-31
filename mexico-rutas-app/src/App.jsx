@@ -41,7 +41,7 @@ function MainApp() {
     id: '', amount: '', fixedCost: '', costDistance: '', capacityWeight: '', capacityPallets: '', capacityUsage: '', loadDuration: '', skill: '', canReload: ''
   });
   // Hardcode industrial key for immediate cloud deployment
-  const API_KEY = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
+  const API_KEY = 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
   const SUPABASE_URL = 'https://ahvmsiogvnhnkrayadgt.supabase.co';
 
   const [cediConfig, setCediConfig] = useState({

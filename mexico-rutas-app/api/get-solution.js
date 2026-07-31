@@ -2,7 +2,7 @@ export default async function handler(req, res) {
   const { taskId, apiKey: queryApiKey } = req.query;
   
   // Fuente de verdad: Si viene en el query, la usamos. Si no, usamos el fallback industrial.
-  const fallbackKey = 'ImdD2y0EQeeOzX6Gd046as7iFAP82Y8lAFcimMnGNRg';
+  const fallbackKey = 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
   const apiKey = (queryApiKey && queryApiKey.length > 10) ? queryApiKey : fallbackKey;
   
   if (!taskId) {
