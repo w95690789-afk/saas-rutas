@@ -722,3 +722,27 @@
 - Rutas altamente precisas en la restricción de horarios.
 - UX ultra-eficiente para el control de decenas de tipologías de vehículos.
 - La herramienta de SaaS Rutas es ahora capaz de calcular el impacto de volumetría.
+
+---
+
+### Sesión 42: Estabilización de Acceso, RLS y Diagnóstico de Desfase Horario
+**Fecha:** 19 de Mayo, 2026 (Segunda Sesión)
+**Estatus:** ✅ ÉXITO EN ACCESO | 🔍 DIAGNÓSTICO DE GANTT COMPLETADO
+**Ejecutor:** AI Lead Architect - Antigravity (DDO Core Powered)
+
+#### Acciones Realizadas:
+1. **Resolución de Bloqueo de Acceso (RLS Infinite Recursion):**
+   - **Diagnóstico:** Se identificó que la consulta de perfiles desencadenaba un bucle infinito en las políticas de seguridad RLS de Supabase al evaluar privilegios cruzados de administración.
+   - **Remediación SQL:** Se generó y entregó un script SQL defensivo para reestructurar las políticas en la tabla `profiles` mediante una función con privilegios elevados (`SECURITY DEFINER` en `public.is_admin()`). Esto eliminó el bucle recursivo y restauró el inicio de sesión.
+2. **Corrección de Rutas SPA en Producción (Vercel 404 / Password Reset):**
+   - **Enrutamiento:** Configuración de reglas de redirección SPA en `vercel.json` (`/(.*) -> /index.html`) para evitar errores 404 en navegaciones profundas.
+   - **Password Reset:** Modificación de `App.jsx` y `AuthModule.jsx` para interceptar la ruta de recuperación `/reset-password` y permitir la actualización de la contraseña del usuario de forma directa y segura.
+3. **Análisis de Polling de Optimización Asíncrona:**
+   - **Diagnóstico:** Se analizó una falla transitoria de tipo (`TypeError: i.status?.toLowerCase is not a function`) que bloqueaba el despeje del bucle de espera (`clearInterval`). A pesar de ello, el solver de HERE resolvió exitosamente la ruta en segundo plano y devolvió la solución óptima (3 rutas generadas con 31 paradas no asignadas debido a las restricciones configuradas).
+4. **Auditoría de Desfase Horario en el Diagrama de Gantt:**
+   - **Hallazgo Clave:** Se descubrió que la superposición visual de bloques en el Gantt se debe a una **doble normalización de huso horario**. 
+   - **Explicación:** Las paradas y los tránsitos se manejan como objetos `Date` en el itinerario. Cuando el Gantt calcula la posición de estos objetos con `getGanttPos()`, al no ser de tipo `number`, se ejecuta la conversión redundante en `normalizeToMs()`, restándoles otras **6 horas de desfase (UTC-6)**. Esto desplaza los bloques de tránsito hacia la izquierda, encimándolos con las entregas matutinas (las cuales, al usar milisegundos numéricos nativos, se posicionan en su hora correcta sin sufrir la doble conversión).
+
+#### Pendientes:
+- Aplicar la corrección en `getGanttPos` para evitar normalizar fechas que ya se encuentran expresadas en tiempo nominal de México.
+

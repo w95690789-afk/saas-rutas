@@ -405,6 +405,7 @@ def generate_interactive_map_v10():
             color = colors[route_color_idx % len(colors)]
             route_color_idx += 1
             
+            total_jobs = sum(len(stop["jobs"]) for stop in trip["stops_with_eta"])
             javascript_routes.append({
                 "vehicle": name,
                 "type": type_str,
@@ -415,7 +416,8 @@ def generate_interactive_map_v10():
                 "departure": trip["departure_time"],
                 "return_time": trip["arrival_back"],
                 "stops": trip["stops_with_eta"],
-                "road_geometry": trip["road_geometry"]
+                "road_geometry": trip["road_geometry"],
+                "orders_count": total_jobs
             })
 
     process_schedule_javascript(torton_schedules[0], "Torton_1", "Torton")
@@ -1813,7 +1815,8 @@ def generate_interactive_map_v10():
                 markers: markers,
                 stops: route.stops,
                 departure: route.departure,
-                return_time: route.return_time
+                return_time: route.return_time,
+                orders_count: route.orders_count
             }});
         }});
 
@@ -1851,7 +1854,7 @@ def generate_interactive_map_v10():
                     tripItem.innerHTML = `
                         <input type="checkbox" id="chk-trip-${{rl.key}}" checked onchange="applyFilters()">
                         <span class="color-dot"></span>
-                        <span>Viaje ${{rl.trip_idx}} (${{rl.corridor}} - $${{(rl.load/1000).toFixed(1)}}t)</span>
+                        <span>Viaje ${{rl.trip_idx}} (${{rl.corridor}} - ${{(rl.load/1000).toFixed(1)}}t | ${{rl.orders_count}} Pedidos)</span>
                     `;
                     tripList.appendChild(tripItem);
                 }});
@@ -1948,8 +1951,9 @@ def generate_interactive_map_v10():
                         ${{timelineHtml}}
                     </div>
                     <div class="route-meta">
-                        <span>📦 Carga: $${{(rl.load/1000).toFixed(2)}}t</span>
+                        <span>📦 Carga: ${{(rl.load/1000).toFixed(2)}}t</span>
                         <span>📍 Paradas: ${{rl.stops.length}}</span>
+                        <span>📄 Pedidos: ${{rl.orders_count}}</span>
                     </div>
                 `;
 

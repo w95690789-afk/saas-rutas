@@ -30995,7 +30995,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 2
     },
     {
         "vehicle": "Torton_1",
@@ -69462,7 +69463,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 1
     },
     {
         "vehicle": "Torton_2",
@@ -89013,7 +89015,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 1
     },
     {
         "vehicle": "Torton_2",
@@ -102041,7 +102044,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 4
     },
     {
         "vehicle": "Torton_3",
@@ -147537,7 +147541,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 4
     },
     {
         "vehicle": "Tracto_1",
@@ -212535,7 +212540,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 6
     },
     {
         "vehicle": "Tracto_1",
@@ -254054,7 +254060,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 1
     },
     {
         "vehicle": "Tracto_1",
@@ -319768,7 +319775,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 6
     },
     {
         "vehicle": "Tracto_1",
@@ -332782,7 +332790,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 2
     },
     {
         "vehicle": "Tracto_2",
@@ -352333,7 +352342,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 1
     },
     {
         "vehicle": "Tracto_2",
@@ -397621,7 +397631,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 10
     },
     {
         "vehicle": "Tracto_2",
@@ -451075,7 +451086,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 12
     },
     {
         "vehicle": "Tracto_3",
@@ -470647,7 +470659,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 4
     },
     {
         "vehicle": "Tracto_3",
@@ -470690,7 +470703,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 1
     },
     {
         "vehicle": "Tracto_3",
@@ -509718,7 +509732,8 @@
                 18.038323,
                 -92.903818
             ]
-        ]
+        ],
+        "orders_count": 2
     }
 ];
         const depot = { "lat": 18.03823591, "lng": -92.90308396 };
@@ -509884,7 +509899,8 @@
                 markers: markers,
                 stops: route.stops,
                 departure: route.departure,
-                return_time: route.return_time
+                return_time: route.return_time,
+                orders_count: route.orders_count
             });
         });
 
@@ -509922,7 +509938,7 @@
                     tripItem.innerHTML = `
                         <input type="checkbox" id="chk-trip-${rl.key}" checked onchange="applyFilters()">
                         <span class="color-dot"></span>
-                        <span>Viaje ${rl.trip_idx} (${rl.corridor} - $${(rl.load/1000).toFixed(1)}t)</span>
+                        <span>Viaje ${rl.trip_idx} (${rl.corridor} - ${(rl.load/1000).toFixed(1)}t | ${rl.orders_count} Pedidos)</span>
                     `;
                     tripList.appendChild(tripItem);
                 });
@@ -510019,8 +510035,9 @@
                         ${timelineHtml}
                     </div>
                     <div class="route-meta">
-                        <span>📦 Carga: $${(rl.load/1000).toFixed(2)}t</span>
+                        <span>📦 Carga: ${(rl.load/1000).toFixed(2)}t</span>
                         <span>📍 Paradas: ${rl.stops.length}</span>
+                        <span>📄 Pedidos: ${rl.orders_count}</span>
                     </div>
                 `;
 
