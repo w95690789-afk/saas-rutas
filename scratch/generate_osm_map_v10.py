@@ -104,8 +104,8 @@ def generate_interactive_map_v10():
         data = json.load(f)
     
     jobs = data["plan"]["jobs"]
-    depot_lat = 18.03823591
-    depot_lng = -92.90308396
+    depot_lat = 18.977181191414243
+    depot_lng = -97.02969533244169
     
     # Load CSV data and geocodes for matching actual client names
     csv_rows = []
@@ -162,7 +162,7 @@ def generate_interactive_map_v10():
             }
         else:
             if abs(lat - depot_lat) < 0.05 and abs(lng - depot_lng) < 0.05:
-                nombre = "CEDI Villahermosa Local"
+                nombre = "CEDI Orizaba"
             else:
                 nombre = f"Cliente General ({get_city_name(lat, lng)})"
             job_matches[j["id"]] = {
