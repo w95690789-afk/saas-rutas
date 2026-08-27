@@ -1273,7 +1273,7 @@ def generate_interactive_map_v11():
         </button>
     </div>
 
-    <div class="sidebar">
+    <div class="sidebar" id="sidebar">
         <button class="sidebar-toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()">◀</button>
         <div class="sidebar-header">
             <h1>CONTROL DE DESPACHO</h1>
