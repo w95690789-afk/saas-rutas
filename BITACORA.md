@@ -810,8 +810,9 @@
    - Compilación y verificación de la paridad en el script Python sin errores de f-strings.
    - Commit y git push exitoso desencadenando el redespliegue automático en Vercel.
    - *Hotfix:* Eliminación de caracteres de escape `\` residuales en las inyecciones de plantillas JS de la barra lateral (pedidos sin asignar), permitiendo la interpretación y renderizado dinámico correcto de los datos del cliente en el navegador.
+6. **Rediseño UX/UI de Barra Lateral Unificada:**
+    - Eliminamos el árbol redundante de filtros de unidades al integrar los checkboxes de visibilidad del mapa directamente en cada Tarjeta de Viaje (las tarjetas desactivadas se atenúan al 40% y ocultan sus marcadores).
+    - Añadimos pestañas de filtro rápido de flota (`[Todos] [Tractos] [Tortones] [Camionetas]`) en la cabecera que filtran tanto el sidebar como el mapa en tiempo real, junto con un indicador dinámico del conteo de viajes.
+    - Se incorporó un punto de color correlativo (color match) en cada tarjeta para asociarla de inmediato con sus pines en el mapa.
 
 **Firmado y Validado:** Antigravity AI - Lead Architect ✅
-
-
-
