@@ -803,9 +803,9 @@
    - Se sustituyeron los grandes marcadores rectangulares por discretos pins circulares que muestran el número de parada correspondiente, disminuyendo el solapamiento visual y mejorando el diseño del mapa.
 3. **Cruces de Información Detallada en Popups:**
    - Se incorporó la totalidad de los datos cruzados entre el Excel `PRUEBA a.xlsx` y el JSON de ruteo en el popup de cada parada: código y nombre de cliente, sucursal, dirección física completa (calle, colonia, CP, población, estado), almacén de origen, fecha de emisión/requerida, estatus, importe total, condiciones de pago, cita/agente y observaciones detalladas.
-4. **Control y Alertas de Pedidos Sin Asignar:**
-   - Se implementó la regla logística de excluir del ruteo del Plan 3 (Flota Capilar) los 3 pedidos cuyo peso individual (> 23t) excede el límite del camión más grande permitido en dicho plan (7.6t).
-   - Se diseñó y desplegó una sección dedicada en el panel lateral izquierdo (**⚠️ PEDIDOS SIN ASIGNAR**) que se muestra automáticamente en el Plan 3, detallando el movimiento, peso, cliente y motivo de no asignación de estos 3 pedidos. En Plan 1 y 2, al usar Tractos de 30t, todos los pedidos se asignan correctamente y el panel se oculta de forma reactiva.
+4. **Programación Logística al 100% (Soporte Heterogéneo):**
+   - Ajustamos el algoritmo para asegurar que todos los pedidos queden asignados (0 pedidos rechazados).
+   - En el Plan 3 (Agile/Capilar), los pedidos ligeros se programan en camionetas (4t/7t) con un límite de 4 paradas. No obstante, los pedidos pesados que superan físicamente el límite de las camionetas son asignados automáticamente a Tortones o Tractos como vehículos de apoyo.
 5. **Despliegue a Producción:**
    - Compilación y verificación de la paridad en el script Python sin errores de f-strings.
    - Commit y git push exitoso desencadenando el redespliegue automático en Vercel.
