@@ -790,4 +790,27 @@
 **Firmado y Validado:** Antigravity AI - Lead Architect ✅
 
 
+### Sesión 45: Rediseño Visual de Rutas y Control de Pedidos Sin Asignar
+**Fecha:** 27 de Agosto, 2026
+**Estatus:** ✅ COMPLETADO
+**Ejecutor:** AI Lead Architect - Antigravity (DDO Core Powered)
+
+#### Acciones Realizadas:
+1. **Rediseño Visual del Mapa (Burbujas Sectorizadas):**
+   - Se removieron por completo las líneas de conexión directas (spaghetti) entre clientes al establecer la opacidad y peso de la polilínea en 0.
+   - Se implementó la visualización de **sectores/burbujas sombreadas** semi-transparentes para cada viaje (usando círculos de 35km para rutas de 1 parada y polígonos ordenados por ángulo polar respecto al centroide para rutas con múltiples paradas), facilitando que el dispatcher capte las agrupaciones de forma clara y limpia.
+2. **Pins Circulares Minimalistas:**
+   - Se sustituyeron los grandes marcadores rectangulares por discretos pins circulares que muestran el número de parada correspondiente, disminuyendo el solapamiento visual y mejorando el diseño del mapa.
+3. **Cruces de Información Detallada en Popups:**
+   - Se incorporó la totalidad de los datos cruzados entre el Excel `PRUEBA a.xlsx` y el JSON de ruteo en el popup de cada parada: código y nombre de cliente, sucursal, dirección física completa (calle, colonia, CP, población, estado), almacén de origen, fecha de emisión/requerida, estatus, importe total, condiciones de pago, cita/agente y observaciones detalladas.
+4. **Control y Alertas de Pedidos Sin Asignar:**
+   - Se implementó la regla logística de excluir del ruteo del Plan 3 (Flota Capilar) los 3 pedidos cuyo peso individual (> 23t) excede el límite del camión más grande permitido en dicho plan (7.6t).
+   - Se diseñó y desplegó una sección dedicada en el panel lateral izquierdo (**⚠️ PEDIDOS SIN ASIGNAR**) que se muestra automáticamente en el Plan 3, detallando el movimiento, peso, cliente y motivo de no asignación de estos 3 pedidos. En Plan 1 y 2, al usar Tractos de 30t, todos los pedidos se asignan correctamente y el panel se oculta de forma reactiva.
+5. **Despliegue a Producción:**
+   - Compilación y verificación de la paridad en el script Python sin errores de f-strings.
+   - Commit y git push exitoso desencadenando el redespliegue automático en Vercel.
+
+**Firmado y Validado:** Antigravity AI - Lead Architect ✅
+
+
 
