@@ -2029,12 +2029,12 @@ def generate_interactive_map_v11():
                     item.style.lineHeight = '1.3';
                     item.innerHTML = `
                         <div style="font-weight:700; color:#f87171; font-size:11.5px; margin-bottom:3px; display:flex; justify-content:space-between;">
-                            <span>📦 \${{ex.pedido}}</span>
-                            <span>\${{(j.demand/1000).toFixed(1)}}t</span>
+                            <span>📦 ${{ex.pedido}}</span>
+                            <span>${{(j.demand/1000).toFixed(1)}}t</span>
                         </div>
-                        <div style="color:#f1f5f9; font-weight:600; margin-bottom:2px;">\${{ex.nombre}}</div>
-                        <div style="color:#94a3b8; font-size:10px; margin-bottom:3px;">\${{ex.poblacion}}, \${{ex.estado}}</div>
-                        <div style="color:#fca5a5; font-size:10.5px; border-top:1px dashed rgba(239,68,68,0.2); padding-top:4px; margin-top:4px; font-weight:600;">⚠️ \${{j.reason}}</div>
+                        <div style="color:#f1f5f9; font-weight:600; margin-bottom:2px;">${{ex.nombre}}</div>
+                        <div style="color:#94a3b8; font-size:10px; margin-bottom:3px;">${{ex.poblacion}}, ${{ex.estado}}</div>
+                        <div style="color:#fca5a5; font-size:10.5px; border-top:1px dashed rgba(239,68,68,0.2); padding-top:4px; margin-top:4px; font-weight:600;">⚠️ ${{j.reason}}</div>
                     `;
                     listEl.appendChild(item);
                 }});
