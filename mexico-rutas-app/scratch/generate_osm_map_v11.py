@@ -164,25 +164,8 @@ def capacitated_kmeans(jobs, depot, max_capacity, max_stops_per_route, max_iters
 def build_plan_routes(plan_type, max_capacity, max_stops, jobs, depot):
     depot_lat, depot_lng = depot
     
-    # Exclude jobs that exceed maximum vehicle capacity in the plan
-    max_veh_cap = 28500.0
-    if plan_type == 3:
-        max_veh_cap = 7600.0
-        
-    assignable_jobs = []
-    unassigned_jobs = []
-    for j in jobs:
-        if j["demand"] > max_veh_cap:
-            unassigned_jobs.append({
-                "id": j["id"],
-                "demand": j["demand"],
-                "reason": f"Excede capacidad del plan (Peso: {j['demand']/1000.0:.1f}t > {max_veh_cap/1000.0:.1f}t)",
-                "excel_info": j["excel_info"]
-            })
-        else:
-            assignable_jobs.append(j)
-            
-    raw_clusters = capacitated_kmeans(assignable_jobs, depot, max_capacity, max_stops)
+    unassigned_jobs = [] # All jobs are assigned
+    raw_clusters = capacitated_kmeans(jobs, depot, max_capacity, max_stops)
     
     trips = []
     
@@ -213,7 +196,15 @@ def build_plan_routes(plan_type, max_capacity, max_stops, jobs, depot):
                 fixed_cost = 3500
                 dist_cost_per_km = 7
         else:  # plan_type == 3
-            if load > 3800.0:
+            if load > 17100.0:
+                v_type = "Tracto"
+                fixed_cost = 10000
+                dist_cost_per_km = 15
+            elif load > 7600.0:
+                v_type = "Torton"
+                fixed_cost = 6000
+                dist_cost_per_km = 10
+            elif load > 3800.0:
                 v_type = "Camioneta 7t"
                 fixed_cost = 3500
                 dist_cost_per_km = 7
