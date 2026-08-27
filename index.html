@@ -253,6 +253,48 @@
             display: inline-block;
         }
         
+        .sidebar-header-panel {
+            padding: 15px;
+            border-bottom: 1px solid var(--border-color);
+            background: rgba(15, 23, 42, 0.4);
+        }
+        .total-trips-title {
+            font-weight: 700;
+            font-size: 11px;
+            color: #60a5fa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .category-filters {
+            display: flex;
+            gap: 5px;
+            margin-top: 8px;
+        }
+        .cat-filter-btn {
+            flex: 1;
+            background: rgba(30, 41, 59, 0.6);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-muted);
+            font-size: 10px;
+            font-weight: 700;
+            padding: 6px 0;
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-family: 'Outfit', sans-serif;
+        }
+        .cat-filter-btn:hover {
+            background: rgba(51, 65, 85, 0.8);
+            color: #f1f5f9;
+        }
+        .cat-filter-btn.active {
+            background: #2563eb;
+            color: #ffffff;
+            border-color: #3b82f6;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
+        }
+        
         .route-list {
             flex: 1;
             overflow-y: auto;
@@ -712,16 +754,19 @@
             </div>
         </div>
         
-        <div id="filter-sidebar-panel" class="filter-panel">
-            <div class="filter-title">
-                <span>Filtro de Unidades</span>
+        <div class="sidebar-header-panel" id="filter-sidebar-panel">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                <span class="total-trips-title">Viajes Programados (<span id="total-trips-count">0</span>)</span>
                 <div style="display:flex; gap: 8px;">
-                    <button class="filter-btn-link" onclick="toggleAllFilters(true)">Todos</button>
-                    <button class="filter-btn-link" onclick="toggleAllFilters(false)" style="color:#ef4444;">Ninguno</button>
+                    <button class="filter-btn-link" onclick="toggleAllFilters(true)">Mostrar todo</button>
+                    <button class="filter-btn-link" onclick="toggleAllFilters(false)" style="color:#f87171;">Ocultar todo</button>
                 </div>
             </div>
-            <div class="nested-filters" id="nested-filters-container">
-                <!-- Javascript will populate -->
+            <div class="category-filters">
+                <button class="cat-filter-btn active" id="btn-cat-all" onclick="filterByVehicleCategory('all')">Todos</button>
+                <button class="cat-filter-btn" id="btn-cat-Tracto" onclick="filterByVehicleCategory('Tracto')">Tractos</button>
+                <button class="cat-filter-btn" id="btn-cat-Torton" onclick="filterByVehicleCategory('Torton')">Tortones</button>
+                <button class="cat-filter-btn" id="btn-cat-Camioneta" onclick="filterByVehicleCategory('Camioneta')">Camionetas</button>
             </div>
         </div>
 
@@ -8405,6 +8450,8 @@
         };
 
         let activeRoutes = plans.plan2.routes; // Default plan is Balanceado
+        let activeCategoryFilter = 'all';
+        let routeVisibility = {}; // Map of routeKey -> boolean
         const depot = { "lat": 18.977181191414243, "lng": -97.02969533244169 };
 
         const map = L.map('map').setView([17.5, -94.5], 7);
@@ -8528,7 +8575,12 @@
                     color: route.color,
                     weight: 0,
                     opacity: 0
-                }).addTo(map);
+                });
+
+                // Initialize visibility state if not set
+                if (routeVisibility[routeKey] === undefined) {
+                    routeVisibility[routeKey] = true;
+                }
 
                 const markers = [];
                 route.stops.forEach(s => {
@@ -8597,7 +8649,7 @@
                         </div>
                     `;
 
-                    const m = L.marker([s.lat, s.lng], {icon: icon}).addTo(map)
+                    const m = L.marker([s.lat, s.lng], {icon: icon})
                         .bindPopup(popupHtml);
                     
                     m.bindTooltip(`<strong>${route.vehicle}</strong><br>Parada ${s.seq} de ${route.stops.length}`, {
@@ -8609,7 +8661,7 @@
                     markers.push(m);
                 });
 
-                routeLayers.push({
+                const routeLayerObj = {
                     key: routeKey,
                     vehicle: route.vehicle,
                     type: route.type,
@@ -8625,86 +8677,92 @@
                     orders_count: route.orders_count,
                     distance: route.distance,
                     cost: route.cost
-                });
-            });
-        }
+                };
 
-        function buildFilterPanel() {
-            const container = document.getElementById('nested-filters-container');
-            container.innerHTML = '';
+                routeLayers.push(routeLayerObj);
 
-            const groups = {};
-            routeLayers.forEach(rl => {
-                if (!groups[rl.vehicle]) groups[rl.vehicle] = [];
-                groups[rl.vehicle].push(rl);
-            });
+                // Add to map only if category matches and visibility is true
+                const matchesCat = activeCategoryFilter === 'all' || 
+                                   (activeCategoryFilter === 'Tracto' && route.type === 'Tracto') || 
+                                   (activeCategoryFilter === 'Torton' && route.type === 'Torton') || 
+                                   (activeCategoryFilter === 'Camioneta' && route.type.includes('Camioneta'));
 
-            Object.entries(groups).forEach(([vehicle, layers]) => {
-                const groupDiv = document.createElement('div');
-                groupDiv.className = 'vehicle-group';
-
-                const header = document.createElement('div');
-                header.className = 'vehicle-header';
-                header.innerHTML = `
-                    <input type="checkbox" id="chk-veh-${vehicle}" checked onchange="toggleVehicleGroup('${vehicle}', this.checked)">
-                    <span>${vehicle} (${layers[0].type})</span>
-                `;
-                groupDiv.appendChild(header);
-
-                const tripList = document.createElement('div');
-                tripList.className = 'trip-list-filter';
-                tripList.id = `trips-of-${vehicle}`;
-
-                layers.forEach(rl => {
-                    const tripItem = document.createElement('div');
-                    tripItem.className = 'trip-filter-item';
-                    tripItem.style.setProperty('--trip-color', rl.color);
-                    tripItem.innerHTML = `
-                        <input type="checkbox" id="chk-trip-${rl.key}" checked onchange="applyFilters()">
-                        <span class="color-dot"></span>
-                        <span>Viaje ${rl.trip_idx} (${rl.corridor} - ${(rl.load/1000).toFixed(1)}t | ${rl.orders_count} Pedidos)</span>
-                    `;
-                    tripList.appendChild(tripItem);
-                });
-
-                groupDiv.appendChild(tripList);
-                container.appendChild(groupDiv);
-            });
-        }
-
-        function toggleVehicleGroup(vehicle, isChecked) {
-            const list = document.getElementById(`trips-of-${vehicle}`);
-            list.querySelectorAll('input[type="checkbox"]').forEach(chk => chk.checked = isChecked);
-            applyFilters();
-        }
-
-        function applyFilters() {
-            routeLayers.forEach(rl => {
-                const chk = document.getElementById(`chk-trip-${rl.key}`);
-                const isChecked = chk ? chk.checked : false;
-
-                const parentChk = document.getElementById(`chk-veh-${rl.vehicle}`);
-                if (parentChk) {
-                    const groupChks = Array.from(document.getElementById(`trips-of-${rl.vehicle}`).querySelectorAll('input[type="checkbox"]'));
-                    const allChecked = groupChks.every(c => c.checked);
-                    const noneChecked = groupChks.every(c => !c.checked);
-                    
-                    if (allChecked) {
-                        parentChk.checked = true;
-                        parentChk.indeterminate = false;
-                    } else if (noneChecked) {
-                        parentChk.checked = false;
-                        parentChk.indeterminate = false;
-                    } else {
-                        parentChk.checked = false;
-                        parentChk.indeterminate = true;
-                    }
+                if (matchesCat && routeVisibility[routeKey]) {
+                    polyline.addTo(map);
+                    markers.forEach(m => m.addTo(map));
                 }
+            });
+        }
 
+        function toggleRouteVisibility(routeKey, isChecked) {
+            routeVisibility[routeKey] = isChecked;
+            
+            const rl = routeLayers.find(layer => layer.key === routeKey);
+            if (rl) {
                 if (isChecked) {
                     if (!map.hasLayer(rl.polyline)) {
-                        map.addLayer(rl.polyline);
-                        rl.markers.forEach(m => map.addLayer(m));
+                        rl.polyline.addTo(map);
+                        rl.markers.forEach(m => m.addTo(map));
+                    }
+                } else {
+                    if (map.hasLayer(rl.polyline)) {
+                        map.removeLayer(rl.polyline);
+                        rl.markers.forEach(m => map.removeLayer(m));
+                    }
+                }
+            }
+
+            renderSidebar();
+            updateKPIs();
+        }
+
+        function toggleAllFilters(isChecked) {
+            routeLayers.forEach(rl => {
+                const matchesCat = activeCategoryFilter === 'all' || 
+                                   (activeCategoryFilter === 'Tracto' && rl.type === 'Tracto') || 
+                                   (activeCategoryFilter === 'Torton' && rl.type === 'Torton') || 
+                                   (activeCategoryFilter === 'Camioneta' && rl.type.includes('Camioneta'));
+                
+                if (matchesCat) {
+                    routeVisibility[rl.key] = isChecked;
+                    if (isChecked) {
+                        if (!map.hasLayer(rl.polyline)) {
+                            rl.polyline.addTo(map);
+                            rl.markers.forEach(m => m.addTo(map));
+                        }
+                    } else {
+                        if (map.hasLayer(rl.polyline)) {
+                            map.removeLayer(rl.polyline);
+                            rl.markers.forEach(m => map.removeLayer(m));
+                        }
+                    }
+                }
+            });
+            renderSidebar();
+            updateKPIs();
+        }
+
+        function filterByVehicleCategory(category) {
+            activeCategoryFilter = category;
+            
+            document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const activeBtn = document.getElementById(`btn-cat-${category}`);
+            if (activeBtn) activeBtn.classList.add('active');
+
+            routeLayers.forEach(rl => {
+                const matchesCat = category === 'all' || 
+                                   (category === 'Tracto' && rl.type === 'Tracto') || 
+                                   (category === 'Torton' && rl.type === 'Torton') || 
+                                   (category === 'Camioneta' && rl.type.includes('Camioneta'));
+
+                const isVisible = routeVisibility[rl.key] !== false;
+
+                if (matchesCat && isVisible) {
+                    if (!map.hasLayer(rl.polyline)) {
+                        rl.polyline.addTo(map);
+                        rl.markers.forEach(m => m.addTo(map));
                     }
                 } else {
                     if (map.hasLayer(rl.polyline)) {
@@ -8714,21 +8772,35 @@
                 }
             });
 
-            resetFocus();
             renderSidebar();
+            updateKPIs();
         }
 
         function renderSidebar() {
             const listContainer = document.getElementById('route-list');
             listContainer.innerHTML = '';
 
+            let totalVisibleTrips = 0;
+
             routeLayers.forEach((rl, idx) => {
-                if (!map.hasLayer(rl.polyline)) return;
+                const matchesCat = activeCategoryFilter === 'all' || 
+                                   (activeCategoryFilter === 'Tracto' && rl.type === 'Tracto') || 
+                                   (activeCategoryFilter === 'Torton' && rl.type === 'Torton') || 
+                                   (activeCategoryFilter === 'Camioneta' && rl.type.includes('Camioneta'));
+
+                if (!matchesCat) return;
+
+                totalVisibleTrips++;
+
+                const isVisible = routeVisibility[rl.key] !== false;
 
                 const card = document.createElement('div');
                 card.className = 'route-card';
                 card.style.setProperty('--route-color', rl.color);
                 card.style.setProperty('--route-color-alpha', rl.color + '22');
+                if (!isVisible) {
+                    card.style.opacity = '0.4';
+                }
 
                 const typeLabel = `🚛 ${rl.type.toUpperCase()}`;
                 let tagBg = '#1e3a8a';
@@ -8745,8 +8817,6 @@
                 rl.stops.forEach(s => {
                     const parts = s.eta.split(" ");
                     const timeOnly = parts[1] + " " + parts[2];
-                    
-                    // We sum and display client names in stop
                     const clientNames = s.jobs.map(j => j.excel_info.nombre).join(' | ');
                     
                     timelineHtml += `
@@ -8758,23 +8828,35 @@
                 });
 
                 card.innerHTML = `
-                    <div class="route-card-header">
-                        <span class="route-title">${rl.vehicle} - Viaje ${rl.trip_idx}</span>
-                        <span class="route-tag" style="background-color: ${tagBg}; color: ${tagColor}">${typeLabel}</span>
-                    </div>
-                    <div style="font-size:12px; color:var(--text-muted); margin-top:5px; font-weight:600;">${rl.corridor}</div>
-                    <div style="font-size:11px; color:#3b82f6; margin-top:5px;">📅 Sale: ${rl.departure} | Regresa: ${rl.return_time}</div>
-                    <div class="route-timeline">
-                        ${timelineHtml}
-                    </div>
-                    <div class="route-meta">
-                        <span>📦 Carga: ${(rl.load/1000).toFixed(2)}t</span>
-                        <span>📍 Paradas: ${rl.stops.length}</span>
-                        <span>📄 Pedidos: ${rl.orders_count}</span>
+                    <div style="display: flex; align-items: flex-start; gap: 10px; width: 100%;">
+                        <input type="checkbox" class="route-toggle-checkbox" ${isVisible ? 'checked' : ''} 
+                            onclick="event.stopPropagation(); toggleRouteVisibility('${rl.key}', this.checked)" 
+                            style="margin-top: 4px; cursor: pointer; width: 16px; height: 16px; accent-color: var(--route-color);">
+                        <div style="flex: 1;">
+                            <div class="route-card-header">
+                                <span class="route-title">${rl.vehicle} - Viaje ${rl.trip_idx}</span>
+                                <span class="route-tag" style="background-color: ${tagBg}; color: ${tagColor}">${typeLabel}</span>
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600; display:flex; align-items:center; gap:6px;">
+                                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:${rl.color}; border:1px solid #fff;"></span>
+                                <span>${rl.corridor}</span>
+                            </div>
+                            <div style="font-size:11px; color:#60a5fa; margin-top:5px;">📅 Sale: ${rl.departure} | Regresa: ${rl.return_time}</div>
+                            <div class="route-timeline">
+                                ${timelineHtml}
+                            </div>
+                            <div class="route-meta">
+                                <span>📦 Carga: ${(rl.load/1000).toFixed(2)}t</span>
+                                <span>📍 Paradas: ${rl.stops.length}</span>
+                                <span>📄 Pedidos: ${rl.orders_count}</span>
+                            </div>
+                        </div>
                     </div>
                 `;
 
                 card.onclick = () => {
+                    if (!isVisible) return; // Cannot focus a hidden card!
+
                     const alreadyActive = card.classList.contains('active');
                     document.querySelectorAll('.route-card').forEach(c => c.classList.remove('active'));
                     
@@ -8789,10 +8871,8 @@
                         }
                         
                         routeLayers.forEach(layer => {
-                            layer.polyline.setStyle({weight: 0, opacity: 0});
                             layer.markers.forEach(m => m.setOpacity(0.25));
                         });
-                        rl.polyline.setStyle({weight: 0, opacity: 0});
                         rl.markers.forEach(m => m.setOpacity(1.0));
                     } else {
                         resetFocus();
@@ -8801,6 +8881,8 @@
 
                 listContainer.appendChild(card);
             });
+
+            document.getElementById('total-trips-count').innerText = totalVisibleTrips;
         }
 
         function resetFocus() {
@@ -8811,7 +8893,6 @@
                 }
             });
             
-            // Auto fit bounds to all visible stops on deactivation/reset
             const allCoords = [];
             routeLayers.forEach(rl => {
                 if (map.hasLayer(rl.polyline)) {
@@ -8821,12 +8902,6 @@
             if (allCoords.length > 0) {
                 map.fitBounds(L.latLngBounds(allCoords), {padding: [50, 50]});
             }
-        }
-
-        function toggleAllFilters(val) {
-            document.querySelectorAll('.filter-panel input[type="checkbox"]').forEach(chk => chk.checked = val);
-            document.querySelectorAll('.vehicle-header input[type="checkbox"]').forEach(chk => chk.checked = val);
-            applyFilters();
         }
 
         function switchTab(tabId) {
@@ -8997,6 +9072,15 @@
 
         function changePlan(planId) {
             activeRoutes = plans[planId].routes;
+            activeCategoryFilter = 'all';
+            routeVisibility = {};
+
+            // Reset active state of category buttons
+            document.querySelectorAll('.cat-filter-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            const allBtn = document.getElementById('btn-cat-all');
+            if (allBtn) allBtn.classList.add('active');
             
             // Populate unassigned list
             const unassigned = plans[planId].unassigned || [];
@@ -9034,7 +9118,6 @@
             }
             
             renderMapRoutes();
-            buildFilterPanel();
             renderSidebar();
             renderFleetView();
             updateKPIs();
