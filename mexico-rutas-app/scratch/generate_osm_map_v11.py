@@ -1211,6 +1211,17 @@ def generate_interactive_map_v11():
         .marker-pin-circle:hover {{
             transform: scale(1.2);
         }}
+        .custom-stop-tooltip {{
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: #f1f5f9;
+            font-size: 11px;
+            font-weight: 700;
+            border-radius: 4px;
+            padding: 4px 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            font-family: 'Outfit', sans-serif;
+        }}
     </style>
 </head>
 <body>
@@ -1503,7 +1514,6 @@ def generate_interactive_map_v11():
         }});
         
         let routeLayers = [];
-        let sectorLayers = [];
 
         function renderMapRoutes() {{
             // Remove existing layers
@@ -1512,9 +1522,6 @@ def generate_interactive_map_v11():
                 rl.markers.forEach(m => map.removeLayer(m));
             }});
             routeLayers = [];
-            
-            sectorLayers.forEach(sl => map.removeLayer(sl));
-            sectorLayers = [];
 
             // Draw new active routes
             activeRoutes.forEach((route, idx) => {{
@@ -1526,42 +1533,6 @@ def generate_interactive_map_v11():
                     weight: 0,
                     opacity: 0
                 }}).addTo(map);
-
-                // Draw shaded cluster area
-                const stopsCoords = route.stops.map(s => [s.lat, s.lng]);
-                if (stopsCoords.length === 1) {{
-                    const circle = L.circle(stopsCoords[0], {{
-                        radius: 35000,
-                        color: route.color,
-                        fillColor: route.color,
-                        fillOpacity: 0.1,
-                        weight: 1.5,
-                        dashArray: '5, 5'
-                    }}).addTo(map);
-                    sectorLayers.push(circle);
-                }} else {{
-                    // Sort coordinates by polar angle relative to centroid
-                    const lats = route.stops.map(s => s.lat);
-                    const lngs = route.stops.map(s => s.lng);
-                    const centroidLat = lats.reduce((a,b) => a+b, 0) / lats.length;
-                    const centroidLng = lngs.reduce((a,b) => a+b, 0) / lngs.length;
-                    
-                    const sortedStops = [...route.stops].sort((a, b) => {{
-                        const angleA = Math.atan2(a.lat - centroidLat, a.lng - centroidLng);
-                        const angleB = Math.atan2(b.lat - centroidLat, b.lng - centroidLng);
-                        return angleA - angleB;
-                    }});
-                    
-                    const polygonCoords = sortedStops.map(s => [s.lat, s.lng]);
-                    const polygon = L.polygon(polygonCoords, {{
-                        color: route.color,
-                        fillColor: route.color,
-                        fillOpacity: 0.08,
-                        weight: 1.5,
-                        dashArray: '5, 5'
-                    }}).addTo(map);
-                    sectorLayers.push(polygon);
-                }}
 
                 const markers = [];
                 route.stops.forEach(s => {{
@@ -1632,6 +1603,13 @@ def generate_interactive_map_v11():
 
                     const m = L.marker([s.lat, s.lng], {{icon: icon}}).addTo(map)
                         .bindPopup(popupHtml);
+                    
+                    m.bindTooltip(`<strong>${{route.vehicle}}</strong><br>Parada ${{s.seq}} de ${{route.stops.length}}`, {{
+                        permanent: false,
+                        direction: 'top',
+                        className: 'custom-stop-tooltip'
+                    }});
+                    
                     markers.push(m);
                 }});
 
