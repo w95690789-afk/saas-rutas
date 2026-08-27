@@ -809,6 +809,7 @@
 5. **Despliegue a Producción:**
    - Compilación y verificación de la paridad en el script Python sin errores de f-strings.
    - Commit y git push exitoso desencadenando el redespliegue automático en Vercel.
+   - *Hotfix:* Eliminación de caracteres de escape `\` residuales en las inyecciones de plantillas JS de la barra lateral (pedidos sin asignar), permitiendo la interpretación y renderizado dinámico correcto de los datos del cliente en el navegador.
 
 **Firmado y Validado:** Antigravity AI - Lead Architect ✅
 
