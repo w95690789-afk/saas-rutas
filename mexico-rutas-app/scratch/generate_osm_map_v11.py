@@ -278,6 +278,7 @@ def build_plan_routes(plan_type, max_capacity, max_stops, jobs, depot):
     for v_name, v_list in veh_trips.items():
         current_time = datetime.fromisoformat("2026-08-21T06:00:00-05:00")
         for trip_idx, trip in enumerate(v_list):
+            trip["trip_idx"] = trip_idx + 1
             if current_time.hour >= 17:
                 current_time = current_time.replace(hour=6, minute=0, second=0) + timedelta(days=1)
             elif current_time.hour < 6:
@@ -461,7 +462,7 @@ def generate_interactive_map_v11():
             js_routes.append({
                 "vehicle": t["vehicle"],
                 "type": t["type"],
-                "trip_idx": int(t["vehicle"].split("_")[-1]),
+                "trip_idx": t["trip_idx"],
                 "corridor": t["corridor"],
                 "load": float(t["load"]),
                 "distance": float(t["distance"]),
@@ -1263,6 +1264,11 @@ def generate_interactive_map_v11():
             </div>
         </div>
         
+        <div class="sidebar-instructions" id="sidebar-instructions" style="padding: 10px 15px 5px 15px; font-size: 11px; color: #94a3b8; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
+            <span>💡</span>
+            <span><strong>Tip:</strong> Haz clic en un viaje para ubicarlo y hacer zoom en sus paradas.</span>
+        </div>
+
         <div class="route-list" id="route-list">
             <!-- Javascript will populate -->
         </div>
@@ -1488,6 +1494,45 @@ def generate_interactive_map_v11():
             }}
         }});
         map.addControl(new SelectorControl());
+
+        const LegendControl = L.Control.extend({{
+            options: {{ position: 'bottomright' }},
+            onAdd: function (map) {{
+                const div = L.DomUtil.create('div', 'map-legend-control');
+                div.style.background = 'rgba(15, 23, 42, 0.9)';
+                div.style.border = '1px solid #334155';
+                div.style.borderRadius = '8px';
+                div.style.padding = '10px 14px';
+                div.style.color = '#f1f5f9';
+                div.style.fontFamily = "'Outfit', sans-serif";
+                div.style.fontSize = '11px';
+                div.style.lineHeight = '1.4';
+                div.style.boxShadow = '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)';
+                div.style.pointerEvents = 'auto';
+                div.innerHTML = `
+                    <div style="font-weight: 700; font-size: 12px; margin-bottom: 6px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                        <span>🗺️</span> GUÍA DEL MAPA
+                    </div>
+                    <div style="display: flex; flex-direction: column; gap: 6px;">
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="display: inline-block; width: 12px; height: 12px; border-radius: 50%; background: #3b82f6; border: 1.5px solid #fff;"></span>
+                            <span>Cada color es un <strong>Viaje único</strong> (Clúster)</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span style="display: inline-block; width: 18px; height: 18px; border-radius: 50%; background: #1e293b; border: 1.5px solid #fff; color: #fff; font-size: 10px; font-weight: 800; text-align: center; line-height: 15px;">2</span>
+                            <span>El número indica el <strong>Orden de secuencia</strong></span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px;">
+                            <span>🏠</span>
+                            <span>Centro de Distribución (<strong>CEDI Orizaba</strong>)</span>
+                        </div>
+                    </div>
+                `;
+                L.DomEvent.disableClickPropagation(div);
+                return div;
+            }}
+        }});
+        map.addControl(new LegendControl());
 
         function changeBaseMap(type) {{
             map.removeLayer(tilesDark);
@@ -1775,13 +1820,19 @@ def generate_interactive_map_v11():
                     
                     if (!alreadyActive) {{
                         card.classList.add('active');
-                        map.fitBounds(rl.polyline.getBounds(), {{padding: [50, 50]}});
+                        
+                        if (rl.stops.length === 1) {{
+                            map.setView([rl.stops[0].lat, rl.stops[0].lng], 9);
+                        }} else {{
+                            const stopCoords = rl.stops.map(s => [s.lat, s.lng]);
+                            map.fitBounds(L.latLngBounds(stopCoords), {{padding: [80, 80]}});
+                        }}
                         
                         routeLayers.forEach(layer => {{
-                            layer.polyline.setStyle({{weight: 2, opacity: 0.15}});
-                            layer.markers.forEach(m => m.setOpacity(0.3));
+                            layer.polyline.setStyle({{weight: 0, opacity: 0}});
+                            layer.markers.forEach(m => m.setOpacity(0.25));
                         }});
-                        rl.polyline.setStyle({{weight: 6, opacity: 1.0}});
+                        rl.polyline.setStyle({{weight: 0, opacity: 0}});
                         rl.markers.forEach(m => m.setOpacity(1.0));
                     }} else {{
                         resetFocus();
@@ -1795,10 +1846,21 @@ def generate_interactive_map_v11():
         function resetFocus() {{
             routeLayers.forEach(layer => {{
                 if (map.hasLayer(layer.polyline)) {{
-                    layer.polyline.setStyle({{weight: 4, opacity: 0.8}});
+                    layer.polyline.setStyle({{weight: 0, opacity: 0}});
                     layer.markers.forEach(m => m.setOpacity(1.0));
                 }}
             }});
+            
+            // Auto fit bounds to all visible stops on deactivation/reset
+            const allCoords = [];
+            routeLayers.forEach(rl => {{
+                if (map.hasLayer(rl.polyline)) {{
+                    rl.stops.forEach(s => allCoords.push([s.lat, s.lng]));
+                }}
+            }});
+            if (allCoords.length > 0) {{
+                map.fitBounds(L.latLngBounds(allCoords), {{padding: [50, 50]}});
+            }}
         }}
 
         function toggleAllFilters(val) {{
