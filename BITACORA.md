@@ -746,3 +746,48 @@
 #### Pendientes:
 - Aplicar la corrección en `getGanttPos` para evitar normalizar fechas que ya se encuentran expresadas en tiempo nominal de México.
 
+---
+
+### Sesión 43: Registro de Solución de Agrupación, Sincronización y Actualización de Coordenadas
+**Fecha:** 27 de Agosto, 2026
+**Estatus:** ✅ COMPLETADO
+**Ejecutor:** AI Lead Architect - Antigravity (DDO Core Powered)
+
+#### Acciones Realizadas:
+1. **Registro en Base de Conocimientos:**
+   - Se ha registrado oficialmente que la URL **`https://saas-rutas-46uf.vercel.app/`** corresponde a la **Solución de Agrupación (Clustering)** en Vercel. 
+   - Esta dirección se utilizará de ahora en adelante para la lógica e interfaz de agrupación de pedidos y rutas, distinguiéndose de la plataforma principal del SaaS de Rutas (`https://saas-rutas.vercel.app/`).
+2. **Actualización de Coordenadas de Pedidos Crudos (`PRUEBA a.xlsx`):**
+   - Se inyectaron de forma estricta y con precisión 1:1 las coordenadas calculadas en `problem_VH.json` en el archivo Excel original de pedidos.
+   - Se crearon las columnas `Latitud` (AQ) y `Longitud` (AR) para los 57 pedidos válidos del archivo, conservando intactas todas las demás celdas y la estructura del libro de cálculo de origen.
+3. **Planificación de Sincronización de Pestañas:**
+   - Se diseñó el plan de sincronización bidireccional de estados de datos, cabeceras y mapeos entre `App.jsx` y `GeoreferenceModule.jsx` para que las correcciones manuales y cargas de archivos impacten a ambas vistas en tiempo real.
+
+**Firmado y Validado:** Antigravity AI - Lead Architect ✅
+
+
+### Sesión 44: Reestructuración Algorítmica a K-Means Espacial y 3 Planes de Flota
+**Fecha:** 27 de Agosto, 2026
+**Estatus:** ✅ COMPLETADO
+**Ejecutor:** AI Lead Architect - Antigravity (DDO Core Powered)
+
+#### Acciones Realizadas:
+1. **Exportación de Datos de Ruteo Actual:**
+   - Se unificó el plan de rutas actual (generado por el Barrido Polar) con el archivo de pedidos `PRUEBA a.xlsx` mediante un script de Node.js, exportando a `Rutas_Optimizadas_Clientes.csv` en el directorio raíz.
+   - El archivo CSV incluye los nombres de cliente, sucursales, direcciones y coordenadas geocodificadas reales mapeados 1:1 con cada parada y viaje.
+2. **Reemplazo Algorítmico (K-Means con Capacidad Acotada):**
+   - Se reemplazó el algoritmo de "Barrido Polar Angular" por **Capacitated K-Means** en el generador de mapas `generate_osm_map_v11.py`.
+   - K-Means agrupa a los clientes basándose en su cercanía geográfica real en 2D, eliminando los cruces de líneas y cuadrantes cruzados típicos del barrido polar y devolviendo sectores de reparto compactos e intuitivos.
+3. **Mezcla de Vehículos y 3 Planes Logísticos:**
+   - Diseñamos y ejecutamos tres planes según la combinación y capacidad de vehículos:
+     - **Plan 1 (Consolidado):** Capacidad de 28.5t. Usa principalmente Tractos (30t) y Tortones (18t) con máxima consolidación.
+     - **Plan 2 (Balanceado - Óptimo):** Capacidad de 17.1t. Mix balanceado de Tractos, Tortones y Camionetas de 7t para agilizar las paradas y limitar la carga por camión (máx. 8 paradas).
+     - **Plan 3 (Capilar):** Capacidad de 7.6t. Usa únicamente Camionetas de 7t y 4t para máxima velocidad, acceso y agilidad urbana (máx. 4 paradas).
+4. **Selector y Exportador Dinámico en Frontend (`index.html`):**
+   - Agregamos un selector en la cabecera del dashboard que actualiza de manera instantánea el mapa de rutas Leaflet, el árbol de filtros, el listado de itinerarios y la ocupación de flota.
+   - Implementamos la descarga interactiva de cada plan seleccionado. Al hacer clic en "Descargar Plan Activo (CSV)", se genera y descarga dinámicamente un archivo CSV con la asignación, ETAs, nombres de clientes y pesos del plan seleccionado.
+
+**Firmado y Validado:** Antigravity AI - Lead Architect ✅
+
+
+
