@@ -798,7 +798,7 @@
 #### Acciones Realizadas:
 1. **Rediseño Visual del Mapa (Burbujas Sectorizadas):**
    - Se removieron por completo las líneas de conexión directas (spaghetti) entre clientes al establecer la opacidad y peso de la polilínea en 0.
-   - Se implementó la visualización de **sectores/burbujas sombreadas** semi-transparentes para cada viaje (usando círculos de 35km para rutas de 1 parada y polígonos ordenados por ángulo polar respecto al centroide para rutas con múltiples paradas), facilitando que el dispatcher capte las agrupaciones de forma clara y limpia.
+   - *Ajuste Visual:* Remoción completa de los polígonos y círculos sombreados (`sectorLayers`) a petición del usuario. La visualización del clúster se consolidó de manera ultra-limpia a través de los colores de los pins y la inclusión de tooltips informativos al hover en Leaflet (mostrando vehículo, parada y secuencia total).
 2. **Pins Circulares Minimalistas:**
    - Se sustituyeron los grandes marcadores rectangulares por discretos pins circulares que muestran el número de parada correspondiente, disminuyendo el solapamiento visual y mejorando el diseño del mapa.
 3. **Cruces de Información Detallada en Popups:**
