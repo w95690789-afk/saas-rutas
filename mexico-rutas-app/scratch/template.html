@@ -581,12 +581,24 @@
 
         const map = L.map('map').setView([17.8, -94.5], 7);
 
-        const tilesLight = L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
-            attribution: '&copy; OpenStreetMap contributors &copy; CARTO',
-            subdomains: 'abcd',
+        const hereApiKey = 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
+
+        const hereDayTile = L.tileLayer(`https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png8?style=explore.day&apiKey=${hereApiKey}`, {
+            attribution: '&copy; HERE Technologies | Calidad Bueno',
             maxZoom: 20
         });
-        tilesLight.addTo(map);
+
+        const osmTile = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; OpenStreetMap contributors',
+            maxZoom: 19
+        });
+
+        hereDayTile.addTo(map);
+
+        L.control.layers({
+            "🗺️ HERE Maps (Oficial)": hereDayTile,
+            "🌍 OpenStreetMap": osmTile
+        }, null, { position: 'bottomright' }).addTo(map);
 
         const depotIcon = L.divIcon({
             className: 'custom-div-icon',
