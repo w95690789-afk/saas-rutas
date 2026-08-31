@@ -16,13 +16,16 @@
         :root {
             --bg-dark: #0f172a;
             --bg-sidebar: #1e293b;
-            --bg-card: #334155;
+            --bg-card: #1e293b;
+            --bg-card-inner: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --primary: #3b82f6;
             --primary-hover: #2563eb;
             --border-color: #334155;
-            --card-border: #475569;
+            --card-border: #334155;
+            --emerald: #10b981;
+            --amber: #f59e0b;
         }
 
         * {
@@ -39,34 +42,32 @@
             height: 100vh;
             overflow: hidden;
             display: flex;
+            flex-direction: column;
         }
 
         /* Top Plan Selector Bar */
         .plan-selector-bar {
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
             height: 65px;
-            background: rgba(15, 23, 42, 0.95);
+            min-height: 65px;
+            background: rgba(15, 23, 42, 0.98);
             backdrop-filter: blur(10px);
             border-bottom: 1px solid var(--border-color);
             z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 25px;
+            padding: 0 20px;
             box-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }
 
         .plan-selector-container {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 12px;
         }
 
         .plan-selector-label {
-            font-size: 12px;
+            font-size: 11.5px;
             font-weight: 800;
             letter-spacing: 0.5px;
             color: #60a5fa;
@@ -77,10 +78,10 @@
             background: #1e293b;
             color: #f8fafc;
             border: 1px solid #475569;
-            padding: 7px 14px;
+            padding: 6px 12px;
             border-radius: 6px;
             font-family: inherit;
-            font-size: 13px;
+            font-size: 12.5px;
             font-weight: 600;
             cursor: pointer;
             outline: none;
@@ -91,19 +92,54 @@
             border-color: #3b82f6;
         }
 
+        /* View Mode Switcher */
+        .view-mode-group {
+            display: flex;
+            background: rgba(30, 41, 59, 0.9);
+            padding: 3px;
+            border-radius: 8px;
+            border: 1px solid #475569;
+            gap: 3px;
+        }
+
+        .view-mode-btn {
+            background: transparent;
+            border: none;
+            color: #94a3b8;
+            padding: 6px 14px;
+            font-size: 12px;
+            font-weight: 700;
+            border-radius: 6px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.2s ease;
+        }
+
+        .view-mode-btn:hover {
+            color: #f8fafc;
+        }
+
+        .view-mode-btn.active {
+            background: #3b82f6;
+            color: white;
+            box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+        }
+
         .btn-action-group {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
         }
 
         .btn-upload-plan {
-            background: #3b82f6;
+            background: #2563eb;
             color: white;
             border: none;
-            padding: 7px 14px;
+            padding: 6px 13px;
             border-radius: 6px;
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -113,17 +149,17 @@
         }
 
         .btn-upload-plan:hover {
-            background: #2563eb;
-            box-shadow: 0 4px 10px rgba(59, 130, 246, 0.3);
+            background: #1d4ed8;
+            box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3);
         }
 
         .btn-download-plan {
             background: #10b981;
             color: white;
             border: none;
-            padding: 7px 14px;
+            padding: 6px 13px;
             border-radius: 6px;
-            font-size: 12.5px;
+            font-size: 12px;
             font-weight: 700;
             cursor: pointer;
             display: flex;
@@ -137,21 +173,30 @@
             box-shadow: 0 4px 10px rgba(16, 185, 129, 0.3);
         }
 
+        /* Workspace Main Body */
+        .workspace-container {
+            display: flex;
+            flex: 1;
+            height: calc(100vh - 65px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* Sidebar in Map Mode */
         .sidebar {
-            width: 400px;
+            width: 390px;
             background-color: var(--bg-sidebar);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
-            height: calc(100vh - 65px);
-            margin-top: 65px;
+            height: 100%;
             transition: all 0.3s ease;
             position: relative;
             z-index: 999;
         }
 
         .sidebar.collapsed {
-            margin-left: -400px;
+            margin-left: -390px;
         }
 
         .sidebar-toggle-btn {
@@ -180,51 +225,21 @@
         }
 
         .sidebar-header {
-            padding: 16px 20px;
+            padding: 14px 18px;
             border-bottom: 1px solid var(--border-color);
         }
 
         .sidebar-header h1 {
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 800;
-            letter-spacing: -0.5px;
             color: #f8fafc;
             display: flex;
             align-items: center;
             gap: 8px;
         }
 
-        .tab-selector {
-            display: flex;
-            gap: 6px;
-            margin-top: 12px;
-            background: rgba(15, 23, 42, 0.6);
-            padding: 4px;
-            border-radius: 8px;
-        }
-
-        .tab-btn {
-            flex: 1;
-            padding: 6px 10px;
-            background: transparent;
-            border: none;
-            color: var(--text-muted);
-            font-size: 11px;
-            font-weight: 600;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            text-align: center;
-        }
-
-        .tab-btn.active {
-            background: #3b82f6;
-            color: white;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-        }
-
         .sidebar-header-panel {
-            padding: 14px 18px;
+            padding: 12px 18px;
             border-bottom: 1px solid var(--border-color);
             background: rgba(15, 23, 42, 0.4);
         }
@@ -240,12 +255,12 @@
         .category-filters {
             display: flex;
             gap: 5px;
-            margin-top: 10px;
+            margin-top: 8px;
         }
 
         .cat-filter-btn {
             flex: 1;
-            padding: 5px 8px;
+            padding: 5px 6px;
             background: rgba(30, 41, 59, 0.8);
             border: 1px solid #475569;
             color: #94a3b8;
@@ -282,7 +297,7 @@
         .route-list {
             flex: 1;
             overflow-y: auto;
-            padding: 12px;
+            padding: 10px;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -362,28 +377,246 @@
             color: var(--text-muted);
         }
 
-        /* Main Viewport */
-        .main-content {
+        /* Views Container */
+        .main-viewport {
             flex: 1;
-            height: calc(100vh - 65px);
-            margin-top: 65px;
+            height: 100%;
             position: relative;
             background: #020617;
+            display: flex;
         }
 
-        .tab-content {
-            display: none;
-            width: 100%;
+        #map-container {
+            flex: 1;
             height: 100%;
-        }
-
-        .tab-content.active {
-            display: block;
+            position: relative;
         }
 
         #map {
             width: 100%;
             height: 100%;
+        }
+
+        /* Cockpit / Spreadsheet View */
+        #cockpit-view {
+            display: none;
+            width: 100%;
+            height: 100%;
+            background: #0b1120;
+            overflow-y: auto;
+            padding: 25px;
+        }
+
+        .cockpit-header-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-box {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-radius: 8px;
+            padding: 16px;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+        }
+
+        .stat-box-title {
+            font-size: 11px;
+            font-weight: 700;
+            color: #94a3b8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .stat-box-val {
+            font-size: 22px;
+            font-weight: 800;
+            margin-top: 4px;
+        }
+
+        .stat-box-sub {
+            font-size: 11px;
+            color: #10b981;
+            margin-top: 3px;
+        }
+
+        /* Embarque Grid Cards */
+        .embarque-table-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+            margin-bottom: 40px;
+        }
+
+        .embarque-row-card {
+            background: #1e293b;
+            border: 1px solid #334155;
+            border-left: 6px solid var(--emb-color);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+            transition: all 0.2s ease;
+        }
+
+        .embarque-row-card:hover {
+            border-color: #475569;
+            box-shadow: 0 6px 16px rgba(0,0,0,0.25);
+        }
+
+        .embarque-main-bar {
+            padding: 15px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 15px;
+            background: rgba(15, 23, 42, 0.3);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            cursor: pointer;
+        }
+
+        .emb-col-id {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .emb-badge-id {
+            font-size: 14px;
+            font-weight: 800;
+            color: white;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(255,255,255,0.15);
+            padding: 4px 10px;
+            border-radius: 6px;
+        }
+
+        .emb-title-text {
+            font-size: 14px;
+            font-weight: 700;
+            color: #f8fafc;
+        }
+
+        .emb-corridor-text {
+            font-size: 12px;
+            color: #94a3b8;
+        }
+
+        .emb-col-capacity {
+            min-width: 180px;
+        }
+
+        .capacity-bar-bg {
+            background: #0f172a;
+            height: 8px;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 5px;
+        }
+
+        .capacity-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .emb-col-dispatch {
+            font-size: 12px;
+            line-height: 1.4;
+        }
+
+        .emb-col-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn-emb-action {
+            background: #334155;
+            color: #f8fafc;
+            border: 1px solid #475569;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 11.5px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            transition: all 0.15s ease;
+        }
+
+        .btn-emb-action:hover {
+            background: #475569;
+            color: white;
+        }
+
+        .btn-emb-whatsapp {
+            background: #065f46;
+            color: #a7f3d0;
+            border: 1px solid #059669;
+        }
+
+        .btn-emb-whatsapp:hover {
+            background: #047857;
+            color: white;
+        }
+
+        /* Order Details Drawer Table */
+        .embarque-orders-drawer {
+            padding: 15px 20px;
+            background: #0f172a;
+            display: none;
+        }
+
+        .orders-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11.5px;
+            text-align: left;
+        }
+
+        .orders-table th {
+            color: #60a5fa;
+            font-weight: 700;
+            padding: 8px 10px;
+            border-bottom: 1px solid #334155;
+            text-transform: uppercase;
+            font-size: 10.5px;
+        }
+
+        .orders-table td {
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            color: #cbd5e1;
+            vertical-align: top;
+        }
+
+        .orders-table tr:hover td {
+            background: rgba(30, 41, 59, 0.6);
+        }
+
+        /* Toast Notification */
+        .toast-notify {
+            position: fixed;
+            bottom: 25px;
+            right: 25px;
+            background: rgba(16, 185, 129, 0.95);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 13px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+            z-index: 9999;
+            display: none;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
         }
 
         .custom-div-icon {
@@ -437,40 +670,33 @@
             box-shadow: 0 2px 4px rgba(0,0,0,0.3);
             font-family: 'Outfit', sans-serif;
         }
-
-        /* Toast Notification */
-        .toast-notify {
-            position: absolute;
-            bottom: 25px;
-            right: 25px;
-            background: rgba(16, 185, 129, 0.95);
-            color: white;
-            padding: 12px 20px;
-            border-radius: 8px;
-            font-weight: 600;
-            font-size: 13px;
-            box-shadow: 0 10px 25px rgba(0,0,0,0.4);
-            z-index: 2000;
-            display: none;
-            animation: fadeIn 0.3s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(10px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
     </style>
 </head>
 <body>
+    <!-- TOP PLAN SELECTOR & ACTION BAR -->
     <div class="plan-selector-bar">
         <div class="plan-selector-container">
-            <span class="plan-selector-label">📋 SELECCIONAR PLAN LOGÍSTICO:</span>
+            <span class="plan-selector-label">📋 PLAN LOGÍSTICO:</span>
             <select id="plan-select" class="plan-select" onchange="changePlan(this.value)">
                 <option value="plan1" selected>Plan 1: Máxima Consolidación (6 Tráilers + 7 Tortons)</option>
                 <option value="plan2">Plan 2: Flota Balanceada (Mix Tráiler, Torton y Camionetas)</option>
                 <option value="plan3">Plan 3: Nivel de Servicio & Citas (Rutas Capilares y Citas 7:00 AM)</option>
             </select>
         </div>
+
+        <!-- VIEW MODE SELECTOR (EXCEL COCKPIT vs SPLIT vs MAP) -->
+        <div class="view-mode-group">
+            <button class="view-mode-btn active" id="btn-view-cockpit" onclick="switchViewMode('cockpit')">
+                <span>📋 Tabla de Despacho</span>
+            </button>
+            <button class="view-mode-btn" id="btn-view-split" onclick="switchViewMode('split')">
+                <span>🔀 Vista Dividida</span>
+            </button>
+            <button class="view-mode-btn" id="btn-view-map" onclick="switchViewMode('map')">
+                <span>🗺️ Mapa Satelital</span>
+            </button>
+        </div>
+
         <div class="btn-action-group">
             <button class="btn-upload-plan" onclick="document.getElementById('excel-file-input').click()">
                 <span>📂 Cargar Pedidos (Excel / CSV)</span>
@@ -486,86 +712,93 @@
         </div>
     </div>
 
-    <div class="sidebar" id="sidebar">
-        <button class="sidebar-toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()">◀</button>
-        <div class="sidebar-header">
-            <h1>CONTROL DE DESPACHO</h1>
-            <div class="tab-selector">
-                <button class="tab-btn active" onclick="switchTab('map-view')">Mapa de Rutas</button>
-                <button class="tab-btn" onclick="switchTab('fleet-view')">Flota / Ocupación</button>
-                <button class="tab-btn" onclick="switchTab('stats-view')">Panel KPIs</button>
+    <!-- MAIN WORKSPACE -->
+    <div class="workspace-container">
+        <!-- SIDEBAR (ACTIVE IN MAP & SPLIT MODES) -->
+        <div class="sidebar" id="sidebar">
+            <button class="sidebar-toggle-btn" id="sidebar-toggle" onclick="toggleSidebar()">◀</button>
+            <div class="sidebar-header">
+                <h1>CONTROL DE EMBARQUES</h1>
             </div>
-        </div>
-        
-        <div class="sidebar-header-panel" id="filter-sidebar-panel">
-            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
-                <span class="total-trips-title">Viajes Programados (<span id="total-trips-count">0</span>)</span>
-                <div style="display:flex; gap: 8px;">
-                    <button class="filter-btn-link" onclick="toggleAllFilters(true)">Mostrar todo</button>
-                    <button class="filter-btn-link" onclick="toggleAllFilters(false)" style="color:#f87171;">Ocultar todo</button>
+            
+            <div class="sidebar-header-panel" id="filter-sidebar-panel">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span class="total-trips-title">Viajes Programados (<span id="total-trips-count">0</span>)</span>
+                    <div style="display:flex; gap: 8px;">
+                        <button class="filter-btn-link" onclick="toggleAllFilters(true)">Mostrar todo</button>
+                        <button class="filter-btn-link" onclick="toggleAllFilters(false)" style="color:#f87171;">Ocultar todo</button>
+                    </div>
+                </div>
+                <div class="category-filters">
+                    <button class="cat-filter-btn active" id="btn-cat-all" onclick="filterByVehicleCategory('all')">Todos</button>
+                    <button class="cat-filter-btn" id="btn-cat-Tracto" onclick="filterByVehicleCategory('Tracto')">Tractos</button>
+                    <button class="cat-filter-btn" id="btn-cat-Torton" onclick="filterByVehicleCategory('Torton')">Tortones</button>
+                    <button class="cat-filter-btn" id="btn-cat-Camioneta" onclick="filterByVehicleCategory('Camioneta')">Camionetas</button>
                 </div>
             </div>
-            <div class="category-filters">
-                <button class="cat-filter-btn active" id="btn-cat-all" onclick="filterByVehicleCategory('all')">Todos</button>
-                <button class="cat-filter-btn" id="btn-cat-Tracto" onclick="filterByVehicleCategory('Tracto')">Tractos</button>
-                <button class="cat-filter-btn" id="btn-cat-Torton" onclick="filterByVehicleCategory('Torton')">Tortones</button>
-                <button class="cat-filter-btn" id="btn-cat-Camioneta" onclick="filterByVehicleCategory('Camioneta')">Camionetas</button>
+            
+            <div class="route-list" id="route-list">
+                <!-- Populated dynamically -->
             </div>
         </div>
-        
-        <div class="sidebar-instructions" id="sidebar-instructions" style="padding: 10px 15px 5px 15px; font-size: 11px; color: #94a3b8; border-top: 1px solid var(--border-color); display: flex; align-items: center; gap: 6px;">
-            <span>💡</span>
-            <span><strong>Tip:</strong> Haz clic en un viaje para ubicarlo y hacer zoom en sus paradas.</span>
-        </div>
 
-        <div class="route-list" id="route-list">
-            <!-- Populated dynamically -->
+        <!-- MAIN VIEWPORT (MAP & COCKPIT) -->
+        <div class="main-viewport">
+            <!-- MAP VIEW -->
+            <div id="map-container">
+                <div id="map"></div>
+            </div>
+
+            <!-- COCKPIT / SPREADSHEET VIEW -->
+            <div id="cockpit-view">
+                <div style="max-width: 1400px; margin: 0 auto;">
+                    <!-- SUMMARY STATS -->
+                    <div class="cockpit-header-stats">
+                        <div class="stat-box">
+                            <div class="stat-box-title">CARGA TOTAL ASIGNADA</div>
+                            <div class="stat-box-val" id="cockpit-weight" style="color:#3b82f6;">290.33 t</div>
+                            <div class="stat-box-sub">✅ 100% de pedidos asignados (57 pedidos)</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-title">TOTAL EMBARQUES / CAMIONES</div>
+                            <div class="stat-box-val" id="cockpit-trips" style="color:#10b981;">13 Fletes</div>
+                            <div class="stat-box-sub">6 Tráilers FTL + 7 Tortons</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-title">AHORRO EN FLETES FALSOS</div>
+                            <div class="stat-box-val" id="cockpit-savings" style="color:#f59e0b;">$14,500 MXN</div>
+                            <div class="stat-box-sub">Mérida en Torton (10.09t) vs Tráiler</div>
+                        </div>
+                        <div class="stat-box">
+                            <div class="stat-box-title">CUMPLIMIENTO DE CITAS SAP</div>
+                            <div class="stat-box-val" id="cockpit-sla" style="color:#ec4899;">100% A Tiempo</div>
+                            <div class="stat-box-sub">Salidas inversas calculadas desde CEDI</div>
+                        </div>
+                    </div>
+
+                    <!-- SEARCH & QUICK BAR -->
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h2 style="font-size: 16px; font-weight: 800; color: #f8fafc; display:flex; align-items:center; gap:8px;">
+                            <span>🚛 PROGRAMACIÓN MAESTRA DE DESPACHO</span>
+                            <span style="font-size:11px; background:#334155; color:#94a3b8; padding:3px 8px; border-radius:4px; font-weight:600;">CEDI Orizaba / CISAALMA</span>
+                        </h2>
+                        <div style="display:flex; gap:10px;">
+                            <input type="text" id="cockpit-search" placeholder="🔍 Buscar cliente, pedido, ciudad..." 
+                                oninput="filterCockpitTable(this.value)"
+                                style="background:#1e293b; border:1px solid #475569; color:#f8fafc; padding:6px 12px; border-radius:6px; font-size:12px; outline:none; width:260px;">
+                        </div>
+                    </div>
+
+                    <!-- EMBARQUE TABLE / CARDS -->
+                    <div class="embarque-table-container" id="cockpit-rows">
+                        <!-- Populated dynamically by renderCockpitView() -->
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
-    <div class="main-content">
-        <div id="map-view" class="tab-content active">
-            <div id="map"></div>
-        </div>
-
-        <div id="fleet-view" class="tab-content" style="padding: 30px; overflow-y: auto;">
-            <div style="max-width: 1200px; margin: 0 auto;">
-                <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #f8fafc;">🚛 Ocupación de Flota & Despachos</h2>
-                <div class="fleet-grid" style="display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 20px;">
-                    <!-- Populated dynamically -->
-                </div>
-            </div>
-        </div>
-
-        <div id="stats-view" class="tab-content" style="padding: 30px; overflow-y: auto;">
-            <div style="max-width: 1200px; margin: 0 auto;">
-                <h2 style="font-size: 20px; font-weight: 700; margin-bottom: 20px; color: #f8fafc;">📊 Panel de Control Logístico & KPIs</h2>
-                <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; margin-bottom: 30px;">
-                    <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
-                        <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">CARGA TOTAL ASIGNADA</div>
-                        <div id="kpi-weight" style="font-size: 24px; font-weight: 800; color: #3b82f6; margin-top: 5px;">0 t</div>
-                        <div style="font-size: 11px; color: #10b981; margin-top: 4px;">100% de pedidos programados</div>
-                    </div>
-                    <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
-                        <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">TOTAL EMBARQUES</div>
-                        <div id="kpi-trips" style="font-size: 24px; font-weight: 800; color: #10b981; margin-top: 5px;">0</div>
-                        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Despachos independientes</div>
-                    </div>
-                    <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
-                        <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">DISTANCIA TOTAL REDONDA</div>
-                        <div id="kpi-dist" style="font-size: 24px; font-weight: 800; color: #f59e0b; margin-top: 5px;">0 km</div>
-                        <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Rutas carreteras OSRM</div>
-                    </div>
-                    <div style="background: #1e293b; padding: 20px; border-radius: 8px; border: 1px solid #334155;">
-                        <div style="font-size: 12px; color: #94a3b8; font-weight: 600;">COSTO TOTAL ESTIMADO</div>
-                        <div id="kpi-cost" style="font-size: 24px; font-weight: 800; color: #ec4899; margin-top: 5px;">$0 MXN</div>
-                        <div style="font-size: 11px; color: #10b981; margin-top: 4px;">Ahorro de fletes falsos incluido</div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
+    <!-- TOAST NOTIFICATION -->
     <div id="toast-msg" class="toast-notify"></div>
 
     <script>
@@ -573,6 +806,7 @@
         const GEOLOOKUP = __GEOLOOKUP_JSON_PLACEHOLDER__;
         
         let currentPlanId = 'plan1';
+        let currentViewMode = 'cockpit'; // 'cockpit', 'split', 'map'
         let activeRoutes = plans.plan1.routes;
         let activeCategoryFilter = 'all';
         let routeVisibility = {};
@@ -616,6 +850,42 @@
 
         let routeLayers = [];
 
+        // ==========================================
+        // VIEW SWITCHING (COCKPIT / SPLIT / MAP)
+        // ==========================================
+        function switchViewMode(mode) {
+            currentViewMode = mode;
+            document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
+            
+            const btn = document.getElementById(`btn-view-${mode}`);
+            if (btn) btn.classList.add('active');
+
+            const sidebar = document.getElementById('sidebar');
+            const mapContainer = document.getElementById('map-container');
+            const cockpitView = document.getElementById('cockpit-view');
+
+            if (mode === 'cockpit') {
+                sidebar.style.display = 'none';
+                mapContainer.style.display = 'none';
+                cockpitView.style.display = 'block';
+            } else if (mode === 'split') {
+                sidebar.style.display = 'flex';
+                sidebar.style.width = '390px';
+                mapContainer.style.display = 'block';
+                cockpitView.style.display = 'none';
+                setTimeout(() => map.invalidateSize(), 50);
+            } else { // 'map'
+                sidebar.style.display = 'flex';
+                sidebar.style.width = '390px';
+                mapContainer.style.display = 'block';
+                cockpitView.style.display = 'none';
+                setTimeout(() => map.invalidateSize(), 50);
+            }
+        }
+
+        // ==========================================
+        // MAP RENDERING
+        // ==========================================
         function renderMapRoutes() {
             routeLayers.forEach(rl => {
                 map.removeLayer(rl.polyline);
@@ -746,7 +1016,6 @@
                 }
             }
             renderSidebar();
-            updateKPIs();
         }
 
         function toggleAllFilters(isChecked) {
@@ -771,7 +1040,6 @@
                 }
             });
             renderSidebar();
-            updateKPIs();
         }
 
         function filterByVehicleCategory(category) {
@@ -800,7 +1068,6 @@
                 }
             });
             renderSidebar();
-            updateKPIs();
         }
 
         function renderSidebar() {
@@ -916,28 +1183,6 @@
             }
         }
 
-        function switchTab(tabId) {
-            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-            
-            document.getElementById(tabId).classList.add('active');
-            const buttons = document.querySelectorAll('.tab-btn');
-            if (tabId === 'map-view') {
-                buttons[0].classList.add('active');
-                setTimeout(() => map.invalidateSize(), 50);
-                document.getElementById('filter-sidebar-panel').style.display = 'block';
-                document.getElementById('route-list').style.display = 'block';
-            } else if (tabId === 'fleet-view') {
-                buttons[1].classList.add('active');
-                document.getElementById('filter-sidebar-panel').style.display = 'none';
-                document.getElementById('route-list').style.display = 'none';
-            } else {
-                buttons[2].classList.add('active');
-                document.getElementById('filter-sidebar-panel').style.display = 'none';
-                document.getElementById('route-list').style.display = 'none';
-            }
-        }
-
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const toggleBtn = document.getElementById('sidebar-toggle');
@@ -946,61 +1191,166 @@
             setTimeout(() => map.invalidateSize(), 320);
         }
 
-        function renderFleetView() {
-            const container = document.querySelector('.fleet-grid');
+        // ==========================================
+        // COCKPIT / SPREADSHEET GRID VIEW RENDERING
+        // ==========================================
+        function renderCockpitView() {
+            const plan = plans[currentPlanId];
+            const container = document.getElementById('cockpit-rows');
             container.innerHTML = '';
 
-            activeRoutes.forEach(r => {
+            document.getElementById('cockpit-weight').innerText = `${(plan.total_weight/1000).toFixed(2)} t`;
+            document.getElementById('cockpit-trips').innerText = `${plan.total_trips} Fletes`;
+
+            plan.routes.forEach((r, rIdx) => {
                 const maxCap = r.type === 'Tracto' ? 30000 : (r.type === 'Torton' ? 18000 : (r.type === 'Camioneta 7t' ? 7000 : 4000));
                 const util = Math.min(100, Math.round((r.load / maxCap) * 100));
-                
+                const utilColor = util >= 90 ? '#10b981' : (util >= 75 ? '#3b82f6' : '#f59e0b');
+
+                const drawerId = `drawer_${rIdx}`;
+
+                let ordersTableRows = '';
+                r.stops.forEach(s => {
+                    s.jobs.forEach(j => {
+                        const ex = j.excel_info || {};
+                        ordersTableRows += `
+                            <tr>
+                                <td><strong style="color:#60a5fa;">${ex.pedido || j.id}</strong></td>
+                                <td><span style="background:#1e3a8a; padding:2px 6px; border-radius:4px; font-weight:700; font-size:10px;">Parada ${s.seq}</span></td>
+                                <td><strong>${ex.nombre || 'Cliente'}</strong><br><span style="color:#94a3b8; font-size:10px;">Cód: ${ex.cliente || ''}</span></td>
+                                <td>${ex.direccion || ''}, ${ex.poblacion || s.city}, ${ex.estado || s.state}</td>
+                                <td><strong style="color:#f8fafc;">${Math.round(j.demand).toLocaleString()} kg</strong></td>
+                                <td><span style="color:#38bdf8; font-weight:600;">${s.eta}</span></td>
+                                <td><span style="color:#eab308; font-weight:600;">${ex.agente || s.cita || 'Sin cita'}</span></td>
+                            </tr>
+                        `;
+                    });
+                });
+
                 const card = document.createElement('div');
-                card.style.background = '#1e293b';
-                card.style.border = '1px solid #334155';
-                card.style.borderRadius = '8px';
-                card.style.padding = '16px';
-                
+                card.className = 'embarque-row-card';
+                card.style.setProperty('--emb-color', r.color);
+
                 card.innerHTML = `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                        <span style="font-weight:700; font-size:14px; color:#f8fafc;">${r.emb_id} (${r.vehicle})</span>
-                        <span style="font-size:11px; background:#0f172a; padding:3px 8px; border-radius:4px; color:#60a5fa; font-weight:600;">${r.type}</span>
+                    <div class="embarque-main-bar" onclick="toggleOrdersDrawer('${drawerId}')">
+                        <div class="emb-col-id">
+                            <span class="emb-badge-id">${r.emb_id}</span>
+                            <div>
+                                <div class="emb-title-text">${r.vehicle} &bull; ${r.type.toUpperCase()}</div>
+                                <div class="emb-corridor-text">📍 ${r.corridor} &bull; <em>${r.modalidad}</em></div>
+                            </div>
+                        </div>
+
+                        <div class="emb-col-capacity">
+                            <div style="display:flex; justify-content:space-between; font-size:11.5px;">
+                                <span>Carga: <strong>${(r.load/1000).toFixed(2)}t</strong> / ${(maxCap/1000).toFixed(0)}t</span>
+                                <strong style="color:${utilColor};">${util}%</strong>
+                            </div>
+                            <div class="capacity-bar-bg">
+                                <div class="capacity-bar-fill" style="background:${utilColor}; width:${util}%;"></div>
+                            </div>
+                        </div>
+
+                        <div class="emb-col-dispatch">
+                            <div>⏰ <strong>Salida CEDI:</strong> <span style="color:#60a5fa;">${r.departure}</span></div>
+                            <div>🏁 <strong>1ra Entrega:</strong> <span style="color:#38bdf8;">${r.stops[0].eta}</span></div>
+                        </div>
+
+                        <div class="emb-col-actions" onclick="event.stopPropagation()">
+                            <button class="btn-emb-action btn-emb-whatsapp" onclick="copyWhatsAppDispatch('${r.emb_id}')">
+                                <span>📲 WhatsApp Chofer</span>
+                            </button>
+                            <button class="btn-emb-action" onclick="viewTripOnMap('${r.emb_id}')">
+                                <span>🗺️ Ver en Mapa</span>
+                            </button>
+                            <button class="btn-emb-action" onclick="toggleOrdersDrawer('${drawerId}')">
+                                <span id="toggle-icon-${drawerId}">🔽 ${r.orders_count} Pedidos</span>
+                            </button>
+                        </div>
                     </div>
-                    <div style="font-size:12px; color:#94a3b8; margin-bottom:12px;"><strong>Corredor:</strong> ${r.corridor}</div>
-                    <div style="display:flex; justify-content:space-between; font-size:11px; margin-bottom:4px; color:#cbd5e1;">
-                        <span>Ocupación: ${(r.load/1000).toFixed(2)}t / ${(maxCap/1000).toFixed(0)}t</span>
-                        <span style="font-weight:700; color:${util > 90 ? '#10b981' : '#f59e0b'};">${util}%</span>
-                    </div>
-                    <div style="background:#0f172a; height:8px; border-radius:4px; overflow:hidden;">
-                        <div style="background:${r.color}; width:${util}%; height:100%;"></div>
-                    </div>
-                    <div style="display:flex; justify-content:space-between; margin-top:12px; font-size:11px; color:#94a3b8; border-top:1px solid rgba(255,255,255,0.05); padding-top:8px;">
-                        <span>📍 ${r.stops.length} Paradas (${r.orders_count} Pedidos)</span>
-                        <span style="color:#10b981; font-weight:600;">$${Math.round(r.cost).toLocaleString()} MXN</span>
+
+                    <div class="embarque-orders-drawer" id="${drawerId}">
+                        <table class="orders-table">
+                            <thead>
+                                <tr>
+                                    <th>Pedido SAP</th>
+                                    <th>Parada</th>
+                                    <th>Cliente / Razón Social</th>
+                                    <th>Dirección de Entrega</th>
+                                    <th>Kilos</th>
+                                    <th>ETA Llegada</th>
+                                    <th>Cita / Instrucciones Agente</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${ordersTableRows}
+                            </tbody>
+                        </table>
                     </div>
                 `;
+
                 container.appendChild(card);
             });
         }
 
-        function updateKPIs() {
-            let totalWeight = 0;
-            let totalDist = 0;
-            let totalCost = 0;
-            let totalTrips = 0;
+        function toggleOrdersDrawer(drawerId) {
+            const drawer = document.getElementById(drawerId);
+            const isHidden = drawer.style.display === 'none' || !drawer.style.display;
+            drawer.style.display = isHidden ? 'block' : 'none';
+        }
 
-            routeLayers.forEach(rl => {
-                if (map.hasLayer(rl.polyline)) {
-                    totalWeight += rl.load;
-                    totalDist += rl.distance;
-                    totalCost += rl.cost;
-                    totalTrips++;
+        function filterCockpitTable(query) {
+            const q = query.toUpperCase().trim();
+            const cards = document.querySelectorAll('.embarque-row-card');
+            cards.forEach(c => {
+                const text = c.innerText.toUpperCase();
+                c.style.display = text.includes(q) ? 'block' : 'none';
+            });
+        }
+
+        function viewTripOnMap(embId) {
+            switchViewMode('split');
+            const rl = routeLayers.find(l => l.emb_id === embId);
+            if (rl) {
+                if (rl.stops.length === 1) {
+                    map.setView([rl.stops[0].lat, rl.stops[0].lng], 9);
+                } else {
+                    const stopCoords = rl.stops.map(s => [s.lat, s.lng]);
+                    map.fitBounds(L.latLngBounds(stopCoords), {padding: [80, 80]});
                 }
+                routeLayers.forEach(layer => layer.markers.forEach(m => m.setOpacity(0.25)));
+                rl.markers.forEach(m => m.setOpacity(1.0));
+            }
+        }
+
+        function copyWhatsAppDispatch(embId) {
+            const plan = plans[currentPlanId];
+            const r = plan.routes.find(route => route.emb_id === embId);
+            if (!r) return;
+
+            let text = `🚛 *HOJA DE DESPACHO - CALIDAD BUENO (CISAALMA)*\n`;
+            text += `📦 *Embarque:* ${r.emb_id} (${r.type})\n`;
+            text += `📍 *Corredor:* ${r.corridor}\n`;
+            text += `⚖️ *Carga Total:* ${(r.load/1000).toFixed(2)} t (${r.orders_count} pedidos)\n`;
+            text += `⏰ *Salida CEDI Orizaba:* ${r.departure}\n\n`;
+            text += `📋 *ITINERARIO DE ENTREGAS:*\n`;
+
+            r.stops.forEach(s => {
+                text += `\n📍 *Parada ${s.seq} - ${s.city}* (${(s.load/1000).toFixed(1)}t)\n`;
+                text += `  ⏰ ETA Estimado: ${s.eta}\n`;
+                if (s.cita) text += `  ⚠️ CITA: ${s.cita}\n`;
+                s.jobs.forEach(j => {
+                    const ex = j.excel_info || {};
+                    text += `  • Pedido ${ex.pedido || j.id}: ${ex.nombre || 'Cliente'} (${Math.round(j.demand)} kg)\n`;
+                    text += `    Dir: ${ex.direccion || ''}, ${ex.poblacion || ''}\n`;
+                });
             });
 
-            document.getElementById('kpi-weight').innerText = `${(totalWeight/1000).toFixed(2)} t`;
-            document.getElementById('kpi-trips').innerText = totalTrips;
-            document.getElementById('kpi-dist').innerText = `${Math.round(totalDist).toLocaleString()} km`;
-            document.getElementById('kpi-cost').innerText = `$${Math.round(totalCost).toLocaleString()} MXN`;
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(`📲 ¡Hoja de despacho de ${r.emb_id} copiada al portapapeles para WhatsApp!`);
+            }).catch(err => {
+                console.error("Error al copiar:", err);
+            });
         }
 
         function changePlan(planId) {
@@ -1015,8 +1365,7 @@
             
             renderMapRoutes();
             renderSidebar();
-            renderFleetView();
-            updateKPIs();
+            renderCockpitView();
         }
 
         // ==========================================
@@ -1462,6 +1811,7 @@
 
         // Initialize view
         changePlan('plan1');
+        switchViewMode('cockpit');
     </script>
 </body>
 </html>
