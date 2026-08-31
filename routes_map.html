@@ -442,6 +442,31 @@
             margin-top: 3px;
         }
 
+        .plan-pill-btn {
+            background: #1e293b;
+            border: 1.5px solid #334155;
+            color: #94a3b8;
+            padding: 12px 16px;
+            border-radius: 10px;
+            cursor: pointer;
+            text-align: left;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .plan-pill-btn:hover {
+            border-color: #60a5fa;
+            color: #f8fafc;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .plan-pill-btn.active {
+            background: rgba(30, 58, 138, 0.4);
+            border-color: #3b82f6;
+            color: #ffffff;
+            box-shadow: 0 0 0 1px #3b82f6, 0 4px 12px rgba(59, 130, 246, 0.25);
+        }
+
         /* Embarque Grid Cards */
         .embarque-table-container {
             display: flex;
@@ -766,6 +791,31 @@
             <!-- COCKPIT / SPREADSHEET VIEW -->
             <div id="cockpit-view">
                 <div style="max-width: 1400px; margin: 0 auto;">
+                    <!-- PLAN SELECTION PILLS (INTERACTIVE TABS) -->
+                    <div class="cockpit-plan-pills" style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
+                        <button class="plan-pill-btn active" id="pill-plan1" onclick="changePlan('plan1')" style="flex:1; min-width:280px;">
+                            <div style="font-size:13px; font-weight:800; color:#60a5fa; display:flex; justify-content:space-between;">
+                                <span>🚛 PLAN 1: Máxima Consolidación</span>
+                                <span style="background:#1e3a8a; padding:2px 8px; border-radius:4px; font-size:11px;">13 Fletes</span>
+                            </div>
+                            <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">6 Tráilers FTL + 7 Tortons &bull; <strong>$282,838 MXN</strong></div>
+                        </button>
+                        <button class="plan-pill-btn" id="pill-plan2" onclick="changePlan('plan2')" style="flex:1; min-width:280px;">
+                            <div style="font-size:13px; font-weight:800; color:#34d399; display:flex; justify-content:space-between;">
+                                <span>⚖️ PLAN 2: Flota Balanceada</span>
+                                <span style="background:#064e3b; padding:2px 8px; border-radius:4px; font-size:11px;">14 Fletes</span>
+                            </div>
+                            <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">6 Tráilers + 7 Tortons + 1 Camioneta &bull; <strong>$289,680 MXN</strong></div>
+                        </button>
+                        <button class="plan-pill-btn" id="pill-plan3" onclick="changePlan('plan3')" style="flex:1; min-width:280px;">
+                            <div style="font-size:13px; font-weight:800; color:#fb923c; display:flex; justify-content:space-between;">
+                                <span>⚡ PLAN 3: Nivel de Servicio & Citas</span>
+                                <span style="background:#7c2d12; padding:2px 8px; border-radius:4px; font-size:11px;">15 Fletes</span>
+                            </div>
+                            <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">6 Tráilers + 6 Tortons + 3 Camionetas &bull; <strong>$289,758 MXN</strong></div>
+                        </button>
+                    </div>
+
                     <!-- SUMMARY STATS -->
                     <div class="cockpit-header-stats">
                         <div class="stat-box">
@@ -776,12 +826,12 @@
                         <div class="stat-box">
                             <div class="stat-box-title">TOTAL EMBARQUES / CAMIONES</div>
                             <div class="stat-box-val" id="cockpit-trips" style="color:#10b981;">13 Fletes</div>
-                            <div class="stat-box-sub">6 Tráilers FTL + 7 Tortons</div>
+                            <div class="stat-box-sub" id="cockpit-fleet-desc">6 Tráilers FTL + 7 Tortons</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-box-title">AHORRO EN FLETES FALSOS</div>
-                            <div class="stat-box-val" id="cockpit-savings" style="color:#f59e0b;">$14,500 MXN</div>
-                            <div class="stat-box-sub">Mérida en Torton (10.09t) vs Tráiler</div>
+                            <div class="stat-box-title">COSTO GLOBAL ESTIMADO</div>
+                            <div class="stat-box-val" id="cockpit-cost" style="color:#f59e0b;">$282,838 MXN</div>
+                            <div class="stat-box-sub" id="cockpit-savings">💡 Incluye ahorro de $14,500 en Mérida</div>
                         </div>
                         <div class="stat-box">
                             <div class="stat-box-title">CUMPLIMIENTO DE CITAS SAP</div>
@@ -791,15 +841,15 @@
                     </div>
 
                     <!-- SEARCH & QUICK BAR -->
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                        <h2 style="font-size: 16px; font-weight: 800; color: #f8fafc; display:flex; align-items:center; gap:8px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; flex-wrap:wrap; gap:10px;">
+                        <h2 style="font-size: 15px; font-weight: 800; color: #f8fafc; display:flex; align-items:center; gap:8px;">
                             <span>🚛 PROGRAMACIÓN MAESTRA DE DESPACHO</span>
-                            <span style="font-size:11px; background:#334155; color:#94a3b8; padding:3px 8px; border-radius:4px; font-weight:600;">CEDI Orizaba / CISAALMA</span>
+                            <span id="active-plan-badge" style="font-size:11px; background:#1e3a8a; color:#93c5fd; padding:3px 8px; border-radius:4px; font-weight:700;">PLAN 1 (13 EMBARQUES)</span>
                         </h2>
                         <div style="display:flex; gap:10px;">
                             <input type="text" id="cockpit-search" placeholder="🔍 Buscar cliente, pedido, ciudad..." 
                                 oninput="filterCockpitTable(this.value)"
-                                style="background:#1e293b; border:1px solid #475569; color:#f8fafc; padding:6px 12px; border-radius:6px; font-size:12px; outline:none; width:260px;">
+                                style="background:#1e293b; border:1px solid #475569; color:#f8fafc; padding:7px 12px; border-radius:6px; font-size:12px; outline:none; width:280px;">
                         </div>
                     </div>
 
@@ -1202,6 +1252,25 @@
                 listContainer.appendChild(card);
             });
 
+            let countTracto = 0;
+            let countTorton = 0;
+            let countCam = 0;
+            routeLayers.forEach(rl => {
+                if (rl.type === 'Tracto') countTracto++;
+                else if (rl.type === 'Torton') countTorton++;
+                else countCam++;
+            });
+
+            const btnAll = document.getElementById('btn-cat-all');
+            const btnTracto = document.getElementById('btn-cat-Tracto');
+            const btnTorton = document.getElementById('btn-cat-Torton');
+            const btnCam = document.getElementById('btn-cat-Camioneta');
+
+            if (btnAll) btnAll.innerText = `Todos (${routeLayers.length})`;
+            if (btnTracto) btnTracto.innerText = `Tractos (${countTracto})`;
+            if (btnTorton) btnTorton.innerText = `Tortones (${countTorton})`;
+            if (btnCam) btnCam.innerText = `Camionetas (${countCam})`;
+
             document.getElementById('total-trips-count').innerText = totalVisibleTrips;
         }
 
@@ -1237,6 +1306,29 @@
 
             document.getElementById('cockpit-weight').innerText = `${(plan.total_weight/1000).toFixed(2)} t`;
             document.getElementById('cockpit-trips').innerText = `${plan.total_trips} Fletes`;
+
+            let fleetDesc = '6 Tráilers FTL + 7 Tortons';
+            let badgeText = `PLAN 1 (${plan.total_trips} EMBARQUES)`;
+            if (currentPlanId === 'plan2') {
+                fleetDesc = '6 Tráilers FTL + 7 Tortons + 1 Camioneta 7t';
+                badgeText = `PLAN 2 (${plan.total_trips} EMBARQUES)`;
+            } else if (currentPlanId === 'plan3') {
+                fleetDesc = '6 Tráilers FTL + 6 Tortons + 3 Camionetas (4t/7t)';
+                badgeText = `PLAN 3 (${plan.total_trips} EMBARQUES)`;
+            }
+            
+            const fleetDescElem = document.getElementById('cockpit-fleet-desc');
+            if (fleetDescElem) fleetDescElem.innerText = fleetDesc;
+
+            const costElem = document.getElementById('cockpit-cost');
+            if (costElem) costElem.innerText = `$${Math.round(plan.total_cost).toLocaleString()} MXN`;
+
+            const activePlanBadge = document.getElementById('active-plan-badge');
+            if (activePlanBadge) {
+                activePlanBadge.innerText = badgeText;
+                activePlanBadge.style.backgroundColor = currentPlanId === 'plan1' ? '#1e3a8a' : (currentPlanId === 'plan2' ? '#064e3b' : '#7c2d12');
+                activePlanBadge.style.color = currentPlanId === 'plan1' ? '#93c5fd' : (currentPlanId === 'plan2' ? '#a7f3d0' : '#fdba74');
+            }
 
             plan.routes.forEach((r, rIdx) => {
                 const maxCap = r.type === 'Tracto' ? 30000 : (r.type === 'Torton' ? 18000 : (r.type === 'Camioneta 7t' ? 7000 : 4000));
@@ -1386,6 +1478,17 @@
             activeRoutes = plans[planId].routes;
             activeCategoryFilter = 'all';
             routeVisibility = {};
+
+            // Synchronize select dropdown
+            const planSelect = document.getElementById('plan-select');
+            if (planSelect && planSelect.value !== planId) {
+                planSelect.value = planId;
+            }
+
+            // Synchronize cockpit pill buttons
+            document.querySelectorAll('.plan-pill-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `pill-${planId}`);
+            });
 
             document.querySelectorAll('.cat-filter-btn').forEach(btn => btn.classList.remove('active'));
             const allBtn = document.getElementById('btn-cat-all');
