@@ -2788,6 +2788,11 @@
                     const idxAge = header.findIndex(h => h && (h.includes('AGENTE') || h.includes('CITA')));
                     const idxObs = header.findIndex(h => h && h.includes('OBSERVACIONES'));
                     const idxRuta = header.findIndex(h => h && h.includes('RUTA'));
+                    const idxLat = header.findIndex(h => h && (h.includes('LATITUD') || h === 'LAT' || h.includes('LATITUDE')));
+                    const idxLng = header.findIndex(h => h && (h.includes('LONGITUD') || h === 'LNG' || h === 'LON' || h.includes('LONGITUDE')));
+                    const idxCorredor = header.findIndex(h => h && (h.includes('CORREDOR') || h.includes('CLUSTER')));
+                    const idxCitaHora = header.findIndex(h => h && (h.includes('HORA_CITA') || h.includes('HORA CITA')));
+                    const idxCitaFecha = header.findIndex(h => h && (h.includes('FECHA_CITA') || h.includes('FECHA CITA')));
 
                     const uploadedJobs = [];
                     for (let i = headerRowIndex + 1; i < targetRows.length; i++) {
@@ -2821,18 +2826,34 @@
                         const agente = r[idxAge !== -1 ? idxAge : 12] || '';
                         const obs = r[idxObs !== -1 ? idxObs : 20] || '';
                         const ruta = r[idxRuta !== -1 ? idxRuta : 21] || '';
+                        const corredor = idxCorredor !== -1 ? r[idxCorredor] : '';
+                        const horaCita = idxCitaHora !== -1 ? r[idxCitaHora] : '';
+                        const fechaCita = idxCitaFecha !== -1 ? r[idxCitaFecha] : '';
 
                         const key1 = String(cliente).trim().toUpperCase();
                         const key2 = `${String(nombre).trim().toUpperCase()}_${String(poblacion).trim().toUpperCase()}`;
                         const key3 = `${String(poblacion).trim().toUpperCase()}_${String(estado).trim().toUpperCase()}`;
                         const key4 = String(poblacion).trim().toUpperCase();
+                        const key5 = String(estado).trim().toUpperCase();
 
-                        let match = (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key1] || 
-                                    (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key2] || 
-                                    (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key3] || 
-                                    (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key4];
-                        let lat = match ? match.lat : (depot.lat + 0.5);
-                        let lng = match ? match.lng : (depot.lng + 0.5);
+                        let lat = null, lng = null;
+                        if (idxLat !== -1 && idxLng !== -1) {
+                            const rawLat = parseFloat(r[idxLat]);
+                            const rawLng = parseFloat(r[idxLng]);
+                            if (!isNaN(rawLat) && !isNaN(rawLng) && Math.abs(rawLat) > 0 && Math.abs(rawLng) > 0) {
+                                lat = rawLat;
+                                lng = rawLng;
+                            }
+                        }
+                        if (lat === null || lng === null) {
+                            let match = (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key1] || 
+                                        (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key2] || 
+                                        (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key3] || 
+                                        (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key4] ||
+                                        (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key5];
+                            lat = match ? match.lat : (depot.lat + 0.5);
+                            lng = match ? match.lng : (depot.lng + 0.5);
+                        }
 
                         uploadedJobs.push({
                             id: String(pedIdStr),
@@ -2849,6 +2870,9 @@
                                 agente: agente,
                                 observaciones: obs,
                                 ruta: ruta,
+                                corredor_logistico: corredor,
+                                hora_cita: horaCita,
+                                fecha_cita: fechaCita,
                                 importe_total: 50000
                             }
                         });
@@ -2858,6 +2882,10 @@
                         const newCalculatedPlans = solveHybridLogisticsPlansJS(uploadedJobs);
                         if (newCalculatedPlans && newCalculatedPlans.plan1) {
                             plans = newCalculatedPlans;
+                            const jobSubEl = document.getElementById('stat-total-jobs-sub');
+                            if (jobSubEl) {
+                                jobSubEl.innerText = `✅ 100% de pedidos asignados (${uploadedJobs.length} pedidos)`;
+                            }
                             changePlan(currentPlanId);
                             showToast(`✅ ¡Archivo ${file.name} procesado con éxito! (${uploadedJobs.length} pedidos cargados y optimizados).`);
                         }
@@ -2891,6 +2919,7 @@
                 VERACRUZ_CENTRO_NORTE: [],
                 SIERRA_POZA_RICA: []
             };
+            const dynamic_groups = {};
 
             allJobs.forEach(j => {
                 const ex = j.excel_info || {};
@@ -2900,7 +2929,29 @@
                 const edo = String(ex.estado || '').trim().toUpperCase();
                 const ped = String(ex.pedido || '').trim();
                 const agente = String(ex.agente || '').trim().toUpperCase();
+                const corr = String(ex.corredor_logistico || ex.corredor || ex.ruta || '').trim().toUpperCase();
 
+                // 1. If explicit Corredor Logístico is present in file (e.g. PRUEBA_Plan_Corredores_Troncales)
+                if (corr) {
+                    if (corr.includes("TABASCO")) { groups.TABASCO_FTL.push(j); return; }
+                    if (corr.includes("SUCHIATE") || corr.includes("CD. HIDALGO") || corr.includes("GUADALUPE")) { groups.GUADALUPE_FTL.push(j); return; }
+                    if (corr.includes("TAPACHULA")) { groups.MAYORISTA_TAPACHULA_FTL.push(j); return; }
+                    if (corr.includes("TUXTLA 1") || corr.includes("TUXTLA GUTIÉRREZ 1") || corr.includes("TUXTLA GUTIERREZ 1")) { groups.MAYORISTA_TUXTLA_1_FTL.push(j); return; }
+                    if (corr.includes("TUXTLA 2") || corr.includes("TUXTLA GUTIÉRREZ 2") || corr.includes("TUXTLA GUTIERREZ 2")) { groups.MAYORISTA_TUXTLA_2_FTL.push(j); return; }
+                    if (corr.includes("PUEBLA DIRECTO") || corr.includes("RIVERA")) { groups.RIVERA_FTL.push(j); return; }
+                    if (corr.includes("PENÍNSULA") || corr.includes("PENINSULA") || corr.includes("MERIDA") || corr.includes("KANASIN")) { groups.YUCATAN_TORTON.push(j); return; }
+                    if (corr.includes("COATZA") || corr.includes("VERACRUZ SUR")) {
+                        if (corr.includes("SABADO") || corr.includes("SÁBADO") || agente.includes("22/08")) groups.COATZA_SABADO.push(j);
+                        else groups.COATZA_MIERCOLES.push(j);
+                        return;
+                    }
+                    if (corr.includes("VALLES CENTRALES") || corr.includes("VALLES")) { groups.OAXACA_VALLES.push(j); return; }
+                    if (corr.includes("ISTMO")) { groups.OAXACA_ISTMO.push(j); return; }
+                    if (corr.includes("COSTA CENTRO-NORTE") || corr.includes("SAN RAFAEL")) { groups.VERACRUZ_CENTRO_NORTE.push(j); return; }
+                    if (corr.includes("SIERRA") || corr.includes("POZA RICA") || corr.includes("VERACRUZ NORTE")) { groups.SIERRA_POZA_RICA.push(j); return; }
+                }
+
+                // 2. Known Strategic Accounts from historical baseline
                 if (client_nom.includes("MONTERREY") || (ex.ruta || '').toUpperCase().includes("TABASCO")) {
                     if (j.demand > 3000) { groups.TABASCO_FTL.push(j); return; }
                 }
@@ -2920,10 +2971,10 @@
                     }
                     return;
                 }
-                if (client_nom.includes("PANADERO") || client_code === "B00200" || edo.includes("YUCAT")) {
+                if (client_nom.includes("PANADERO") || client_code === "B00200") {
                     groups.YUCATAN_TORTON.push(j); return;
                 }
-                if (client_nom.includes("PERFUMERIA") || client_code === "B00035" || pob.includes("COATZA") || pob.includes("JALTIPAN")) {
+                if (client_nom.includes("PERFUMERIA") || client_code === "B00035") {
                     if (agente.includes("22/08") || ped.includes("450461") || ped.includes("450473")) {
                         groups.COATZA_SABADO.push(j);
                     } else {
@@ -2931,16 +2982,57 @@
                     }
                     return;
                 }
-                if (client_nom.includes("GUVIER") || client_nom.includes("CONCHA") || pob.includes("MIAHUAT") || pob.includes("OCOTLAN")) {
+                if (client_nom.includes("GUVIER") || client_nom.includes("CONCHA")) {
                     groups.OAXACA_VALLES.push(j); return;
                 }
-                if (client_nom.includes("TOLEDO") || pob.includes("JUCHIT") || client_code === "B00084") {
+                if (client_nom.includes("TOLEDO") || client_code === "B00084") {
                     groups.OAXACA_ISTMO.push(j); return;
                 }
-                if (client_nom.includes("MEUNIER") || client_nom.includes("ROSA MARIA") || client_nom.includes("JORGE ANDRES") || pob.includes("SAN RAFAEL") || pob.includes("MARTINEZ")) {
+                if (client_nom.includes("MEUNIER") || client_nom.includes("ROSA MARIA") || client_nom.includes("JORGE ANDRES")) {
                     groups.VERACRUZ_CENTRO_NORTE.push(j); return;
                 }
-                groups.SIERRA_POZA_RICA.push(j);
+
+                // 3. Geographic Routing Fallback for Any New Day of Work / Unknown Accounts
+                if (edo.includes("YUCAT") || edo.includes("QUINTANA") || edo.includes("CAMPECHE") || pob.includes("MERIDA") || pob.includes("KANASIN")) {
+                    groups.YUCATAN_TORTON.push(j); return;
+                }
+                if (pob.includes("COATZA") || pob.includes("MINATITLAN") || pob.includes("JALTIPAN") || pob.includes("ACAYUCAN") || pob.includes("NANCHITAL")) {
+                    if (agente.includes("22/08") || agente.includes("SAB")) groups.COATZA_SABADO.push(j);
+                    else groups.COATZA_MIERCOLES.push(j);
+                    return;
+                }
+                if (pob.includes("MIAHUAT") || pob.includes("OCOTLAN") || (edo.includes("OAXACA") && !pob.includes("JUCHIT") && !pob.includes("SALINA") && !pob.includes("TEHUANTEPEC") && !pob.includes("IXTEPEC"))) {
+                    groups.OAXACA_VALLES.push(j); return;
+                }
+                if (pob.includes("JUCHIT") || pob.includes("SALINA") || pob.includes("TEHUANTEPEC") || pob.includes("IXTEPEC") || pob.includes("MATIAS ROMERO")) {
+                    groups.OAXACA_ISTMO.push(j); return;
+                }
+                if (pob.includes("SAN RAFAEL") || pob.includes("MARTINEZ") || pob.includes("MISANTLA") || pob.includes("TLAPACOYAN") || pob.includes("VEGA") || pob.includes("CARDEL") || pob.includes("VERACRUZ")) {
+                    groups.VERACRUZ_CENTRO_NORTE.push(j); return;
+                }
+                if (pob.includes("VILLAHERMOSA") || edo.includes("TABASCO")) {
+                    groups.TABASCO_FTL.push(j); return;
+                }
+                if (pob.includes("SUCHIATE") || pob.includes("HIDALGO")) {
+                    groups.GUADALUPE_FTL.push(j); return;
+                }
+                if (pob.includes("TAPACHULA") || pob.includes("HUIXTLA") || pob.includes("MAPASTEPEC")) {
+                    groups.MAYORISTA_TAPACHULA_FTL.push(j); return;
+                }
+                if (pob.includes("TUXTLA") || pob.includes("CHIAPA") || pob.includes("SAN CRISTOBAL") || edo.includes("CHIAPAS")) {
+                    groups.MAYORISTA_TUXTLA_1_FTL.push(j); return;
+                }
+                if (pob.includes("PUEBLA") || pob.includes("TEHUACAN") || pob.includes("CHOLULA") || (edo.includes("PUEBLA") && (pob.includes("PUEBLA") || j.demand > 10000))) {
+                    groups.RIVERA_FTL.push(j); return;
+                }
+                if (pob.includes("POZA") || pob.includes("PAPANTLA") || pob.includes("TUXPAN") || pob.includes("XICOTEPEC") || pob.includes("CARRANZA") || edo.includes("PUEBLA")) {
+                    groups.SIERRA_POZA_RICA.push(j); return;
+                }
+
+                // 4. Dynamic Catch-All for Other National Regions (e.g. CDMX, Bajío, Norte, etc.)
+                const dynKey = edo || pob || 'Destinos Foráneos';
+                if (!dynamic_groups[dynKey]) dynamic_groups[dynKey] = [];
+                dynamic_groups[dynKey].push(j);
             });
 
             function generatePlanStructureJS(planType) {
@@ -2958,6 +3050,28 @@
                     { modalidad: "Consolidado Istmo de Tehuantepec (Juchitán)", corridor: "Oaxaca (Istmo)", color: "#f97316", speed_kmh: 50, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.OAXACA_ISTMO, departure_str: "21/Ago 04:00 AM" },
                     { modalidad: "Consolidado Costa Centro-Norte (San Rafael/Mtz)", corridor: "Veracruz Costa Centro-Norte", color: "#14b8a6", speed_kmh: 55, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.VERACRUZ_CENTRO_NORTE, departure_str: "21/Ago 05:30 AM" }
                 ];
+
+                // Append dynamic extra corridors if any were discovered
+                Object.keys(dynamic_groups).forEach(dKey => {
+                    const dJobs = dynamic_groups[dKey];
+                    if (dJobs.length > 0) {
+                        const dWeight = dJobs.reduce((a, b) => a + b.demand, 0);
+                        const vType = dWeight > 18000 ? "Tracto" : (dWeight > 7000 ? "Torton" : "Camioneta 7t");
+                        const fCost = vType === "Tracto" ? 10000 : (vType === "Torton" ? 6000 : 3500);
+                        const cPerKm = vType === "Tracto" ? 15 : (vType === "Torton" ? 10 : 7);
+                        plan_trips.push({
+                            modalidad: `Consolidado Foráneo (${dKey})`,
+                            corridor: `Ruta Especial ${dKey}`,
+                            color: "#64748b",
+                            speed_kmh: 60,
+                            vehicle_type: vType,
+                            fixed_cost: fCost,
+                            dist_cost_per_km: cPerKm,
+                            jobs: dJobs,
+                            departure_str: "18/Ago 06:00 AM"
+                        });
+                    }
+                });
 
                 const sierra_costa_jobs = groups.SIERRA_POZA_RICA;
                 if (planType === 1) {
@@ -2998,9 +3112,10 @@
               { id: "plan3", num: 3, title: "Plan 3: Nivel de Servicio & Citas (Rutas Capilares y Citas 7:00 AM)" }
             ].forEach(p => {
                 const raw_trips = generatePlanStructureJS(p.num);
+                const active_trips = raw_trips.filter(t => t.jobs && t.jobs.length > 0);
                 const formatted = [];
 
-                raw_trips.forEach((t, tripIdx) => {
+                active_trips.forEach((t, tripIdx) => {
                     const emb_id = `EMB-${String(tripIdx + 1).padStart(2, '0')}`;
                     const locMap = {};
                     t.jobs.forEach(j => {
