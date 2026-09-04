@@ -948,6 +948,65 @@
         }
 
         // ==========================================
+        // HELPERS: FORMATEO INTELIGENTE DE DIRECCIÓN Y TIEMPOS
+        // ==========================================
+        function formatFullAddress(ex, s) {
+            if (!ex) return 'Destino programado';
+            let dir = String(ex.direccion || '').trim();
+            let pob = String(ex.poblacion || (s && s.city) || '').trim();
+            let edo = String(ex.estado || (s && s.state) || '').trim();
+            if (pob === 'Destino') pob = '';
+
+            if (!dir) {
+                if (ex.observaciones) {
+                    dir = ex.observaciones.split('|')[0].trim();
+                } else if (ex.colonia) {
+                    dir = `Col. ${ex.colonia}`;
+                }
+            }
+
+            const parts = [];
+            if (dir) parts.push(dir);
+            if (pob && !dir.toUpperCase().includes(pob.toUpperCase())) parts.push(pob);
+            if (edo && !dir.toUpperCase().includes(edo.toUpperCase()) && (!pob || !pob.toUpperCase().includes(edo.toUpperCase()))) parts.push(edo);
+
+            return parts.length > 0 ? parts.join(', ') : 'Destino programado';
+        }
+
+        function addHoursToDepartureStr(depStr, hoursToAdd) {
+            if (!depStr) return `${Math.round(hoursToAdd)} hrs de viaje`;
+            const months = { "Ene": 0, "Feb": 1, "Mar": 2, "Abr": 3, "May": 4, "Jun": 5, "Jul": 6, "Ago": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dic": 11,
+                             "Jan": 0, "Apr": 3, "Aug": 7, "Dec": 11 };
+            try {
+                const parts = depStr.trim().split(' ');
+                const dateParts = parts[0].split('/');
+                const day = parseInt(dateParts[0]);
+                const mStr = dateParts[1];
+                const month = months[mStr] !== undefined ? months[mStr] : 7;
+                const timeParts = parts[1].split(':');
+                let hours = parseInt(timeParts[0]);
+                const minutes = parseInt(timeParts[1]);
+                const ampm = parts[2].toUpperCase();
+                if (ampm === 'PM' && hours < 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+                
+                const dt = new Date(2026, month, day, hours, minutes);
+                dt.setTime(dt.getTime() + Math.round(hoursToAdd * 3600 * 1000));
+                
+                const resDay = dt.getDate();
+                const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+                const resMonth = monthNames[dt.getMonth()];
+                let resHours = dt.getHours();
+                const resMins = String(dt.getMinutes()).padStart(2, '0');
+                const resAmPm = resHours >= 12 ? 'PM' : 'AM';
+                resHours = resHours % 12 || 12;
+                return `${resDay}/${resMonth} ${String(resHours).padStart(2, '0')}:${resMins} ${resAmPm}`;
+            } catch(e) {
+                return `${Math.round(hoursToAdd)} hrs de viaje`;
+            }
+        }
+
+        // ==========================================
         // MAP RENDERING (SOLO PUNTOS Y CLUSTERS)
         // ==========================================
         function renderMapRoutes() {
@@ -990,7 +1049,7 @@
                                 </div>
                                 <div style="margin-bottom:4px;"><strong>Cliente:</strong> ${ex.cliente || ''} - ${ex.nombre || ''}</div>
                                 <div style="margin-bottom:6px; border-top:1px dashed rgba(255,255,255,0.05); padding-top:6px; line-height:1.3;">
-                                    <strong>Dirección:</strong> ${ex.direccion || ''}, ${ex.poblacion || ''}, ${ex.estado || ''}
+                                    <strong>Dirección:</strong> ${formatFullAddress(ex, s)}
                                 </div>
                                 <div style="margin-bottom:4px; color:#eab308; line-height:1.2;">
                                     <strong>Cita / Instrucciones:</strong><br/>
@@ -1341,15 +1400,20 @@
                 r.stops.forEach(s => {
                     s.jobs.forEach(j => {
                         const ex = j.excel_info || {};
+                        const citaText = ex.agente || s.cita || 'Sin cita';
+                        const hasCita = citaText !== 'Sin cita' && citaText.toUpperCase().includes('CITA');
                         ordersTableRows += `
                             <tr>
                                 <td><strong style="color:#60a5fa;">${ex.pedido || j.id}</strong></td>
                                 <td><span style="background:#1e3a8a; padding:2px 6px; border-radius:4px; font-weight:700; font-size:10px;">Parada ${s.seq}</span></td>
                                 <td><strong>${ex.nombre || 'Cliente'}</strong><br><span style="color:#94a3b8; font-size:10px;">Cód: ${ex.cliente || ''}</span></td>
-                                <td>${ex.direccion || ''}, ${ex.poblacion || s.city}, ${ex.estado || s.state}</td>
+                                <td>${formatFullAddress(ex, s)}</td>
                                 <td><strong style="color:#f8fafc;">${Math.round(j.demand).toLocaleString()} kg</strong></td>
-                                <td><span style="color:#38bdf8; font-weight:600;">${s.eta}</span></td>
-                                <td><span style="color:#eab308; font-weight:600;">${ex.agente || s.cita || 'Sin cita'}</span></td>
+                                <td>
+                                    <span style="color:#38bdf8; font-weight:600;">${s.eta}</span>
+                                    ${hasCita ? '<div style="color:#10b981; font-size:10px; font-weight:700; margin-top:2px;">✓ A tiempo para cita</div>' : ''}
+                                </td>
+                                <td><span style="color:#eab308; font-weight:600;">${citaText}</span></td>
                             </tr>
                         `;
                     });
@@ -1380,8 +1444,8 @@
                         </div>
 
                         <div class="emb-col-dispatch">
-                            <div>⏰ <strong>Salida CEDI:</strong> <span style="color:#60a5fa;">${r.departure}</span></div>
-                            <div>🏁 <strong>1ra Entrega:</strong> <span style="color:#38bdf8;">${r.stops[0].eta}</span></div>
+                            <div>⏰ <strong>Salida CEDI:</strong> <span style="color:#60a5fa; font-weight:700;">${r.departure}</span></div>
+                            <div>🏁 <strong>1ra Entrega:</strong> <span style="color:#38bdf8; font-weight:700;">${r.stops[0].eta}</span> ${r.stops[0].cita && r.stops[0].cita.toUpperCase().includes('CITA') ? '<span style="color:#10b981; font-size:9.5px; font-weight:700; margin-left:4px; background:rgba(16,185,129,0.15); padding:1px 5px; border-radius:4px; border:1px solid rgba(16,185,129,0.3);">✓ CUMPLE CITA</span>' : ''}</div>
                         </div>
 
                         <div class="emb-col-actions" onclick="event.stopPropagation()">
@@ -1462,7 +1526,7 @@
                 s.jobs.forEach(j => {
                     const ex = j.excel_info || {};
                     text += `  • Pedido ${ex.pedido || j.id}: ${ex.nombre || 'Cliente'} (${Math.round(j.demand)} kg)\n`;
-                    text += `    Dir: ${ex.direccion || ''}, ${ex.poblacion || ''}\n`;
+                    text += `    Dir: ${formatFullAddress(ex, s)}\n`;
                 });
             });
 
@@ -1548,9 +1612,9 @@
                             ex.pedido || j.id,
                             ex.cliente || '',
                             ex.nombre || '',
-                            ex.direccion || '',
-                            ex.poblacion || s.city,
-                            ex.estado || s.state,
+                            ex.direccion || formatFullAddress(ex, s),
+                            ex.poblacion || (s.city !== 'Destino' ? s.city : ''),
+                            ex.estado || (s.state !== 'Destino' ? s.state : ''),
                             Math.round(j.demand),
                             Number((r.load / 1000).toFixed(2)),
                             ex.agente || s.cita || 'Sin cita',
@@ -1787,15 +1851,15 @@
 
             function generatePlanStructureJS(planType) {
                 const plan_trips = [
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Tabasco (Villahermosa)", color: "#3b82f6", speed_kmh: 65, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.TABASCO_FTL, departure_str: "18/Ago 10:00 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Suchiate / Cd. Hidalgo)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.GUADALUPE_FTL, departure_str: "21/Ago 06:00 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tapachula)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TAPACHULA_FTL, departure_str: "21/Ago 08:00 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tuxtla Gutiérrez 1)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TUXTLA_1_FTL, departure_str: "21/Ago 08:00 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tuxtla Gutiérrez 2)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TUXTLA_2_FTL, departure_str: "21/Ago 08:00 PM" },
+                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Tabasco (Villahermosa)", color: "#3b82f6", speed_kmh: 65, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.TABASCO_FTL, departure_str: "18/Ago 09:30 PM" },
+                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Suchiate / Cd. Hidalgo)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.GUADALUPE_FTL, departure_str: "21/Ago 02:45 PM" },
+                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tapachula)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TAPACHULA_FTL, departure_str: "21/Ago 03:30 PM" },
+                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tuxtla Gutiérrez 1)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TUXTLA_1_FTL, departure_str: "21/Ago 07:15 PM" },
+                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tuxtla Gutiérrez 2)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TUXTLA_2_FTL, departure_str: "21/Ago 07:15 PM" },
                     { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Puebla Directo (Pq. Ind. 5 de Mayo)", color: "#06b6d4", speed_kmh: 60, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.RIVERA_FTL, departure_str: "21/Ago 06:00 AM" },
                     { modalidad: "Consolidado Península (Kanasín)", corridor: "Península (Mérida)", color: "#ec4899", speed_kmh: 75, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.YUCATAN_TORTON, departure_str: "18/Ago 02:00 PM" },
-                    { modalidad: "Consolidado Coatzacoalcos (Turno Miércoles)", corridor: "Veracruz Sur (Coatzacoalcos)", color: "#6366f1", speed_kmh: 60, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.COATZA_MIERCOLES, departure_str: "19/Ago 02:00 AM" },
-                    { modalidad: "Consolidado Coatzacoalcos (Turno Sábado)", corridor: "Veracruz Sur (Coatzacoalcos)", color: "#6366f1", speed_kmh: 60, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.COATZA_SABADO, departure_str: "22/Ago 02:00 AM" },
+                    { modalidad: "Consolidado Coatzacoalcos (Turno Miércoles)", corridor: "Veracruz Sur (Coatzacoalcos)", color: "#6366f1", speed_kmh: 60, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.COATZA_MIERCOLES, departure_str: "19/Ago 12:30 AM" },
+                    { modalidad: "Consolidado Coatzacoalcos (Turno Sábado)", corridor: "Veracruz Sur (Coatzacoalcos)", color: "#6366f1", speed_kmh: 60, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.COATZA_SABADO, departure_str: "22/Ago 12:30 AM" },
                     { modalidad: "Consolidado Valles Centrales (Miahuatlán/Ocotlán)", corridor: "Oaxaca (Valles Centrales)", color: "#eab308", speed_kmh: 48, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.OAXACA_VALLES, departure_str: "21/Ago 05:00 AM" },
                     { modalidad: "Consolidado Istmo de Tehuantepec (Juchitán)", corridor: "Oaxaca (Istmo)", color: "#f97316", speed_kmh: 50, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.OAXACA_ISTMO, departure_str: "21/Ago 04:00 AM" },
                     { modalidad: "Consolidado Costa Centro-Norte (San Rafael/Mtz)", corridor: "Veracruz Costa Centro-Norte", color: "#14b8a6", speed_kmh: 55, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.VERACRUZ_CENTRO_NORTE, departure_str: "21/Ago 05:30 AM" }
@@ -1872,6 +1936,7 @@
                     let pLat = depot.lat, pLng = depot.lng;
                     const stops = [];
                     const roadGeometry = [[depot.lat, depot.lng]];
+                    let totalElapsedHours = 0;
 
                     locSeq.forEach((sJobs, sIdx) => {
                         const sLoad = sJobs.reduce((a, b) => a + b.demand, 0);
@@ -1881,16 +1946,48 @@
                         pLat = sLat; pLng = sLng;
                         roadGeometry.push([sLat, sLng]);
 
+                        const legHours = d / t.speed_kmh;
+                        totalElapsedHours += legHours;
+                        const legEta = addHoursToDepartureStr(t.departure_str, totalElapsedHours);
+                        // Add unloading time for next stop
+                        totalElapsedHours += Math.min(2.0, 0.33 + (sLoad / 1000) * 0.08);
+
                         const ex = sJobs[0].excel_info || {};
+                        let cName = (ex.poblacion || '').trim();
+                        let sName = (ex.estado || '').trim();
+                        const obsT = (ex.observaciones || '').toUpperCase();
+                        const corrT = (t.corridor || '').toUpperCase();
+
+                        if (!cName || ['Destino', 'Chiapas', 'Yucatán', 'Veracruz', 'Puebla', 'Oaxaca'].includes(cName)) {
+                            if (obsT.includes('TAPACHULA') || corrT.includes('TAPACHULA')) { cName = 'Tapachula'; sName = 'Chiapas'; }
+                            else if (obsT.includes('TUXTLA') || corrT.includes('TUXTLA')) { cName = 'Tuxtla Gutiérrez'; sName = 'Chiapas'; }
+                            else if (obsT.includes('COATZA') || corrT.includes('COATZA')) { cName = 'Coatzacoalcos'; sName = 'Veracruz'; }
+                            else if (obsT.includes('XICOTEPEC')) { cName = 'Xicotepec de Juárez'; sName = 'Puebla'; }
+                            else if (obsT.includes('CARRANZA')) { cName = 'Venustiano Carranza'; sName = 'Puebla'; }
+                            else if (obsT.includes('HIDALGO') || corrT.includes('SUCHIATE')) { cName = 'Ciudad Hidalgo / Suchiate'; sName = 'Chiapas'; }
+                            else if (obsT.includes('KANASIN') || corrT.includes('MERIDA')) { cName = 'Kanasín'; sName = 'Yucatán'; }
+                            else if (ex.delegacion) { cName = ex.delegacion; }
+                            else { cName = sName || cName || 'Destino'; }
+                        }
+
+                        if (!sName) {
+                            if (['Tapachula', 'Tuxtla Gutiérrez', 'Ciudad Hidalgo / Suchiate'].includes(cName)) sName = 'Chiapas';
+                            else if (['Coatzacoalcos', 'Poza Rica de Hidalgo', 'Papantla de Olarte', 'San Rafael', 'Martínez de la Torre'].includes(cName)) sName = 'Veracruz';
+                            else if (['Xicotepec de Juárez', 'Venustiano Carranza', 'Puebla (Heroica Puebla)', 'Puebla'].includes(cName)) sName = 'Puebla';
+                            else if (['Kanasín', 'Mérida'].includes(cName)) sName = 'Yucatán';
+                            else if (cName === 'Villahermosa') sName = 'Tabasco';
+                            else if (['Ocotlán de Morelos', 'Miahuatlán de Porfirio Díaz', 'Juchitán (Juchitán de Zaragoza)'].includes(cName)) sName = 'Oaxaca';
+                        }
+
                         stops.push({
                             seq: sIdx + 1,
                             lat: sLat,
                             lng: sLng,
-                            city: ex.poblacion || ex.estado || "Destino",
-                            state: ex.estado || "",
+                            city: cName,
+                            state: sName,
                             load: sLoad,
                             jobs: sJobs,
-                            eta: `${(sIdx + 1) * 2} hrs de viaje`,
+                            eta: legEta,
                             cita: ex.agente || ""
                         });
                     });

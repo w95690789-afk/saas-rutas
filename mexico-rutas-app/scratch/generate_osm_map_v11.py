@@ -177,7 +177,7 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
             "fixed_cost": 10000,
             "dist_cost_per_km": 15,
             "jobs": groups["TABASCO_FTL"],
-            "pref_dep": datetime(2026, 8, 18, 22, 0)
+            "pref_dep": datetime(2026, 8, 18, 21, 30) # Salida 09:30 PM -> ETA 19/Ago 06:21 AM (Cita 07:00 AM)
         })
         
         plan_trips.append({
@@ -189,7 +189,7 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
             "fixed_cost": 10000,
             "dist_cost_per_km": 15,
             "jobs": groups["GUADALUPE_FTL"],
-            "pref_dep": datetime(2026, 8, 21, 18, 0)
+            "pref_dep": datetime(2026, 8, 21, 14, 45) # Salida 02:45 PM -> ETA 22/Ago 07:15 AM
         })
         
         plan_trips.append({
@@ -201,7 +201,7 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
             "fixed_cost": 10000,
             "dist_cost_per_km": 15,
             "jobs": groups["MAYORISTA_TAPACHULA_FTL"],
-            "pref_dep": datetime(2026, 8, 21, 20, 0)
+            "pref_dep": datetime(2026, 8, 21, 15, 30) # Salida 03:30 PM -> ETA 22/Ago 07:21 AM (Cita 08:00 AM)
         })
         
         plan_trips.append({
@@ -213,7 +213,7 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
             "fixed_cost": 10000,
             "dist_cost_per_km": 15,
             "jobs": groups["MAYORISTA_TUXTLA_1_FTL"],
-            "pref_dep": datetime(2026, 8, 21, 20, 0)
+            "pref_dep": datetime(2026, 8, 21, 19, 15) # Salida 07:15 PM -> ETA 22/Ago 06:25 AM (Cita 07:00 AM)
         })
         
         plan_trips.append({
@@ -225,7 +225,7 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
             "fixed_cost": 10000,
             "dist_cost_per_km": 15,
             "jobs": groups["MAYORISTA_TUXTLA_2_FTL"],
-            "pref_dep": datetime(2026, 8, 21, 20, 0)
+            "pref_dep": datetime(2026, 8, 21, 19, 15) # Salida 07:15 PM -> ETA 22/Ago 06:25 AM (Cita 07:00 AM)
         })
         
         plan_trips.append({
@@ -262,7 +262,7 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
             "fixed_cost": 6000,
             "dist_cost_per_km": 10,
             "jobs": groups["COATZA_MIERCOLES"],
-            "pref_dep": datetime(2026, 8, 19, 2, 0)
+            "pref_dep": datetime(2026, 8, 19, 0, 30) # Salida 12:30 AM -> ETA 19/Ago 06:25 AM (Cita 07:00 AM)
         })
         
         plan_trips.append({
@@ -274,7 +274,7 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
             "fixed_cost": 6000,
             "dist_cost_per_km": 10,
             "jobs": groups["COATZA_SABADO"],
-            "pref_dep": datetime(2026, 8, 22, 2, 0)
+            "pref_dep": datetime(2026, 8, 22, 0, 30) # Salida 12:30 AM -> ETA 22/Ago 06:25 AM (Cita 07:00 AM)
         })
         
         plan_trips.append({
@@ -417,12 +417,58 @@ def solve_hybrid_logistics_plans(all_jobs, depot_coords):
                 prev_lat, prev_lng = loc[0], loc[1]
                 
                 ex = s_jobs[0]["excel_info"]
+                city_name = str(ex.get("poblacion") or "").strip()
+                state_name = str(ex.get("estado") or "").strip()
+                obs_text = str(ex.get("observaciones") or "").strip().upper()
+                corridor_text = str(t.get("corridor") or "").strip().upper()
+
+                if not city_name or city_name in ["Destino", "Chiapas", "Yucatán", "Veracruz", "Puebla", "Oaxaca"]:
+                    if "TAPACHULA" in obs_text or "TAPACHULA" in corridor_text:
+                        city_name = "Tapachula"
+                        state_name = "Chiapas"
+                    elif "TUXTLA" in obs_text or "TUXTLA" in corridor_text:
+                        city_name = "Tuxtla Gutiérrez"
+                        state_name = "Chiapas"
+                    elif "COATZA" in obs_text or "COATZA" in corridor_text:
+                        city_name = "Coatzacoalcos"
+                        state_name = "Veracruz"
+                    elif "XICOTEPEC" in obs_text:
+                        city_name = "Xicotepec de Juárez"
+                        state_name = "Puebla"
+                    elif "CARRANZA" in obs_text:
+                        city_name = "Venustiano Carranza"
+                        state_name = "Puebla"
+                    elif "HIDALGO" in obs_text or "SUCHIATE" in corridor_text:
+                        city_name = "Ciudad Hidalgo / Suchiate"
+                        state_name = "Chiapas"
+                    elif "KANASIN" in obs_text or "MERIDA" in corridor_text:
+                        city_name = "Kanasín"
+                        state_name = "Yucatán"
+                    elif ex.get("delegacion"):
+                        city_name = ex.get("delegacion")
+                    else:
+                        city_name = state_name or city_name or "Destino"
+
+                if not state_name:
+                    if city_name in ["Tapachula", "Tuxtla Gutiérrez", "Ciudad Hidalgo / Suchiate"]:
+                        state_name = "Chiapas"
+                    elif city_name in ["Coatzacoalcos", "Poza Rica de Hidalgo", "Papantla de Olarte", "San Rafael", "Martínez de la Torre"]:
+                        state_name = "Veracruz"
+                    elif city_name in ["Xicotepec de Juárez", "Venustiano Carranza", "Puebla (Heroica Puebla)", "Puebla"]:
+                        state_name = "Puebla"
+                    elif city_name in ["Kanasín", "Mérida"]:
+                        state_name = "Yucatán"
+                    elif city_name in ["Villahermosa"]:
+                        state_name = "Tabasco"
+                    elif city_name in ["Ocotlán de Morelos", "Miahuatlán de Porfirio Díaz", "Juchitán (Juchitán de Zaragoza)"]:
+                        state_name = "Oaxaca"
+
                 sequence.append({
                     "seq": s_idx + 1,
                     "lat": loc[0],
                     "lng": loc[1],
-                    "city": ex.get("poblacion") or ex.get("estado") or "Destino",
-                    "state": ex.get("estado", ""),
+                    "city": city_name,
+                    "state": state_name,
                     "load": s_load,
                     "jobs": s_jobs,
                     "cita": parse_appointment_info(s_jobs[0])["cita_text"]
@@ -524,7 +570,10 @@ def main():
             
     plans_json_str = json.dumps(plans, ensure_ascii=False)
     
-    with open("/home/wilsonpintogaona/.gemini/antigravity/brain/e949a076-47db-4d03-ad2f-d0339939a208/scratch/template.html", "r", encoding="utf-8") as f:
+    tmpl_path = "/home/wilsonpintogaona/Documentos/Proyectos/Saas Rutas/mexico-rutas-app/scratch/template.html"
+    if not os.path.exists(tmpl_path):
+        tmpl_path = "/home/wilsonpintogaona/.gemini/antigravity/brain/e949a076-47db-4d03-ad2f-d0339939a208/scratch/template.html"
+    with open(tmpl_path, "r", encoding="utf-8") as f:
         template_text = f.read()
         
     output_html = template_text.replace("__PLANS_JSON_PLACEHOLDER__", plans_json_str)
