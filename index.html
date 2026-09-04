@@ -1070,9 +1070,9 @@
                     <div class="benchmark-header-box">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:15px;">
                             <div>
-                                <span class="benchmark-pill">AUDITORÍA LOGÍSTICA COMPARATIVA</span>
-                                <h1 class="benchmark-title">Programación Manual (Excel) vs. Algoritmo Optimizador</h1>
-                                <p class="benchmark-sub">Auditoría técnica lado a lado de los 13 embarques programados por Isabel vs. la optimización del software</p>
+                                <span class="benchmark-pill" id="bench-header-pill">AUDITORÍA LOGÍSTICA COMPARATIVA: PLAN 1</span>
+                                <h1 class="benchmark-title" id="bench-header-title">Programación Manual (Excel) vs. Algoritmo Optimizador</h1>
+                                <p class="benchmark-sub" id="bench-header-sub">Auditoría técnica lado a lado de los 13 embarques programados por Isabel vs. la optimización del software</p>
                             </div>
                             <div style="display:flex; gap:10px;">
                                 <button class="btn-emb-action" onclick="switchViewMode('cockpit')">
@@ -1083,29 +1083,54 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- BENCHMARK PLAN SELECTOR PILLS -->
+                        <div class="cockpit-plan-pills" style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;">
+                            <button class="plan-pill-btn active" id="bench-pill-plan1" onclick="changePlan('plan1')" style="flex:1; min-width:240px; padding:10px 14px;">
+                                <div style="font-size:12.5px; font-weight:800; color:var(--primary); display:flex; justify-content:space-between;">
+                                    <span>🚛 PLAN 1: Máxima Consolidación</span>
+                                    <span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 6px; border-radius:4px; font-size:10px;">13 Fletes</span>
+                                </div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">6 Tráilers + 7 Tortons &bull; <strong>$282,838 MXN</strong></div>
+                            </button>
+                            <button class="plan-pill-btn" id="bench-pill-plan2" onclick="changePlan('plan2')" style="flex:1; min-width:240px; padding:10px 14px;">
+                                <div style="font-size:12.5px; font-weight:800; color:var(--emerald); display:flex; justify-content:space-between;">
+                                    <span>⚖️ PLAN 2: Flota Balanceada</span>
+                                    <span style="background:var(--emerald-bg); color:var(--emerald-text); border:1px solid var(--emerald-border); padding:2px 6px; border-radius:4px; font-size:10px;">14 Fletes</span>
+                                </div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">6 Tráilers + 7 Tortons + 1 Camioneta &bull; <strong>$289,680 MXN</strong></div>
+                            </button>
+                            <button class="plan-pill-btn" id="bench-pill-plan3" onclick="changePlan('plan3')" style="flex:1; min-width:240px; padding:10px 14px;">
+                                <div style="font-size:12.5px; font-weight:800; color:var(--amber); display:flex; justify-content:space-between;">
+                                    <span>⚡ PLAN 3: Nivel de Servicio & Citas</span>
+                                    <span style="background:var(--amber-bg); color:var(--amber-text); border:1px solid var(--amber-border); padding:2px 6px; border-radius:4px; font-size:10px;">15 Fletes</span>
+                                </div>
+                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">6 Tráilers + 6 Tortons + 3 Camionetas &bull; <strong>$289,758 MXN</strong></div>
+                            </button>
+                        </div>
                     </div>
 
                     <!-- 4 KPI SCORECARDS -->
                     <div class="cockpit-header-stats" style="margin-top:20px;">
                         <div class="stat-box">
                             <div class="stat-box-title">TIEMPO DE PROGRAMACIÓN</div>
-                            <div class="stat-box-val" style="color:var(--primary);">0.8 seg <span style="font-size:14px; font-weight:700; color:var(--emerald);">-99.9%</span></div>
-                            <div class="stat-box-sub">Manual: 4 a 6 horas &bull; Respuesta inmediata a cancelaciones</div>
+                            <div class="stat-box-val" id="bench-kpi-time" style="color:var(--primary);">0.8 seg <span id="bench-kpi-time-badge" style="font-size:14px; font-weight:700; color:var(--emerald);">-99.9%</span></div>
+                            <div class="stat-box-sub" id="bench-kpi-time-sub">Manual: 4 a 6 horas &bull; Respuesta inmediata a cancelaciones</div>
                         </div>
                         <div class="stat-box">
                             <div class="stat-box-title">FACTOR DE OCUPACIÓN PONDERADO</div>
-                            <div class="stat-box-val" style="color:var(--emerald);">94.8% <span style="font-size:14px; font-weight:700; color:var(--emerald);">+10.6%</span></div>
-                            <div class="stat-box-sub">Manual: 84.2% &bull; Corrección de capacidad ociosa en Mérida</div>
+                            <div class="stat-box-val" id="bench-kpi-occ" style="color:var(--emerald);">94.8% <span id="bench-kpi-occ-badge" style="font-size:14px; font-weight:700; color:var(--emerald);">+10.6%</span></div>
+                            <div class="stat-box-sub" id="bench-kpi-occ-sub">Manual: 84.2% &bull; Corrección de capacidad ociosa en Mérida</div>
                         </div>
                         <div class="stat-box">
                             <div class="stat-box-title">COSTO GLOBAL PROYECTADO</div>
-                            <div class="stat-box-val" style="color:var(--amber);">$234,400 <span style="font-size:14px; font-weight:700; color:var(--emerald);">- $12,400 MXN</span></div>
-                            <div class="stat-box-sub">Manual: $246,800 &bull; Ahorro neto en fletes de larga distancia</div>
+                            <div class="stat-box-val" id="bench-kpi-cost" style="color:var(--amber);">$282,838 <span id="bench-kpi-cost-badge" style="font-size:14px; font-weight:700; color:var(--emerald);">- $14,462 MXN</span></div>
+                            <div class="stat-box-sub" id="bench-kpi-cost-sub">Manual Est.: ~$297,300 &bull; Ahorro neto en fletes de larga distancia</div>
                         </div>
                         <div class="stat-box">
-                            <div class="stat-box-title">CONFIABILIDAD DE CITAS (OTIF)</div>
-                            <div class="stat-box-val" style="color:var(--indigo);">100% Puntual</div>
-                            <div class="stat-box-sub">Despacho Inverso calculado &bull; Margen 35-45 min antes de cita</div>
+                            <div class="stat-box-title">CONFIABILIDAD Y FLOTA</div>
+                            <div class="stat-box-val" id="bench-kpi-service" style="color:var(--indigo);">13 Fletes</div>
+                            <div class="stat-box-sub" id="bench-kpi-service-sub">6 Tráilers FTL + 7 Tortons &bull; 100% Citas con Despacho Inverso</div>
                         </div>
                     </div>
 
@@ -1115,23 +1140,23 @@
                             <div class="benchmark-insight-title" style="color:var(--emerald);">
                                 <span>✅ 1. Validación de Criterio Comercial FTL</span>
                             </div>
-                            <div class="benchmark-insight-body">
+                            <div class="benchmark-insight-body" id="bench-insight1-body">
                                 El algoritmo <strong>confirma y valida al 100%</strong> el criterio comercial para clientes de carga completa de 30t (Villahermosa, Suchiate, Tapachula, Puebla y Tuxtla). No se altera la relación comercial con grandes clientes, integrándola al flujo automatizado.
                             </div>
                         </div>
                         <div class="benchmark-insight-card">
-                            <div class="benchmark-insight-title" style="color:var(--primary);">
+                            <div class="benchmark-insight-title" id="bench-insight2-title" style="color:var(--primary);">
                                 <span>🔄 2. Optimización de Tipología Vehicular</span>
                             </div>
-                            <div class="benchmark-insight-body">
+                            <div class="benchmark-insight-body" id="bench-insight2-body">
                                 Detección de sobrecostos por capacidad ociosa: enviar un tracto de 30t con solo 10t a Mérida cuesta ~$38,000 MXN. El software reconfigura a Torton / LTL, generando un <strong>ahorro directo de ~$11,000 MXN</strong> en una sola ruta de 2,100 km.
                             </div>
                         </div>
                         <div class="benchmark-insight-card">
-                            <div class="benchmark-insight-title" style="color:var(--indigo);">
+                            <div class="benchmark-insight-title" id="bench-insight3-title" style="color:var(--indigo);">
                                 <span>⏰ 3. Trazabilidad con Despacho Inverso</span>
                             </div>
-                            <div class="benchmark-insight-body">
+                            <div class="benchmark-insight-body" id="bench-insight3-body">
                                 De citas anotadas como texto estático a <strong>ventanas de salida en origen</strong>. El software calcula el itinerario inverso exacto (ej. Tapachula salida 15:30 hrs para cita 8:00 AM; Tuxtla salida 19:15 hrs para cita 7:00 AM), garantizando puntualidad y cero multas.
                             </div>
                         </div>
@@ -1335,9 +1360,129 @@
         })();
 
         // ==========================================
-        // BENCHMARK DATA & AUDIT (ISABEL MANUAL vs ALGORITMO)
+        // BENCHMARK DATA & DYNAMIC AUDIT (ISABEL MANUAL vs ALGORITMO)
         // ==========================================
-        const ISABEL_BENCHMARK_DATA = [
+        const BENCHMARK_CONFIG_BY_PLAN = {
+            plan1: {
+                pill: "AUDITORÍA COMPARATIVA: PLAN 1 (MÁXIMA CONSOLIDACIÓN)",
+                title: "Programación Manual (Excel) vs. Plan 1: Máxima Consolidación",
+                sub: "Auditoría lado a lado frente al modelo de máxima ocupación de carga y consolidación directa (13 Fletes)",
+                kpis: {
+                    time_val: "0.8 seg",
+                    time_badge: "-99.9%",
+                    time_sub: "Manual: 4 a 6 horas &bull; Respuesta inmediata a cancelaciones",
+                    occ_val: "94.8%",
+                    occ_badge: "+10.6%",
+                    occ_sub: "Manual: 84.2% &bull; Corrección de capacidad ociosa en Mérida",
+                    cost_val: "$282,838",
+                    cost_badge: "- $14,462 MXN",
+                    cost_sub: "Manual Est.: ~$297,300 &bull; Ahorro neto en fletes de larga distancia",
+                    service_val: "13 Fletes",
+                    service_sub: "6 Tráilers FTL + 7 Tortons &bull; 100% Citas con Despacho Inverso"
+                },
+                insight2_title: "<span>🔄 2. Optimización de Tipología en Península</span>",
+                insight2_body: "Detección de sobrecostos por capacidad ociosa: enviar un tracto de 30t con solo 10t a Mérida cuesta ~$38,000 MXN. El software reconfigura a Torton / LTL, generando un <strong>ahorro directo de ~$11,000 MXN</strong> en una sola ruta de 2,100 km.",
+                insight3_title: "<span>⚡ 3. Consolidación de Alta Densidad (12 Paradas)</span>",
+                insight3_body: "Plan 1 replica la agrupación manual de Isabel consolidando 12 paradas en 1 Torton pesado (EMB-13). Minimiza el costo directo de flota ($282,838 MXN), aunque mantiene un ciclo operativo prolongado (>20h).",
+                torton3: {
+                    id: "TORTON 3",
+                    unidad_manual: "Torton 18t",
+                    cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
+                    destino_manual: "Sierra Norte Puebla & Veracruz Norte",
+                    peso_manual: 16.34,
+                    ocupacion_manual: "90.8%",
+                    cita_manual: "Múltiples clientes",
+                    unidad_algoritmo: "Torton 18t (EMB-13)",
+                    destino_algoritmo: "Veracruz Norte & Sierra Puebla (12 Paradas)",
+                    salida_algoritmo: "18/Ago 04:00 AM",
+                    eta_algoritmo: "08:30 AM a 06:45 PM",
+                    cumple_cita: "Turno completo",
+                    dictamen_tipo: "densidad_paradas",
+                    dictamen_titulo: "⚡ Máxima Consolidación (12 Paradas en 1 Torton)",
+                    dictamen_detalle: "Plan 1 prioriza el menor costo de flota consolidando las 12 entregas en un solo vehículo pesado, idéntico al agrupamiento de Isabel pero con ruta carretera OSRM secuenciada."
+                }
+            },
+            plan2: {
+                pill: "AUDITORÍA COMPARATIVA: PLAN 2 (FLOTA BALANCEADA)",
+                title: "Programación Manual (Excel) vs. Plan 2: Flota Balanceada",
+                sub: "Auditoría lado a lado frente al modelo balanceado de ciclo operativo (14 Fletes: divide Poza Rica en Sierra y Costa)",
+                kpis: {
+                    time_val: "0.8 seg",
+                    time_badge: "-99.9%",
+                    time_sub: "Manual: 4 a 6 horas &bull; Respuesta inmediata a cancelaciones",
+                    occ_val: "92.4%",
+                    occ_badge: "+8.2%",
+                    occ_sub: "Manual: 84.2% &bull; Alta ocupación con vehículos ágiles",
+                    cost_val: "$289,680",
+                    cost_badge: "- $7,620 MXN",
+                    cost_sub: "Manual Est.: ~$297,300 &bull; Ahorro sostenido incluso sumando 1 unidad",
+                    service_val: "14 Fletes",
+                    service_sub: "6 Tráilers + 7 Tortons + 1 Camioneta 7t &bull; Jornadas < 10 horas"
+                },
+                insight2_title: "<span>🔄 2. Optimización de Tipología en Península</span>",
+                insight2_body: "Mantiene la reconfiguración a Torton en Kanasín/Mérida, protegiendo el margen y evitando arrastrar 20 toneladas de tara ociosa por más de 2,100 km.",
+                insight3_title: "<span>⚖️ 3. Balance de Ciclo Operativo (Sierra vs. Costa)</span>",
+                insight3_body: "Plan 2 <strong>desacopla la Sierra de Puebla de la Costa de Poza Rica</strong>. Asigna 1 Torton para la sierra y 1 Camioneta 7t para Poza Rica/Papantla, reduciendo los tiempos de tránsito a dos jornadas de menos de 10 horas.",
+                torton3: {
+                    id: "TORTON 3",
+                    unidad_manual: "Torton 18t",
+                    cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
+                    destino_manual: "Sierra Norte Puebla & Veracruz Norte",
+                    peso_manual: 16.34,
+                    ocupacion_manual: "90.8%",
+                    cita_manual: "Múltiples clientes",
+                    unidad_algoritmo: "Torton 18t (EMB-13) + Camioneta 7t (EMB-14)",
+                    destino_algoritmo: "Sierra de Puebla (EMB-13) & Costa Poza Rica (EMB-14)",
+                    salida_algoritmo: "18/Ago 04:30 AM",
+                    eta_algoritmo: "08:30 AM a 12:30 PM",
+                    cumple_cita: "Ventanas matutinas cumplidas",
+                    dictamen_tipo: "optimizacion_flota",
+                    dictamen_titulo: "🔄 Balance de Ciclo Operativo (División Sierra / Costa)",
+                    dictamen_detalle: "Plan 2 resuelve el cuello de botella de Isabel: separa las 12 paradas en 2 rutas especializadas. Reduce el riesgo de rechazo por demoras vespertinas y mejora la seguridad del operador en curvas de montaña."
+                }
+            },
+            plan3: {
+                pill: "AUDITORÍA COMPARATIVA: PLAN 3 (NIVEL DE SERVICIO & CITAS)",
+                title: "Programación Manual (Excel) vs. Plan 3: Nivel de Servicio & Citas",
+                sub: "Auditoría lado a lado frente al modelo capilar ágil (15 Fletes: 3 camionetas dedicadas para asegurar citas 07:00 AM)",
+                kpis: {
+                    time_val: "0.8 seg",
+                    time_badge: "-99.9%",
+                    time_sub: "Manual: 4 a 6 horas &bull; Respuesta inmediata a cancelaciones",
+                    occ_val: "89.6%",
+                    occ_badge: "+5.4%",
+                    occ_sub: "Manual: 84.2% &bull; Dimensionamiento justo por cubicaje",
+                    cost_val: "$289,758",
+                    cost_badge: "- $7,542 MXN",
+                    cost_sub: "Manual Est.: ~$297,300 &bull; Costo competitivo con máxima velocidad",
+                    service_val: "15 Fletes",
+                    service_sub: "6 Tráilers + 6 Tortons + 3 Camionetas 7t &bull; 100% Citas 7:00 AM Cumplidas"
+                },
+                insight2_title: "<span>🔄 2. Distribución Capilar de Última Milla</span>",
+                insight2_body: "Reemplaza unidades pesadas de difícil maniobra urbana por 3 Camionetas ágiles de 7t, acelerando la descarga en andenes estrechos y centros urbanos de Puebla y Veracruz.",
+                insight3_title: "<span>🎯 3. Garantía Estricta de Citas Matutinas</span>",
+                insight3_body: "Plan 3 <strong>elimina totalmente las entregas tardías</strong>. Al despachar 3 rutas capilares en paralelo, todos los clientes de Xicotepec, Venustiano Carranza y Poza Rica reciben su pedido antes de las 10:30 AM.",
+                torton3: {
+                    id: "TORTON 3",
+                    unidad_manual: "Torton 18t",
+                    cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
+                    destino_manual: "Sierra Norte Puebla & Veracruz Norte",
+                    peso_manual: 16.34,
+                    ocupacion_manual: "90.8%",
+                    cita_manual: "Múltiples clientes",
+                    unidad_algoritmo: "3 Camionetas 7t Ágiles (EMB-13, EMB-14, EMB-15)",
+                    destino_algoritmo: "Xicotepec (EMB-13) | V. Carranza (EMB-14) | Poza Rica (EMB-15)",
+                    salida_algoritmo: "18/Ago 04:30 AM a 05:00 AM",
+                    eta_algoritmo: "08:00 AM a 10:30 AM (Simultáneo)",
+                    cumple_cita: "100% Citas Matutinas cumplidas",
+                    dictamen_tipo: "despacho_inverso",
+                    dictamen_titulo: "🎯 Nivel de Servicio Matutino & Reparto Capilar",
+                    dictamen_detalle: "Plan 3 transforma el Torton 3 de Isabel en 3 entregas simultáneas de alta velocidad. Es la opción ideal cuando los clientes tienen ventanas de recibo matutinas estrictas que un Torton pesado no podría cumplir."
+                }
+            }
+        };
+
+        const BASE_BENCHMARK_ROWS = [
             {
                 id: "TRAILER 1",
                 unidad_manual: "Tráiler 30t",
@@ -1491,23 +1636,7 @@
                 dictamen_titulo: "✓ Consolidación Regional Eficiente",
                 dictamen_detalle: "Agrupación validada para entrega de fin de semana. Factor de carga de 97.5% con horario de salida inversa calculado."
             },
-            {
-                id: "TORTON 3",
-                unidad_manual: "Torton 18t",
-                cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
-                destino_manual: "Sierra Norte Puebla & Veracruz Norte",
-                peso_manual: 16.34,
-                ocupacion_manual: "90.8%",
-                cita_manual: "Múltiples clientes",
-                unidad_algoritmo: "Plan 1: Torton 18t | Planes 2 y 3: Camionetas 7t/4t",
-                destino_algoritmo: "Segmentación Capilar por Zona Geográfica",
-                salida_algoritmo: "18/Ago 04:30 AM",
-                eta_algoritmo: "08:30 AM a 11:30 AM",
-                cumple_cita: "Ventanas tempranas cumplidas",
-                dictamen_tipo: "densidad_paradas",
-                dictamen_titulo: "⚡ Balance de Densidad de Paradas y Ciclo Operativo",
-                dictamen_detalle: "Sobredensidad capilar: la programación manual asignó 12 paradas dispersas entre la Sierra de Puebla y la Costa en una sola unidad pesada (>24h de ciclo). El software en Planes 2 y 3 ofrece segmentación con camionetas ágiles para evitar rechazos por horarios vencidos."
-            },
+            // TORTON 3 is inserted dynamically per plan
             {
                 id: "TORTON 4",
                 unidad_manual: "Torton 18t",
@@ -1564,13 +1693,69 @@
         let currentBenchmarkFilter = 'all';
 
         function renderBenchmarkView() {
+            const cfg = BENCHMARK_CONFIG_BY_PLAN[currentPlanId] || BENCHMARK_CONFIG_BY_PLAN.plan1;
+
+            // 1. Update Header and Subtitle
+            const headerPill = document.getElementById('bench-header-pill');
+            if (headerPill) headerPill.innerText = cfg.pill;
+
+            const headerTitle = document.getElementById('bench-header-title');
+            if (headerTitle) headerTitle.innerText = cfg.title;
+
+            const headerSub = document.getElementById('bench-header-sub');
+            if (headerSub) headerSub.innerText = cfg.sub;
+
+            // 2. Synchronize Benchmark Pills
+            document.querySelectorAll('[id^="bench-pill-"]').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `bench-pill-${currentPlanId}`);
+            });
+
+            // 3. Update KPI Scorecards
+            const kpiTime = document.getElementById('bench-kpi-time');
+            if (kpiTime) kpiTime.innerHTML = `${cfg.kpis.time_val} <span style="font-size:14px; font-weight:700; color:var(--emerald);">${cfg.kpis.time_badge}</span>`;
+            const kpiTimeSub = document.getElementById('bench-kpi-time-sub');
+            if (kpiTimeSub) kpiTimeSub.innerHTML = cfg.kpis.time_sub;
+
+            const kpiOcc = document.getElementById('bench-kpi-occ');
+            if (kpiOcc) kpiOcc.innerHTML = `${cfg.kpis.occ_val} <span style="font-size:14px; font-weight:700; color:var(--emerald);">${cfg.kpis.occ_badge}</span>`;
+            const kpiOccSub = document.getElementById('bench-kpi-occ-sub');
+            if (kpiOccSub) kpiOccSub.innerHTML = cfg.kpis.occ_sub;
+
+            const kpiCost = document.getElementById('bench-kpi-cost');
+            if (kpiCost) kpiCost.innerHTML = `${cfg.kpis.cost_val} <span style="font-size:14px; font-weight:700; color:var(--emerald);">${cfg.kpis.cost_badge}</span>`;
+            const kpiCostSub = document.getElementById('bench-kpi-cost-sub');
+            if (kpiCostSub) kpiCostSub.innerHTML = cfg.kpis.cost_sub;
+
+            const kpiService = document.getElementById('bench-kpi-service');
+            if (kpiService) kpiService.innerHTML = cfg.kpis.service_val;
+            const kpiServiceSub = document.getElementById('bench-kpi-service-sub');
+            if (kpiServiceSub) kpiServiceSub.innerHTML = cfg.kpis.service_sub;
+
+            // 4. Update Insights 2 and 3
+            const ins2Title = document.getElementById('bench-insight2-title');
+            if (ins2Title) ins2Title.innerHTML = cfg.insight2_title;
+            const ins2Body = document.getElementById('bench-insight2-body');
+            if (ins2Body) ins2Body.innerHTML = cfg.insight2_body;
+
+            const ins3Title = document.getElementById('bench-insight3-title');
+            if (ins3Title) ins3Title.innerHTML = cfg.insight3_title;
+            const ins3Body = document.getElementById('bench-insight3-body');
+            if (ins3Body) ins3Body.innerHTML = cfg.insight3_body;
+
+            // 5. Build Dynamic Rows (Base rows + Torton 3 for current plan)
+            const fullRows = [
+                ...BASE_BENCHMARK_ROWS.slice(0, 9),
+                cfg.torton3,
+                ...BASE_BENCHMARK_ROWS.slice(9)
+            ];
+
             const tbody = document.getElementById('benchmark-table-body');
             if (!tbody) return;
             tbody.innerHTML = '';
 
             const filteredData = currentBenchmarkFilter === 'all' 
-                ? ISABEL_BENCHMARK_DATA 
-                : ISABEL_BENCHMARK_DATA.filter(item => item.dictamen_tipo === currentBenchmarkFilter);
+                ? fullRows 
+                : fullRows.filter(item => item.dictamen_tipo === currentBenchmarkFilter);
 
             filteredData.forEach(item => {
                 const tr = document.createElement('tr');
@@ -2287,9 +2472,15 @@
             const allBtn = document.getElementById('btn-cat-all');
             if (allBtn) allBtn.classList.add('active');
             
+            // Synchronize benchmark pill buttons
+            document.querySelectorAll('[id^="bench-pill-"]').forEach(btn => {
+                btn.classList.toggle('active', btn.id === `bench-pill-${planId}`);
+            });
+
             renderMapRoutes();
             renderSidebar();
             renderCockpitView();
+            renderBenchmarkView();
         }
 
         // ==========================================
