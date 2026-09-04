@@ -2728,6 +2728,9 @@
         // ==========================================
         // INTERACTIVE EXCEL UPLOAD
         // ==========================================
+        // ==========================================
+        // EXCEL UPLOAD & AUTO-REPLANNING HANDLER
+        // ==========================================
         function handleExcelUpload(files) {
             if (!files || files.length === 0) return;
             const file = files[0];
@@ -2738,38 +2741,80 @@
                     const data = e.target.result;
                     const workbook = XLSX.read(data, {type: 'binary'});
                     
-                    let sheetName = workbook.SheetNames.find(s => s.toUpperCase().includes('MONSE')) || workbook.SheetNames[0];
-                    const sheet = workbook.Sheets[sheetName];
-                    const rows = XLSX.utils.sheet_to_json(sheet, {header: 1});
+                    let targetSheet = null;
+                    let targetRows = [];
+                    let headerRowIndex = 0;
 
-                    if (rows.length < 2) {
+                    // Search across all sheets to find the one containing orders
+                    for (const sName of workbook.SheetNames) {
+                        const s = workbook.Sheets[sName];
+                        if (!s) continue;
+                        const r = XLSX.utils.sheet_to_json(s, {header: 1});
+                        if (r && r.length > 1) {
+                            for (let idx = 0; idx < Math.min(r.length, 6); idx++) {
+                                const testHeader = Array.from(r[idx] || []).map(h => String(h ?? '').trim().toUpperCase());
+                                if (testHeader.some(h => h && (h.includes('MOVIMIENTO') || h.includes('PEDIDO') || h.includes('CLIENTE')))) {
+                                    targetSheet = s;
+                                    targetRows = r;
+                                    headerRowIndex = idx;
+                                    break;
+                                }
+                            }
+                            if (targetSheet) break;
+                        }
+                    }
+
+                    if (!targetSheet) {
+                        targetSheet = workbook.Sheets[workbook.SheetNames[0]];
+                        targetRows = XLSX.utils.sheet_to_json(targetSheet, {header: 1});
+                    }
+
+                    if (!targetRows || targetRows.length < 2) {
                         alert("El archivo no contiene suficientes filas de pedidos.");
                         return;
                     }
 
-                    const header = rows[0].map(h => String(h || '').trim().toUpperCase());
-                    const idxMov = header.findIndex(h => h.includes('MOVIMIENTO') || h.includes('PEDIDO'));
-                    const idxCli = header.findIndex(h => h.includes('CLIENTE') && !h.includes('SUCURSAL'));
-                    const idxNom = header.findIndex(h => h.includes('NOMBRE'));
-                    const idxPeso = header.findIndex(h => h.includes('PESO') || h.includes('DEMAND') || h.includes('KILOS'));
-                    const idxPob = header.findIndex(h => h.includes('POBLACI') || h.includes('CIUDAD'));
-                    const idxEdo = header.findIndex(h => h.includes('ESTADO'));
-                    const idxDir = header.findIndex(h => h.includes('DIRECCI'));
-                    const idxAge = header.findIndex(h => h.includes('AGENTE') || h.includes('CITA'));
-                    const idxObs = header.findIndex(h => h.includes('OBSERVACIONES'));
-                    const idxRuta = header.findIndex(h => h.includes('RUTA'));
+                    // Convert raw header safely converting holes to actual strings
+                    const rawHeader = Array.from(targetRows[headerRowIndex] || []);
+                    const header = rawHeader.map(h => String(h ?? '').trim().toUpperCase());
+
+                    const idxMov = header.findIndex(h => h && (h.includes('MOVIMIENTO') || h.includes('PEDIDO')));
+                    const idxCli = header.findIndex(h => h && h.includes('CLIENTE') && !h.includes('SUCURSAL'));
+                    const idxNom = header.findIndex(h => h && h.includes('NOMBRE'));
+                    const idxPeso = header.findIndex(h => h && (h.includes('PESO') || h.includes('DEMAND') || h.includes('KILOS')));
+                    const idxPob = header.findIndex(h => h && (h.includes('POBLACI') || h.includes('CIUDAD')));
+                    const idxEdo = header.findIndex(h => h && h.includes('ESTADO'));
+                    const idxDir = header.findIndex(h => h && h.includes('DIRECCI'));
+                    const idxAge = header.findIndex(h => h && (h.includes('AGENTE') || h.includes('CITA')));
+                    const idxObs = header.findIndex(h => h && h.includes('OBSERVACIONES'));
+                    const idxRuta = header.findIndex(h => h && h.includes('RUTA'));
 
                     const uploadedJobs = [];
-                    for (let i = 1; i < rows.length; i++) {
-                        const r = rows[i];
-                        if (!r || r.length === 0) continue;
+                    for (let i = headerRowIndex + 1; i < targetRows.length; i++) {
+                        const rawR = targetRows[i];
+                        if (!rawR || rawR.length === 0) continue;
+                        const r = Array.from(rawR);
                         
-                        const pedId = r[idxMov !== -1 ? idxMov : 1];
-                        if (!pedId || !String(pedId).trim().startsWith('Pedido')) continue;
+                        let pedId = idxMov !== -1 ? r[idxMov] : null;
+                        if (!pedId) {
+                            pedId = r.find(cell => cell && String(cell).trim().toUpperCase().includes('PEDIDO'));
+                        }
+                        if (!pedId) {
+                            const cand = r[0] || r[1];
+                            if (cand && /^\d{5,7}$/.test(String(cand).trim())) {
+                                pedId = 'Pedido ' + String(cand).trim();
+                            }
+                        }
+                        if (!pedId) continue;
+                        let pedIdStr = String(pedId).trim();
+                        if (!pedIdStr.toUpperCase().startsWith('PEDIDO') && /^\d{5,7}$/.test(pedIdStr)) {
+                            pedIdStr = 'Pedido ' + pedIdStr;
+                        }
 
                         const cliente = r[idxCli !== -1 ? idxCli : 2] || '';
                         const nombre = r[idxNom !== -1 ? idxNom : 3] || '';
-                        const peso = Number(r[idxPeso !== -1 ? idxPeso : 11]) || 1000;
+                        const rawPeso = String(r[idxPeso !== -1 ? idxPeso : 11] ?? '').replace(/,/g, '').replace(/[^\d.]/g, '');
+                        const peso = parseFloat(rawPeso) || 1000;
                         const poblacion = r[idxPob !== -1 ? idxPob : 28] || '';
                         const estado = r[idxEdo !== -1 ? idxEdo : 29] || '';
                         const direccion = r[idxDir !== -1 ? idxDir : 24] || '';
@@ -2782,17 +2827,20 @@
                         const key3 = `${String(poblacion).trim().toUpperCase()}_${String(estado).trim().toUpperCase()}`;
                         const key4 = String(poblacion).trim().toUpperCase();
 
-                        let match = GEOLOOKUP[key1] || GEOLOOKUP[key2] || GEOLOOKUP[key3] || GEOLOOKUP[key4];
+                        let match = (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key1] || 
+                                    (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key2] || 
+                                    (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key3] || 
+                                    (typeof GEOLOOKUP !== 'undefined' ? GEOLOOKUP : {})[key4];
                         let lat = match ? match.lat : (depot.lat + 0.5);
                         let lng = match ? match.lng : (depot.lng + 0.5);
 
                         uploadedJobs.push({
-                            id: String(pedId),
+                            id: String(pedIdStr),
                             lat: lat,
                             lng: lng,
                             demand: peso,
                             excel_info: {
-                                pedido: String(pedId),
+                                pedido: String(pedIdStr),
                                 cliente: cliente,
                                 nombre: nombre,
                                 direccion: direccion,
@@ -2811,12 +2859,14 @@
                         if (newCalculatedPlans && newCalculatedPlans.plan1) {
                             plans = newCalculatedPlans;
                             changePlan(currentPlanId);
-                            showToast(`✅ ¡Archivo ${file.name} procesado con éxito! (${uploadedJobs.length} pedidos optimizados).`);
+                            showToast(`✅ ¡Archivo ${file.name} procesado con éxito! (${uploadedJobs.length} pedidos cargados y optimizados).`);
                         }
+                    } else {
+                        alert("No se encontraron pedidos válidos en el archivo Excel. Verifica que tenga una columna con 'Pedido' o 'Movimiento'.");
                     }
                 } catch(err) {
                     console.error("Error al procesar Excel:", err);
-                    alert("Ocurrió un error al procesar el archivo Excel. Asegúrate que tenga el formato estándar.");
+                    alert("Ocurrió un error al procesar el archivo Excel: " + (err && err.message ? err.message : String(err)));
                 }
             };
             reader.readAsBinaryString(file);
