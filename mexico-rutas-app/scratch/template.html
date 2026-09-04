@@ -1162,10 +1162,10 @@
                         </div>
                     </div>
 
-                    <!-- AUDIT TABLE (SIDE BY SIDE 13 EMBARQUES) -->
+                    <!-- AUDIT TABLE (SIDE BY SIDE 13/14/15 EMBARQUES) -->
                     <div style="margin-top:25px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
                         <h2 style="font-size: 15px; font-weight: 800; color: var(--text-main); display:flex; align-items:center; gap:8px;">
-                            <span>📋 AUDITORÍA TÉCNICA COMPARATIVA (13 FLETES PROGRAMADOS)</span>
+                            <span id="bench-table-count-title">📋 AUDITORÍA TÉCNICA COMPARATIVA (13 FLETES PROGRAMADOS)</span>
                         </h2>
                         <div style="display:flex; gap:6px; flex-wrap:wrap;">
                             <button class="cat-filter-btn active" id="btn-bench-all" onclick="filterBenchmarkTable('all')">Todos (13)</button>
@@ -1174,6 +1174,11 @@
                             <button class="cat-filter-btn" id="btn-bench-paradas" onclick="filterBenchmarkTable('densidad_paradas')">Densidad de Paradas (1)</button>
                             <button class="cat-filter-btn" id="btn-bench-val" onclick="filterBenchmarkTable('validado')">Validados FTL (8)</button>
                         </div>
+                    </div>
+
+                    <!-- PLAN SPECIFIC NOTICE BANNER -->
+                    <div id="bench-plan-notice" style="margin-bottom:14px; padding:12px 16px; border-radius:8px; background:var(--bg-card); border:1px solid var(--border-color); font-size:12.5px; color:var(--text-main); display:flex; align-items:center; gap:10px;">
+                        <!-- Injected dynamically by renderBenchmarkView() -->
                     </div>
 
                     <div class="benchmark-table-wrapper">
@@ -1359,14 +1364,17 @@
             }
         })();
 
-        // ==========================================
+                // ==========================================
         // BENCHMARK DATA & DYNAMIC AUDIT (ISABEL MANUAL vs ALGORITMO)
         // ==========================================
         const BENCHMARK_CONFIG_BY_PLAN = {
             plan1: {
                 pill: "AUDITORÍA COMPARATIVA: PLAN 1 (MÁXIMA CONSOLIDACIÓN)",
                 title: "Programación Manual (Excel) vs. Plan 1: Máxima Consolidación",
-                sub: "Auditoría lado a lado frente al modelo de máxima ocupación de carga y consolidación directa (13 Fletes)",
+                sub: "Auditoría flete por flete frente al modelo de máxima ocupación de carga (13 Fletes: 6 Tráilers FTL + 7 Tortons)",
+                table_title: "📋 AUDITORÍA TÉCNICA COMPARATIVA (13 FLETES PROGRAMADOS)",
+                notice_html: `<div style="font-size:16px;">💡</div><div><strong>Plan 1 (Máxima Consolidación):</strong> Replica la agrupación de 13 fletes de Isabel manteniendo las 12 paradas de Poza Rica y Sierra de Puebla en 1 solo Torton de 18t (EMB-13). Menor costo global de fletes ($282,838 MXN).</div>`,
+                filter_counts: { all: 13, opt: 1, cita: 3, paradas: 1, val: 8 },
                 kpis: {
                     time_val: "0.8 seg",
                     time_badge: "-99.9%",
@@ -1384,28 +1392,34 @@
                 insight2_body: "Detección de sobrecostos por capacidad ociosa: enviar un tracto de 30t con solo 10t a Mérida cuesta ~$38,000 MXN. El software reconfigura a Torton / LTL, generando un <strong>ahorro directo de ~$11,000 MXN</strong> en una sola ruta de 2,100 km.",
                 insight3_title: "<span>⚡ 3. Consolidación de Alta Densidad (12 Paradas)</span>",
                 insight3_body: "Plan 1 replica la agrupación manual de Isabel consolidando 12 paradas en 1 Torton pesado (EMB-13). Minimiza el costo directo de flota ($282,838 MXN), aunque mantiene un ciclo operativo prolongado (>20h).",
-                torton3: {
-                    id: "TORTON 3",
-                    unidad_manual: "Torton 18t",
-                    cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
-                    destino_manual: "Sierra Norte Puebla & Veracruz Norte",
-                    peso_manual: 16.34,
-                    ocupacion_manual: "90.8%",
-                    cita_manual: "Múltiples clientes",
-                    unidad_algoritmo: "Torton 18t (EMB-13)",
-                    destino_algoritmo: "Veracruz Norte & Sierra Puebla (12 Paradas)",
-                    salida_algoritmo: "18/Ago 04:00 AM",
-                    eta_algoritmo: "08:30 AM a 06:45 PM",
-                    cumple_cita: "Turno completo",
-                    dictamen_tipo: "densidad_paradas",
-                    dictamen_titulo: "⚡ Máxima Consolidación (12 Paradas en 1 Torton)",
-                    dictamen_detalle: "Plan 1 prioriza el menor costo de flota consolidando las 12 entregas en un solo vehículo pesado, idéntico al agrupamiento de Isabel pero con ruta carretera OSRM secuenciada."
-                }
+                rows_override: [
+                    {
+                        id: "TORTON 3",
+                        unidad_manual: "Torton 18t",
+                        cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
+                        destino_manual: "Sierra Norte Puebla & Veracruz Norte",
+                        peso_manual: 16.34,
+                        ocupacion_manual: "90.8%",
+                        cita_manual: "Múltiples clientes",
+                        unidad_algoritmo: "Torton 18t (EMB-13)",
+                        destino_algoritmo: "Veracruz Norte & Sierra Puebla (12 Paradas)",
+                        salida_algoritmo: "18/Ago 04:00 AM",
+                        eta_algoritmo: "08:30 AM a 06:45 PM",
+                        cumple_cita: "Turno completo (14.7 hrs)",
+                        dictamen_tipo: "densidad_paradas",
+                        dictamen_titulo: "⚡ Máxima Consolidación (12 Paradas en 1 Torton)",
+                        dictamen_detalle: "Plan 1 prioriza el menor costo de flota consolidando las 12 entregas en un solo vehículo pesado, idéntico al agrupamiento de Isabel pero con ruta carretera OSRM secuenciada.",
+                        is_plan_highlight: false
+                    }
+                ]
             },
             plan2: {
                 pill: "AUDITORÍA COMPARATIVA: PLAN 2 (FLOTA BALANCEADA)",
                 title: "Programación Manual (Excel) vs. Plan 2: Flota Balanceada",
-                sub: "Auditoría lado a lado frente al modelo balanceado de ciclo operativo (14 Fletes: divide Poza Rica en Sierra y Costa)",
+                sub: "Auditoría flete por flete frente al modelo balanceado de ciclo operativo (14 Fletes: divide Poza Rica en Sierra y Costa)",
+                table_title: "📋 AUDITORÍA TÉCNICA COMPARATIVA (14 FLETES PROGRAMADOS)",
+                notice_html: `<div style="font-size:16px;">⚖️</div><div><strong>Plan 2 (Flota Balanceada):</strong> Desacopla la ruta TORTON 3 de Isabel en <strong>2 unidades independientes</strong> (EMB-13 Torton en Sierra y EMB-14 Camioneta en Costa) para eliminar fatiga de conducción y mantener jornadas &lt; 10 horas. Flota total: 14 fletes.</div>`,
+                filter_counts: { all: 14, opt: 3, cita: 3, paradas: 0, val: 8 },
                 kpis: {
                     time_val: "0.8 seg",
                     time_badge: "-99.9%",
@@ -1423,28 +1437,54 @@
                 insight2_body: "Mantiene la reconfiguración a Torton en Kanasín/Mérida, protegiendo el margen y evitando arrastrar 20 toneladas de tara ociosa por más de 2,100 km.",
                 insight3_title: "<span>⚖️ 3. Balance de Ciclo Operativo (Sierra vs. Costa)</span>",
                 insight3_body: "Plan 2 <strong>desacopla la Sierra de Puebla de la Costa de Poza Rica</strong>. Asigna 1 Torton para la sierra y 1 Camioneta 7t para Poza Rica/Papantla, reduciendo los tiempos de tránsito a dos jornadas de menos de 10 horas.",
-                torton3: {
-                    id: "TORTON 3",
-                    unidad_manual: "Torton 18t",
-                    cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
-                    destino_manual: "Sierra Norte Puebla & Veracruz Norte",
-                    peso_manual: 16.34,
-                    ocupacion_manual: "90.8%",
-                    cita_manual: "Múltiples clientes",
-                    unidad_algoritmo: "Torton 18t (EMB-13) + Camioneta 7t (EMB-14)",
-                    destino_algoritmo: "Sierra de Puebla (EMB-13) & Costa Poza Rica (EMB-14)",
-                    salida_algoritmo: "18/Ago 04:30 AM",
-                    eta_algoritmo: "08:30 AM a 12:30 PM",
-                    cumple_cita: "Ventanas matutinas cumplidas",
-                    dictamen_tipo: "optimizacion_flota",
-                    dictamen_titulo: "🔄 Balance de Ciclo Operativo (División Sierra / Costa)",
-                    dictamen_detalle: "Plan 2 resuelve el cuello de botella de Isabel: separa las 12 paradas en 2 rutas especializadas. Reduce el riesgo de rechazo por demoras vespertinas y mejora la seguridad del operador en curvas de montaña."
-                }
+                rows_override: [
+                    {
+                        id: "TORTON 3-A",
+                        unidad_manual: "Torton 18t (Partición Sierra)",
+                        cliente_manual: "Xicotepec, Huauchinango, Zacatlán (7 Pedidos)",
+                        destino_manual: "Sierra Norte de Puebla",
+                        peso_manual: 9.85,
+                        ocupacion_manual: "54.7% (Partición)",
+                        cita_manual: "Sin Cita Fija",
+                        unidad_algoritmo: "Torton 18t (EMB-13)",
+                        destino_algoritmo: "Corredor Sierra de Puebla",
+                        salida_algoritmo: "18/Ago 04:30 AM",
+                        eta_algoritmo: "18/Ago 09:15 AM a 01:45 PM",
+                        cumple_cita: "Jornada 9.2 hrs (< 10h)",
+                        dictamen_tipo: "optimizacion_flota",
+                        dictamen_titulo: "⚖️ Balance de Flota: Subcircuito Sierra Norte",
+                        dictamen_detalle: "Plan 2 desacopla la sierra poblana de la costa veracruzana. Garantiza retorno en menos de 10 horas eliminando riesgo de fatiga en curvas de montaña.",
+                        is_plan_highlight: true,
+                        plan_badge: "⚖️ DIVISIÓN PLAN 2"
+                    },
+                    {
+                        id: "TORTON 3-B",
+                        unidad_manual: "Torton 18t (Partición Costa)",
+                        cliente_manual: "Poza Rica, Papantla, Gtz. Zamora (5 Pedidos)",
+                        destino_manual: "Costa Norte de Veracruz",
+                        peso_manual: 6.49,
+                        ocupacion_manual: "92.7% (Camioneta 7t)",
+                        cita_manual: "Sin Cita Fija",
+                        unidad_algoritmo: "Camioneta 7t (EMB-14)",
+                        destino_algoritmo: "Costa Poza Rica & Papantla",
+                        salida_algoritmo: "18/Ago 05:00 AM",
+                        eta_algoritmo: "18/Ago 09:30 AM a 02:15 PM",
+                        cumple_cita: "Jornada 8.5 hrs (< 10h)",
+                        dictamen_tipo: "optimizacion_flota",
+                        dictamen_titulo: "⚖️ Balance de Flota: Subcircuito Costa Petrolera",
+                        dictamen_detalle: "Asigna una camioneta ágil de 7t para las entregas urbanas en Poza Rica y Papantla, logrando entrega antes de las 14:00 hrs con 92.7% de ocupación.",
+                        is_plan_highlight: true,
+                        plan_badge: "⚖️ DIVISIÓN PLAN 2"
+                    }
+                ]
             },
             plan3: {
                 pill: "AUDITORÍA COMPARATIVA: PLAN 3 (NIVEL DE SERVICIO & CITAS)",
                 title: "Programación Manual (Excel) vs. Plan 3: Nivel de Servicio & Citas",
-                sub: "Auditoría lado a lado frente al modelo capilar ágil (15 Fletes: 3 camionetas dedicadas para asegurar citas 07:00 AM)",
+                sub: "Auditoría flete por flete frente al modelo capilar ágil (15 Fletes: 3 camionetas dedicadas para asegurar citas 07:00 AM)",
+                table_title: "📋 AUDITORÍA TÉCNICA COMPARATIVA (15 FLETES PROGRAMADOS)",
+                notice_html: `<div style="font-size:16px;">⚡</div><div><strong>Plan 3 (Nivel de Servicio & Citas):</strong> Divide la ruta TORTON 3 de Isabel en <strong>3 camionetas capilares de 7t dedicadas</strong> (EMB-13, EMB-14 y EMB-15) para cumplir al 100% citas matutinas (07:00 AM a 10:30 AM) y acceder sin restricciones urbanas. Flota total: 15 fletes.</div>`,
+                filter_counts: { all: 15, opt: 1, cita: 6, paradas: 0, val: 8 },
                 kpis: {
                     time_val: "0.8 seg",
                     time_badge: "-99.9%",
@@ -1462,23 +1502,65 @@
                 insight2_body: "Reemplaza unidades pesadas de difícil maniobra urbana por 3 Camionetas ágiles de 7t, acelerando la descarga en andenes estrechos y centros urbanos de Puebla y Veracruz.",
                 insight3_title: "<span>🎯 3. Garantía Estricta de Citas Matutinas</span>",
                 insight3_body: "Plan 3 <strong>elimina totalmente las entregas tardías</strong>. Al despachar 3 rutas capilares en paralelo, todos los clientes de Xicotepec, Venustiano Carranza y Poza Rica reciben su pedido antes de las 10:30 AM.",
-                torton3: {
-                    id: "TORTON 3",
-                    unidad_manual: "Torton 18t",
-                    cliente_manual: "Poza Rica, Papantla, Xicotepec, Carranza (12 Pedidos)",
-                    destino_manual: "Sierra Norte Puebla & Veracruz Norte",
-                    peso_manual: 16.34,
-                    ocupacion_manual: "90.8%",
-                    cita_manual: "Múltiples clientes",
-                    unidad_algoritmo: "3 Camionetas 7t Ágiles (EMB-13, EMB-14, EMB-15)",
-                    destino_algoritmo: "Xicotepec (EMB-13) | V. Carranza (EMB-14) | Poza Rica (EMB-15)",
-                    salida_algoritmo: "18/Ago 04:30 AM a 05:00 AM",
-                    eta_algoritmo: "08:00 AM a 10:30 AM (Simultáneo)",
-                    cumple_cita: "100% Citas Matutinas cumplidas",
-                    dictamen_tipo: "despacho_inverso",
-                    dictamen_titulo: "🎯 Nivel de Servicio Matutino & Reparto Capilar",
-                    dictamen_detalle: "Plan 3 transforma el Torton 3 de Isabel en 3 entregas simultáneas de alta velocidad. Es la opción ideal cuando los clientes tienen ventanas de recibo matutinas estrictas que un Torton pesado no podría cumplir."
-                }
+                rows_override: [
+                    {
+                        id: "TORTON 3-A",
+                        unidad_manual: "Torton 18t (Fracción Cita 1)",
+                        cliente_manual: "Huauchinango & Xicotepec (3 Pedidos)",
+                        destino_manual: "Sierra Alta de Puebla",
+                        peso_manual: 5.12,
+                        ocupacion_manual: "73.1% (Camioneta 7t)",
+                        cita_manual: "Cita 7:00 AM (19/Ago)",
+                        unidad_algoritmo: "Camioneta 7t (EMB-13)",
+                        destino_algoritmo: "Xicotepec Cita Matutina (Capilar)",
+                        salida_algoritmo: "19/Ago 03:00 AM (Despacho Inverso)",
+                        eta_algoritmo: "19/Ago 06:40 AM",
+                        cumple_cita: "20 min antes de Cita 7:00 AM",
+                        dictamen_tipo: "despacho_inverso",
+                        dictamen_titulo: "⚡ Cita 7:00 AM Cumplida (Ruta Capilar)",
+                        dictamen_detalle: "Plan 3 despacha camioneta dedicada a las 03:00 AM para asegurar arribo antes de las 07:00 AM a andén prioritario en Xicotepec.",
+                        is_plan_highlight: true,
+                        plan_badge: "⚡ PLAN 3: CITA 7:00 AM"
+                    },
+                    {
+                        id: "TORTON 3-B",
+                        unidad_manual: "Torton 18t (Fracción Cita 2)",
+                        cliente_manual: "Venustiano Carranza & Entronque (4 Pedidos)",
+                        destino_manual: "Sierra-Costa Conexión",
+                        peso_manual: 5.48,
+                        ocupacion_manual: "78.3% (Camioneta 7t)",
+                        cita_manual: "Cita 8:30 AM (19/Ago)",
+                        unidad_algoritmo: "Camioneta 7t (EMB-14)",
+                        destino_algoritmo: "Venustiano Carranza (Capilar)",
+                        salida_algoritmo: "19/Ago 04:15 AM (Despacho Inverso)",
+                        eta_algoritmo: "19/Ago 08:05 AM",
+                        cumple_cita: "25 min antes de Cita 8:30 AM",
+                        dictamen_tipo: "despacho_inverso",
+                        dictamen_titulo: "⚡ Ventana 8:30 AM Garantizada",
+                        dictamen_detalle: "Salida directa sincronizada desde CEDI Orizaba a las 04:15 AM para arribo a andén a las 08:05 AM sin filas ni demoras.",
+                        is_plan_highlight: true,
+                        plan_badge: "⚡ PLAN 3: VENTANA MATUTINA"
+                    },
+                    {
+                        id: "TORTON 3-C",
+                        unidad_manual: "Torton 18t (Fracción Cita 3)",
+                        cliente_manual: "Poza Rica Urbano & Papantla (5 Pedidos)",
+                        destino_manual: "Zona Metropolitana Poza Rica",
+                        peso_manual: 5.74,
+                        ocupacion_manual: "82.0% (Camioneta 7t)",
+                        cita_manual: "Cita 10:00 AM (19/Ago)",
+                        unidad_algoritmo: "Camioneta 7t (EMB-15)",
+                        destino_algoritmo: "Poza Rica Centro Comercial (Capilar)",
+                        salida_algoritmo: "19/Ago 04:45 AM (Despacho Inverso)",
+                        eta_algoritmo: "19/Ago 09:20 AM",
+                        cumple_cita: "40 min antes de Cita 10:00 AM",
+                        dictamen_tipo: "despacho_inverso",
+                        dictamen_titulo: "⚡ Reparto Urbano Capilar Sin Restricción",
+                        dictamen_detalle: "Unidad de 7t con libre acceso al centro urbano de Poza Rica, evitando restricciones de circulación para tortons pesados.",
+                        is_plan_highlight: true,
+                        plan_badge: "⚡ PLAN 3: ACCESO URBANO"
+                    }
+                ]
             }
         };
 
@@ -1742,10 +1824,32 @@
             const ins3Body = document.getElementById('bench-insight3-body');
             if (ins3Body) ins3Body.innerHTML = cfg.insight3_body;
 
-            // 5. Build Dynamic Rows (Base rows + Torton 3 for current plan)
+            // 5. Update Table Title, Notice Banner and Filter Counts
+            const tableTitle = document.getElementById('bench-table-count-title');
+            if (tableTitle) tableTitle.innerText = cfg.table_title;
+
+            const benchNotice = document.getElementById('bench-plan-notice');
+            if (benchNotice) benchNotice.innerHTML = cfg.notice_html;
+
+            const btnAll = document.getElementById('btn-bench-all');
+            if (btnAll) btnAll.innerText = `Todos (${cfg.filter_counts.all})`;
+
+            const btnOpt = document.getElementById('btn-bench-opt');
+            if (btnOpt) btnOpt.innerText = `Tipología Vehicular (${cfg.filter_counts.opt})`;
+
+            const btnCita = document.getElementById('btn-bench-cita');
+            if (btnCita) btnCita.innerText = `Despacho Inverso (${cfg.filter_counts.cita})`;
+
+            const btnParadas = document.getElementById('btn-bench-paradas');
+            if (btnParadas) btnParadas.innerText = `Densidad de Paradas (${cfg.filter_counts.paradas})`;
+
+            const btnVal = document.getElementById('btn-bench-val');
+            if (btnVal) btnVal.innerText = `Validados FTL (${cfg.filter_counts.val})`;
+
+            // 6. Build Dynamic Rows (Base rows + Plan Overrides)
             const fullRows = [
                 ...BASE_BENCHMARK_ROWS.slice(0, 9),
-                cfg.torton3,
+                ...cfg.rows_override,
                 ...BASE_BENCHMARK_ROWS.slice(9)
             ];
 
@@ -1762,9 +1866,28 @@
                 const isUnderUtilized = item.peso_manual < 15;
                 const occColor = isUnderUtilized ? 'var(--amber)' : 'var(--emerald)';
 
+                let highlightStyle = '';
+                let badgeHtml = '';
+                if (item.is_plan_highlight) {
+                    if (currentPlanId === 'plan3') {
+                        highlightStyle = 'background: rgba(245, 158, 11, 0.05); border-left: 4px solid var(--amber);';
+                        badgeHtml = `<span style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.35); font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">${item.plan_badge}</span>`;
+                    } else if (currentPlanId === 'plan2') {
+                        highlightStyle = 'background: rgba(16, 185, 129, 0.05); border-left: 4px solid var(--emerald);';
+                        badgeHtml = `<span style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.35); font-size: 10px; font-weight: 800; padding: 2px 6px; border-radius: 4px; margin-left: 6px;">${item.plan_badge}</span>`;
+                    }
+                }
+
+                if (highlightStyle) {
+                    tr.setAttribute('style', highlightStyle);
+                }
+
                 tr.innerHTML = `
                     <td>
-                        <strong style="font-size:13px; color:var(--text-main);">${item.id}</strong>
+                        <div style="display:flex; align-items:center; flex-wrap:wrap; gap:4px;">
+                            <strong style="font-size:13px; color:var(--text-main);">${item.id}</strong>
+                            ${badgeHtml}
+                        </div>
                         <div style="font-size:11px; color:var(--text-muted); margin-top:2px;">${item.unidad_manual}</div>
                     </td>
                     <td>
@@ -2455,6 +2578,7 @@
             currentPlanId = planId;
             activeRoutes = plans[planId].routes;
             activeCategoryFilter = 'all';
+            currentBenchmarkFilter = 'all';
             routeVisibility = {};
 
             // Synchronize select dropdown
