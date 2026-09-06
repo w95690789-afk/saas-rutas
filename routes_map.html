@@ -2122,6 +2122,231 @@
             margin-top: 4px;
         }
     
+    
+        /* ==========================================
+           DEFERRED ORDERS & OUTLIER DETECTION STYLES
+           ========================================== */
+        .btn-deferred-pill {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-muted);
+            padding: 7px 14px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            box-shadow: var(--neu-sm);
+            transition: all 0.2s ease;
+        }
+
+        .btn-deferred-pill.has-deferred {
+            background: rgba(245, 158, 11, 0.12);
+            color: #b45309;
+            border-color: rgba(245, 158, 11, 0.4);
+            font-weight: 800;
+            box-shadow: 0 0 12px rgba(245, 158, 11, 0.25);
+            animation: pulseAmber 2.5s infinite;
+        }
+
+        body.theme-dark .btn-deferred-pill.has-deferred {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fde68a;
+            border-color: rgba(245, 158, 11, 0.5);
+        }
+
+        @keyframes pulseAmber {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .badge-outlier-alert {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: rgba(239, 68, 68, 0.12);
+            color: #dc2626;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+            letter-spacing: 0.3px;
+        }
+
+        body.theme-dark .badge-outlier-alert {
+            background: rgba(239, 68, 68, 0.25);
+            color: #fca5a5;
+            border-color: rgba(239, 68, 68, 0.5);
+        }
+
+        .btn-defer-pill {
+            background: rgba(245, 158, 11, 0.1);
+            color: #b45309;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            font-size: 10.5px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .btn-defer-pill:hover {
+            background: #f59e0b;
+            color: #ffffff;
+            border-color: #f59e0b;
+            box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
+        }
+
+        /* MODAL / DRAWER FOR DEFERRED ORDERS */
+        .defer-modal-backdrop {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: rgba(15, 23, 42, 0.5);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .defer-modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            width: 100%;
+            max-width: 680px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 28px;
+            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .defer-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .defer-order-card {
+            background: var(--bg-card-inner);
+            border: 1px solid var(--border-color);
+            border-radius: 18px;
+            padding: 16px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .defer-impact-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: var(--bg-card-inner);
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .defer-impact-col {
+            display: flex;
+            flex-direction: column;
+            text-align: center;
+        }
+
+        .defer-impact-val {
+            font-size: 16px;
+            font-weight: 800;
+            color: #10b981;
+        }
+
+        .defer-impact-lbl {
+            font-size: 10.5px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .defer-actions-row {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            flex-wrap: wrap;
+            margin-top: 10px;
+        }
+
+        .btn-modal-global {
+            background: var(--grad-coral-sunset);
+            color: #ffffff;
+            border: none;
+            padding: 12px 22px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            box-shadow: 0 4px 14px rgba(255, 94, 98, 0.35);
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-modal-global:hover {
+            box-shadow: 0 6px 20px rgba(255, 94, 98, 0.5);
+            transform: translateY(-1px);
+        }
+
+        .btn-modal-local {
+            background: var(--primary-bg);
+            color: var(--primary);
+            border: 1.5px solid var(--primary-border);
+            padding: 12px 20px;
+            border-radius: 9999px;
+            font-size: 13px;
+            font-weight: 800;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn-modal-local:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-modal-close {
+            background: transparent;
+            color: var(--text-muted);
+            border: 1px solid var(--border-color);
+            padding: 12px 18px;
+            border-radius: 9999px;
+            font-size: 12.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-modal-close:hover {
+            background: var(--bg-card-inner);
+            color: var(--text-main);
+        }
+    
     </style>
 
 </head>
@@ -2166,6 +2391,11 @@
         </div>
 
         <div class="btn-action-group">
+            <button id="btn-deferred-pill" class="btn-deferred-pill" onclick="openDeferredOrdersModal()" title="Ver y gestionar pedidos diferidos">
+                <span>📦 Diferidos:</span>
+                <span id="deferred-badge-count" class="mono-num" style="font-weight:800;">0</span>
+            </button>
+    
             <button id="btn-theme-toggle" class="btn-theme-toggle" onclick="toggleColorTheme()" title="Cambiar Tema (Claro / Oscuro)">
                 <span id="theme-toggle-icon">🌙</span>
                 <span id="theme-toggle-text">Modo</span>
@@ -2535,6 +2765,54 @@
                 </div>
             </div>
 
+    
+    <!-- MODAL / DRAWER PARA GESTIÓN DE PEDIDOS DIFERIDOS & OUTLIERS -->
+    <div id="defer-modal-backdrop" class="defer-modal-backdrop" onclick="closeDeferredOrdersModal(event)">
+        <div class="defer-modal-box" onclick="event.stopPropagation()">
+            <div class="defer-modal-header">
+                <div>
+                    <span class="wave-badge" style="background:rgba(245,158,11,0.15); color:#b45309;">GESTIÓN TÁCTICA DE BACKORDER</span>
+                    <h2 style="font-size:18px; font-weight:800; color:var(--text-main); margin-top:6px;">
+                        📦 Pedidos Diferidos & Simulación de Flota
+                    </h2>
+                    <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+                        Retén pedidos atípicos para optimizar el flete o envíalos al siguiente corte de consolidación.
+                    </div>
+                </div>
+                <button class="btn-modal-close" style="padding:6px 12px;" onclick="closeDeferredOrdersModal()">✕</button>
+            </div>
+
+            <div id="defer-modal-content">
+                <!-- Populated dynamically: Active deferred orders or empty state -->
+            </div>
+
+            <div id="defer-impact-summary" class="defer-impact-grid" style="display:none;">
+                <div class="defer-impact-col">
+                    <span class="defer-impact-val" id="defer-km-saved">-450 km</span>
+                    <span class="defer-impact-lbl">Distancia Ahorrada</span>
+                </div>
+                <div class="defer-impact-col">
+                    <span class="defer-impact-val" id="defer-cost-saved">-$8,100 MXN</span>
+                    <span class="defer-impact-lbl">Ahorro en Flete</span>
+                </div>
+                <div class="defer-impact-col">
+                    <span class="defer-impact-val" id="defer-hours-saved">-6.5 hrs</span>
+                    <span class="defer-impact-lbl">Tiempo de Chofer</span>
+                </div>
+            </div>
+
+            <div class="defer-actions-row" id="defer-modal-actions">
+                <button class="btn-modal-close" onclick="closeDeferredOrdersModal()">Cerrar</button>
+                <button class="btn-modal-local" id="btn-apply-local" onclick="applyDeferLocal()" title="Poda quirúrgica solo en el camión afectado">
+                    <span>🔒 Ajustar solo Rutas Afectadas</span>
+                </button>
+                <button class="btn-modal-global" id="btn-apply-global" onclick="applyDeferGlobal()" title="Vuelve a correr el algoritmo K-Means / VRP completo">
+                    <span>🚀 Re-Optimizar Plan Completo</span>
+                </button>
+            </div>
+        </div>
+    </div>
+    
     <!-- TOAST NOTIFICATION -->
     <div id="toast-msg" class="toast-notify"></div>
 
@@ -3239,6 +3517,384 @@
         
         let currentSelectedEmbId = 'EMB-01';
 
+        
+        // ==========================================
+        // DEFERRED ORDERS & OUTLIER DETECTION ENGINE
+        // ==========================================
+        let masterOrdersPool = [];
+        let deferredOrders = [];
+        let pendingDeferTarget = null;
+        let originalPlansBackup = null;
+
+        // Initialize master pool from baseline plan
+        function initMasterOrdersPool() {
+            if (masterOrdersPool.length > 0) return;
+            if (plans && plans.plan1) {
+                plans.plan1.routes.forEach(r => {
+                    r.stops.forEach(s => {
+                        s.jobs.forEach(j => {
+                            masterOrdersPool.push({
+                                id: j.id,
+                                lat: s.lat,
+                                lng: s.lng,
+                                demand: j.demand,
+                                excel_info: JSON.parse(JSON.stringify(j.excel_info || {})),
+                                original_emb_id: r.emb_id,
+                                original_corridor: r.corridor
+                            });
+                        });
+                    });
+                });
+                originalPlansBackup = JSON.parse(JSON.stringify(plans));
+            }
+        }
+
+        // Calculate Outlier Distance & Marginal Cost for any stop in a route
+        function checkStopOutlier(route, stop) {
+            // Distance between coordinates (Haversine km)
+            function getDist(lat1, lon1, lat2, lon2) {
+                const R = 6371;
+                const dLat = (lat2 - lat1) * Math.PI / 180;
+                const dLon = (lon2 - lon1) * Math.PI / 180;
+                const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+                          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+                          Math.sin(dLon/2) * Math.sin(dLon/2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+                return R * c;
+            }
+
+            if (!route.stops || route.stops.length <= 1) return null;
+
+            // Compute minimum distance to any OTHER stop in this route
+            let minDistToNeighbors = Infinity;
+            route.stops.forEach(otherStop => {
+                if (otherStop.seq === stop.seq) return;
+                const d = getDist(stop.lat, stop.lng, otherStop.lat, otherStop.lng);
+                if (d < minDistToNeighbors) minDistToNeighbors = d;
+            });
+
+            // If a stop is > 120km away from all other stops in the route, it is an outlier
+            if (minDistToNeighbors >= 120) {
+                const kmDesvio = Math.round(minDistToNeighbors * 1.25); // Road winding factor
+                const costoMarginal = Math.round(kmDesvio * 18); // $18 MXN/km for Torton
+                const costoPorKg = (costoMarginal / (stop.load || 1500)).toFixed(2);
+                return {
+                    isOutlier: true,
+                    kmDesvio: kmDesvio,
+                    costoMarginal: costoMarginal,
+                    costoPorKg: costoPorKg
+                };
+            }
+            return null;
+        }
+
+        // Open Defer Confirmation Modal for a specific order
+        function promptDeferOrder(orderId, embId) {
+            initMasterOrdersPool();
+            const plan = plans[currentPlanId];
+            const route = plan.routes.find(r => r.emb_id === embId);
+            if (!route) return;
+
+            let targetJob = null;
+            let targetStop = null;
+            route.stops.forEach(s => {
+                const j = s.jobs.find(job => (job.excel_info && job.excel_info.pedido === orderId) || job.id === orderId);
+                if (j) {
+                    targetJob = j;
+                    targetStop = s;
+                }
+            });
+
+            if (!targetJob) return;
+
+            const outlier = checkStopOutlier(route, targetStop) || {
+                kmDesvio: 450,
+                costoMarginal: 8100,
+                costoPorKg: "5.40"
+            };
+
+            pendingDeferTarget = {
+                orderId: orderId,
+                embId: embId,
+                job: targetJob,
+                stop: targetStop,
+                route: route,
+                outlier: outlier
+            };
+
+            const modalContent = document.getElementById('defer-modal-content');
+            const ex = targetJob.excel_info || {};
+
+            modalContent.innerHTML = `
+                <div class="defer-order-card" style="border-left: 5px solid #f59e0b;">
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <span class="badge-outlier-alert">⚠️ PARADA ATÍPICA DETECTADA</span>
+                            <div style="font-size:15px; font-weight:800; color:var(--text-main); margin-top:4px;">
+                                ${ex.pedido || targetJob.id} &bull; ${ex.nombre || 'Cliente'}
+                            </div>
+                            <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+                                📍 <strong>Destino:</strong> ${ex.poblacion || targetStop.city}, ${ex.estado || targetStop.state} &bull; <strong>Carga:</strong> ${Math.round(targetJob.demand).toLocaleString()} kg (${(targetJob.demand/1000).toFixed(2)} t)
+                            </div>
+                            <div style="font-size:11.5px; color:#64748b; margin-top:4px;">
+                                🚛 <strong>Unidad Actual:</strong> ${route.emb_id} (${route.type}) &bull; ${route.corridor}
+                            </div>
+                        </div>
+                        <span class="mono-num" style="font-size:14px; font-weight:800; color:var(--primary);">${(targetJob.demand/1000).toFixed(2)}t</span>
+                    </div>
+
+                    <div style="margin-top:10px; background:rgba(239,68,68,0.06); border:1px solid rgba(239,68,68,0.2); padding:10px 14px; border-radius:12px;">
+                        <div style="font-size:12px; font-weight:700; color:#dc2626;">
+                            📉 Diagnóstico de Ineficiencia Logística:
+                        </div>
+                        <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">
+                            Esta parada desvía a la unidad <strong>+${outlier.kmDesvio} km</strong> fuera de su cluster natural, generando un sobrecosto de <strong>+$${outlier.costoMarginal.toLocaleString()} MXN</strong> ($${outlier.costoPorKg} MXN/kg trasladado).
+                        </div>
+                    </div>
+
+                    <div style="margin-top:10px;">
+                        <label style="font-size:11.5px; font-weight:800; color:var(--text-main); display:block; margin-bottom:4px;">
+                            Selecciona la Razón Operativa del Diferimiento:
+                        </label>
+                        <select id="defer-reason-select" style="width:100%; padding:8px 12px; border-radius:10px; border:1px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-size:12px; font-weight:600;">
+                            <option value="Dispersión geográfica excesiva (Desvío de 450 km no rentable)">Dispersión geográfica excesiva (Desvío de ${outlier.kmDesvio} km no rentable)</option>
+                            <option value="Capacidad agotada en corredor natural de destino">Capacidad agotada en corredor natural de destino</option>
+                            <option value="Retención para consolidación en siguiente jornada (Armar FTL)">Retención para consolidación en siguiente jornada (Armar FTL)</option>
+                            <option value="Ventana horaria o cita SAP no alcanzable">Ventana horaria o cita SAP no alcanzable</option>
+                        </select>
+                    </div>
+                </div>
+            `;
+
+            // Update impact summary
+            const impactSummary = document.getElementById('defer-impact-summary');
+            if (impactSummary) {
+                impactSummary.style.display = 'grid';
+                document.getElementById('defer-km-saved').innerText = `-${outlier.kmDesvio} km`;
+                document.getElementById('defer-cost-saved').innerText = `-$${outlier.costoMarginal.toLocaleString()} MXN`;
+                document.getElementById('defer-hours-saved').innerText = `-${(outlier.kmDesvio/65).toFixed(1)} hrs`;
+            }
+
+            document.getElementById('defer-modal-backdrop').style.display = 'flex';
+        }
+
+        // Apply Local Pruning: only remove order from affected route
+        function applyDeferLocal() {
+            if (!pendingDeferTarget) return;
+            const target = pendingDeferTarget;
+            const reasonSelect = document.getElementById('defer-reason-select');
+            const reason = reasonSelect ? reasonSelect.value : "Dispersión geográfica excesiva";
+
+            // Push to deferredOrders array
+            deferredOrders.push({
+                orderId: target.orderId,
+                job: target.job,
+                routeOrigin: target.embId,
+                corridorOrigin: target.route.corridor,
+                reason: reason,
+                kmSaved: target.outlier.kmDesvio,
+                costSaved: target.outlier.costoMarginal,
+                deferredAt: new Date().toLocaleTimeString()
+            });
+
+            // Prune locally from route
+            const plan = plans[currentPlanId];
+            const route = plan.routes.find(r => r.emb_id === target.embId);
+            if (route) {
+                // Remove job from stop or remove entire stop if empty
+                route.stops = route.stops.filter(s => {
+                    s.jobs = s.jobs.filter(j => (j.excel_info && j.excel_info.pedido !== target.orderId) && j.id !== target.orderId);
+                    return s.jobs.length > 0;
+                });
+
+                // Recalculate route totals
+                route.load = route.stops.reduce((acc, s) => acc + s.jobs.reduce((a, j) => a + j.demand, 0), 0);
+                route.orders_count = route.stops.reduce((acc, s) => acc + s.jobs.length, 0);
+                route.stops_count = route.stops.length;
+                route.distance = Math.max(200, route.distance - target.outlier.kmDesvio);
+                route.cost = Math.max(route.fixed_cost || 10000, route.cost - target.outlier.costoMarginal);
+
+                // Update plan totals
+                plan.total_weight = plan.routes.reduce((acc, r) => acc + r.load, 0);
+                plan.total_cost = plan.routes.reduce((acc, r) => acc + r.cost, 0);
+            }
+
+            updateDeferredBadge();
+            closeDeferredOrdersModal();
+            renderCockpitView();
+            renderSidebar();
+            renderMapRoutes();
+            updateControlKpis();
+            if (currentViewMode === 'map' || currentViewMode === 'tactical') {
+                renderTacticalView(target.embId);
+            }
+
+            showToast(`🔒 Pedido ${target.orderId} diferido localmente. Unidad ${target.embId} ajustada a ${route.stops.length} paradas.`);
+            pendingDeferTarget = null;
+        }
+
+        // Apply Global Re-Optimization: rerun solver with remaining active jobs
+        function applyDeferGlobal() {
+            if (!pendingDeferTarget && deferredOrders.length === 0) return;
+            const target = pendingDeferTarget;
+            const reasonSelect = document.getElementById('defer-reason-select');
+            const reason = reasonSelect ? reasonSelect.value : "Dispersión geográfica excesiva";
+
+            if (target) {
+                deferredOrders.push({
+                    orderId: target.orderId,
+                    job: target.job,
+                    routeOrigin: target.embId,
+                    corridorOrigin: target.route.corridor,
+                    reason: reason,
+                    kmSaved: target.outlier.kmDesvio,
+                    costSaved: target.outlier.costoMarginal,
+                    deferredAt: new Date().toLocaleTimeString()
+                });
+            }
+
+            initMasterOrdersPool();
+
+            // Filter active jobs from master pool
+            const deferredIds = new Set(deferredOrders.map(d => d.orderId));
+            const activeJobs = masterOrdersPool.filter(j => !deferredIds.has(j.id) && !deferredIds.has(j.excel_info && j.excel_info.pedido));
+
+            // Re-solve dynamically using the built-in solver
+            const recomputedPlans = solveHybridLogisticsPlansJS(activeJobs);
+            if (recomputedPlans && recomputedPlans.plan1) {
+                plans = recomputedPlans;
+                changePlan(currentPlanId);
+                showToast(`🚀 Plan Global Re-optimizado con ${activeJobs.length} pedidos activos. Toda la red ha sido recalculada.`);
+            }
+
+            updateDeferredBadge();
+            closeDeferredOrdersModal();
+            pendingDeferTarget = null;
+        }
+
+        // Reinstate a deferred order back into the plan
+        function reinstateDeferredOrder(orderId) {
+            initMasterOrdersPool();
+            deferredOrders = deferredOrders.filter(d => d.orderId !== orderId);
+            updateDeferredBadge();
+
+            if (deferredOrders.length === 0 && originalPlansBackup) {
+                plans = JSON.parse(JSON.stringify(originalPlansBackup));
+                changePlan(currentPlanId);
+                showToast(`↩️ Pedido ${orderId} reincorporado. Plan restaurado al estado original.`);
+            } else {
+                const deferredIds = new Set(deferredOrders.map(d => d.orderId));
+                const activeJobs = masterOrdersPool.filter(j => !deferredIds.has(j.id) && !deferredIds.has(j.excel_info && j.excel_info.pedido));
+                const recomputedPlans = solveHybridLogisticsPlansJS(activeJobs);
+                if (recomputedPlans && recomputedPlans.plan1) {
+                    plans = recomputedPlans;
+                    changePlan(currentPlanId);
+                }
+                showToast(`↩️ Pedido ${orderId} reincorporado al plan activo.`);
+            }
+
+            openDeferredOrdersModal();
+        }
+
+        // Update Topbar Counter Badge
+        function updateDeferredBadge() {
+            const badge = document.getElementById('deferred-badge-count');
+            const btn = document.getElementById('btn-deferred-pill');
+            if (badge) badge.innerText = deferredOrders.length;
+            if (btn) {
+                if (deferredOrders.length > 0) {
+                    btn.classList.add('has-deferred');
+                    const totalDefWeight = (deferredOrders.reduce((acc, d) => acc + (d.job.demand || 0), 0)/1000).toFixed(2);
+                    btn.innerHTML = `<span>📦 Diferidos: <strong>${deferredOrders.length} (${totalDefWeight}t)</strong></span>`;
+                } else {
+                    btn.classList.remove('has-deferred');
+                    btn.innerHTML = `<span>📦 Diferidos: <strong>0</strong></span>`;
+                }
+            }
+        }
+
+        // Open Deferred Orders Modal (from topbar or button)
+        function openDeferredOrdersModal() {
+            initMasterOrdersPool();
+            const modalContent = document.getElementById('defer-modal-content');
+            const impactSummary = document.getElementById('defer-impact-summary');
+            const actionsRow = document.getElementById('defer-modal-actions');
+
+            if (deferredOrders.length === 0) {
+                modalContent.innerHTML = `
+                    <div style="text-align:center; padding:30px 20px; color:var(--text-muted);">
+                        <div style="font-size:36px; margin-bottom:10px;">📦</div>
+                        <div style="font-size:15px; font-weight:800; color:var(--text-main);">No hay pedidos diferidos actualmente</div>
+                        <div style="font-size:12px; margin-top:4px;">
+                            Todos los pedidos están asignados en el plan activo. Si detectas paradas atípicas con desvío excesivo, puedes diferirlas directamente desde la Consola de Despacho.
+                        </div>
+                    </div>
+                `;
+                if (impactSummary) impactSummary.style.display = 'none';
+                if (actionsRow) {
+                    actionsRow.innerHTML = `<button class="btn-modal-close" onclick="closeDeferredOrdersModal()">Cerrar</button>`;
+                }
+            } else {
+                let itemsHtml = '';
+                let totalKmSaved = 0;
+                let totalCostSaved = 0;
+
+                deferredOrders.forEach((d, idx) => {
+                    const ex = d.job.excel_info || {};
+                    totalKmSaved += d.kmSaved || 450;
+                    totalCostSaved += d.costSaved || 8100;
+
+                    itemsHtml += `
+                        <div class="defer-order-card" style="margin-bottom:12px; border-left:4px solid #f59e0b;">
+                            <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                                <div>
+                                    <span class="badge-outlier-alert" style="background:rgba(245,158,11,0.15); color:#b45309;">RETENIDO EN BACKORDER</span>
+                                    <div style="font-size:14px; font-weight:800; color:var(--text-main); margin-top:3px;">
+                                        ${ex.pedido || d.orderId} &bull; ${ex.nombre || 'Cliente'}
+                                    </div>
+                                    <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">
+                                        📍 <strong>Destino:</strong> ${ex.poblacion || 'Destino'}, ${ex.estado || ''} &bull; <strong>Carga:</strong> ${Math.round(d.job.demand).toLocaleString()} kg (${(d.job.demand/1000).toFixed(2)} t)
+                                    </div>
+                                    <div style="font-size:11px; color:#b45309; margin-top:4px; font-weight:700;">
+                                        📋 Razón: ${d.reason}
+                                    </div>
+                                </div>
+                                <button class="btn-defer-pill" style="background:var(--primary-bg); color:var(--primary); border-color:var(--primary-border);" onclick="reinstateDeferredOrder('${d.orderId}')">
+                                    <span>↩️ Reincorporar</span>
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                modalContent.innerHTML = itemsHtml;
+
+                if (impactSummary) {
+                    impactSummary.style.display = 'grid';
+                    document.getElementById('defer-km-saved').innerText = `-${totalKmSaved} km`;
+                    document.getElementById('defer-cost-saved').innerText = `-$${totalCostSaved.toLocaleString()} MXN`;
+                    document.getElementById('defer-hours-saved').innerText = `-${(totalKmSaved/65).toFixed(1)} hrs`;
+                }
+
+                if (actionsRow) {
+                    actionsRow.innerHTML = `
+                        <button class="btn-modal-close" onclick="closeDeferredOrdersModal()">Cerrar</button>
+                        <button class="btn-modal-global" onclick="applyDeferGlobal()">
+                            <span>🚀 Re-Optimizar Plan Completo</span>
+                        </button>
+                    `;
+                }
+            }
+
+            document.getElementById('defer-modal-backdrop').style.display = 'flex';
+        }
+
+        function closeDeferredOrdersModal(event) {
+            if (event && event.target !== document.getElementById('defer-modal-backdrop')) return;
+            document.getElementById('defer-modal-backdrop').style.display = 'none';
+        }
+    
+
         function updateControlKpis() {
             const plan = plans[currentPlanId];
             if (!plan) return;
@@ -3878,15 +4534,41 @@
                 const util = Math.min(100, Math.round((r.load / maxCap) * 100));
                 const drawerId = `drawer_${rIdx}`;
 
+                // Check for outlier stops in this route
+                let hasOutlierInRoute = false;
+                let outlierStopSeq = null;
+                let outlierDesvioKm = 0;
+                let outlierCost = 0;
+                let outlierOrderId = null;
+
+                r.stops.forEach(s => {
+                    const out = checkStopOutlier(r, s);
+                    if (out && out.isOutlier) {
+                        hasOutlierInRoute = true;
+                        outlierStopSeq = s.seq;
+                        outlierDesvioKm = out.kmDesvio;
+                        outlierCost = out.costoMarginal;
+                        if (s.jobs && s.jobs[0] && s.jobs[0].excel_info) {
+                            outlierOrderId = s.jobs[0].excel_info.pedido || s.jobs[0].id;
+                        }
+                    }
+                });
+
                 let ordersTableRows = '';
                 r.stops.forEach(s => {
+                    const stopOutlier = checkStopOutlier(r, s);
                     s.jobs.forEach(j => {
                         const ex = j.excel_info || {};
                         const citaText = ex.agente || s.cita || 'Sin cita';
                         const hasCita = citaText !== 'Sin cita' && citaText.toUpperCase().includes('CITA');
+                        const pId = ex.pedido || j.id;
+
                         ordersTableRows += `
-                            <tr>
-                                <td><strong style="color:var(--primary);">${ex.pedido || j.id}</strong></td>
+                            <tr style="${stopOutlier ? 'background:rgba(239,68,68,0.04);' : ''}">
+                                <td>
+                                    <strong style="color:var(--primary);">${pId}</strong>
+                                    ${stopOutlier ? `<div style="margin-top:2px;"><span class="badge-outlier-alert">⚠️ Desvío +${stopOutlier.kmDesvio}km</span></div>` : ''}
+                                </td>
                                 <td><span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 6px; border-radius:9999px; font-weight:700; font-size:10px;">Parada ${s.seq}</span></td>
                                 <td><strong>${ex.nombre || 'Cliente'}</strong><br><span style="color:#94a3b8; font-size:10px;">Cód: ${ex.cliente || ''}</span></td>
                                 <td>${formatFullAddress(ex, s)}</td>
@@ -3895,7 +4577,10 @@
                                     <span style="color:var(--primary); font-weight:700;">${s.eta}</span>
                                     ${hasCita ? '<div style="color:var(--emerald); font-size:10px; font-weight:700; margin-top:2px;">✓ A tiempo para cita</div>' : ''}
                                 </td>
-                                <td><span style="color:var(--amber); font-weight:600;">${citaText}</span></td>
+                                <td>
+                                    <span style="color:var(--amber); font-weight:600;">${citaText}</span>
+                                    ${stopOutlier ? `<div style="margin-top:4px;"><button class="btn-defer-pill" onclick="promptDeferOrder('${pId}', '${r.emb_id}')">⏸️ Diferir Pedido</button></div>` : ''}
+                                </td>
                             </tr>
                         `;
                     });
@@ -3903,12 +4588,23 @@
 
                 const card = document.createElement('div');
                 card.className = 'embarque-row-card';
+                if (hasOutlierInRoute) {
+                    card.style.borderColor = 'rgba(239, 68, 68, 0.4)';
+                }
+                card.className = 'embarque-row-card';
 
                 card.innerHTML = `
                     <div class="embarque-main-bar" onclick="toggleOrdersDrawer('${drawerId}')">
                         <div class="emb-card-top">
-                            <span class="emb-badge-id-pill">${r.emb_id}</span>
-                            <span class="emb-type-pill">${r.vehicle} &bull; ${r.type.toUpperCase()}</span>
+                            <div style="display:flex; align-items:center; gap:8px;">
+                                <span class="emb-badge-id-pill">${r.emb_id}</span>
+                                <span class="emb-type-pill">${r.vehicle} &bull; ${r.type.toUpperCase()}</span>
+                            </div>
+                            ${hasOutlierInRoute ? `
+                                <button class="btn-defer-pill" onclick="event.stopPropagation(); promptDeferOrder('${outlierOrderId}', '${r.emb_id}')" title="Detectado desvío excesivo fuera del cluster">
+                                    <span>⚠️ Parada ${outlierStopSeq} Atípica (+${outlierDesvioKm} km) &bull; Diferir</span>
+                                </button>
+                            ` : ''}
                         </div>
 
                         <div class="emb-corridor-banner">
@@ -4136,6 +4832,31 @@
             ];
             const wsKPIs = XLSX.utils.aoa_to_sheet(kpiData);
             XLSX.utils.book_append_sheet(wb, wsKPIs, "KPIS_PLAN");
+
+            // 4. Sheet PEDIDOS_DIFERIDOS (Si existen pedidos en backorder)
+            if (deferredOrders && deferredOrders.length > 0) {
+                const deferredData = [
+                    ["Pedido SAP", "Código Cliente", "Razón Social", "Población", "Estado", "Demanda (kg)", "Toneladas (t)", "Corredor Original", "Razón de Diferimiento", "Ahorro Estimado Flete (MXN)", "Hora Registro"]
+                ];
+                deferredOrders.forEach(d => {
+                    const ex = d.job.excel_info || {};
+                    deferredData.push([
+                        ex.pedido || d.orderId,
+                        ex.cliente || '',
+                        ex.nombre || '',
+                        ex.poblacion || '',
+                        ex.estado || '',
+                        d.job.demand,
+                        Number((d.job.demand/1000).toFixed(2)),
+                        d.corridorOrigin,
+                        d.reason,
+                        d.costSaved,
+                        d.deferredAt
+                    ]);
+                });
+                const wsDeferred = XLSX.utils.aoa_to_sheet(deferredData);
+                XLSX.utils.book_append_sheet(wb, wsDeferred, "PEDIDOS_DIFERIDOS");
+            }
 
             const fileName = `Plan_Logistico_CalidadBueno_${currentPlanId.toUpperCase()}.xlsx`;
             XLSX.writeFile(wb, fileName);
