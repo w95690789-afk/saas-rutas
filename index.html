@@ -732,43 +732,52 @@
             background: var(--bg-card);
             border: 1px solid var(--card-border);
             border-left: 6px solid var(--emb-color);
-            border-radius: 14px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: var(--neu-sm);
-            transition: all 0.2s ease;
+            box-shadow: 6px 6px 16px rgba(166, 180, 200, 0.42), -6px -6px 16px #ffffff;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 16px;
         }
 
         .embarque-row-card:hover {
-            box-shadow: var(--neu-hover);
-            transform: translateY(-1px);
+            box-shadow: 8px 8px 22px rgba(166, 180, 200, 0.52), -8px -8px 22px #ffffff;
+            transform: translateY(-2px);
         }
 
         .embarque-main-bar {
-            padding: 16px 22px;
-            display: flex;
+            padding: 18px 26px;
+            display: grid;
+            grid-template-columns: minmax(300px, 1.4fr) 210px 260px auto;
             align-items: center;
-            justify-content: space-between;
-            flex-wrap: wrap;
-            gap: 15px;
+            gap: 22px;
             background: var(--bg-card);
             cursor: pointer;
+            transition: background 0.15s ease;
+        }
+
+        .embarque-main-bar:hover {
+            background: var(--bg-card-hover);
         }
 
         .emb-col-id {
             display: flex;
             align-items: center;
             gap: 14px;
+            min-width: 0;
         }
 
         .emb-badge-id {
-            font-size: 13.5px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
             font-weight: 800;
             color: var(--primary-text);
-            background: var(--primary-bg);
-            border: 1px solid var(--primary-border);
-            padding: 4px 10px;
-            border-radius: 8px;
+            background: var(--bg-card-inner);
+            border: 1px solid var(--border-color);
+            padding: 6px 12px;
+            border-radius: 10px;
             box-shadow: var(--neu-pressed-subtle);
+            letter-spacing: 0.5px;
+            flex-shrink: 0;
         }
 
         body.theme-dark .emb-badge-id {
@@ -781,77 +790,186 @@
             font-size: 14px;
             font-weight: 800;
             color: var(--text-main);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .emb-corridor-text {
             font-size: 12px;
             color: var(--text-muted);
-            margin-top: 2px;
+            margin-top: 3px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .emb-col-capacity {
-            min-width: 190px;
+            width: 210px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }
 
         .capacity-bar-bg {
             background: var(--bg-card-inner);
-            height: 9px;
-            border-radius: 5px;
+            height: 10px;
+            border-radius: 6px;
             overflow: hidden;
             margin-top: 6px;
-            box-shadow: var(--neu-pressed-subtle);
+            box-shadow: inset 2px 2px 5px rgba(166, 180, 200, 0.4), inset -2px -2px 5px #ffffff;
+            padding: 2px;
         }
 
         .capacity-bar-fill {
             height: 100%;
-            border-radius: 5px;
+            border-radius: 4px;
             transition: width 0.3s ease;
+            box-shadow: 0 0 6px currentColor;
         }
 
         .emb-col-dispatch {
+            width: 260px;
             font-size: 12px;
-            line-height: 1.4;
+            line-height: 1.5;
             color: var(--text-muted);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .badge-cita-live {
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            padding: 2px 7px;
+            border-radius: 8px;
+            font-size: 9.5px;
+            font-weight: 800;
+            letter-spacing: 0.5px;
+            box-shadow: 0 0 8px rgba(16, 185, 129, 0.25);
+            margin-left: 6px;
         }
 
         .emb-col-actions {
             display: flex;
-            gap: 8px;
+            align-items: center;
+            justify-content: flex-end;
+            gap: 10px;
+            white-space: nowrap;
         }
 
         .btn-emb-action {
             background: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--card-border);
-            padding: 7px 12px;
-            border-radius: 8px;
+            padding: 8px 14px;
+            border-radius: 10px;
             font-size: 11.5px;
             font-weight: 700;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 5px;
-            box-shadow: var(--neu-sm);
-            transition: all 0.15s ease;
+            gap: 6px;
+            box-shadow: 3px 3px 8px rgba(166, 180, 200, 0.35), -3px -3px 8px #ffffff;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            white-space: nowrap;
         }
 
         .btn-emb-action:hover {
-            box-shadow: var(--neu-hover);
-            transform: translateY(-1px);
+            box-shadow: 5px 5px 12px rgba(166, 180, 200, 0.45), -5px -5px 12px #ffffff;
+            transform: translateY(-2px);
+        }
+
+        .btn-emb-action:active {
+            box-shadow: var(--neu-pressed-subtle);
+            transform: translateY(0);
         }
 
         .btn-emb-whatsapp {
-            background: var(--emerald-bg);
-            color: var(--emerald-text);
-            border: 1px solid var(--emerald-border);
+            background: #ecfdf5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+            box-shadow: 3px 3px 8px rgba(16, 185, 129, 0.25), -3px -3px 8px #ffffff;
         }
 
         .btn-emb-whatsapp:hover {
-            background: var(--emerald);
-            color: white;
+            background: #d1fae5;
+            color: #047857;
+            box-shadow: 5px 5px 14px rgba(16, 185, 129, 0.35), -5px -5px 14px #ffffff;
         }
 
-        /* Order Details Drawer Table */
+        .btn-emb-map {
+            background: #eff6ff;
+            color: #1d4ed8;
+            border: 1px solid #bfdbfe;
+            box-shadow: 3px 3px 8px rgba(37, 99, 235, 0.22), -3px -3px 8px #ffffff;
+        }
+
+        .btn-emb-map:hover {
+            background: #dbeafe;
+            color: #1e40af;
+            box-shadow: 5px 5px 14px rgba(37, 99, 235, 0.32), -5px -5px 14px #ffffff;
+        }
+
+        .btn-emb-orders {
+            background: #fffbeb;
+            color: #92400e;
+            border: 1px solid #fde68a;
+            box-shadow: 3px 3px 8px rgba(217, 119, 6, 0.22), -3px -3px 8px #ffffff;
+        }
+
+        .btn-emb-orders:hover {
+            background: #fef3c7;
+            color: #78350f;
+            box-shadow: 5px 5px 14px rgba(217, 119, 6, 0.32), -5px -5px 14px #ffffff;
+        }
+
+        /* Dark mode overrides for buttons */
+        body.theme-dark .embarque-row-card {
+            box-shadow: 6px 6px 16px rgba(0, 0, 0, 0.45), -4px -4px 12px rgba(255, 255, 255, 0.03);
+        }
+        body.theme-dark .btn-emb-action {
+            background: #1e293b;
+            box-shadow: 3px 3px 8px rgba(0, 0, 0, 0.4), -2px -2px 6px rgba(255, 255, 255, 0.02);
+            color: #f1f5f9;
+        }
+        body.theme-dark .btn-emb-whatsapp {
+            background: rgba(16, 185, 129, 0.2);
+            color: #6ee7b7;
+            border: 1px solid rgba(16, 185, 129, 0.4);
+        }
+        body.theme-dark .btn-emb-map {
+            background: rgba(59, 130, 246, 0.2);
+            color: #93c5fd;
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+        body.theme-dark .btn-emb-orders {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fcd34d;
+            border: 1px solid rgba(245, 158, 11, 0.4);
+        }
+
+        @media (max-width: 1280px) {
+            .embarque-main-bar {
+                grid-template-columns: 1fr 1fr;
+                gap: 16px;
+            }
+            .emb-col-capacity {
+                width: 100%;
+            }
+            .emb-col-dispatch {
+                width: 100%;
+            }
+            .emb-col-actions {
+                justify-content: flex-start;
+                grid-column: span 2;
+            }
+        }
+
         .embarque-orders-drawer {
             padding: 16px 22px;
             background: var(--bg-card-inner);
@@ -1449,7 +1567,7 @@
 
             <!-- BENCHMARK / AUDITORIA VIEW -->
             <div id="benchmark-view">
-                <div style="max-width: 1400px; margin: 0 auto;">
+                <div style="max-width: 1680px; width: 100%; margin: 0 auto; padding: 0 16px;">
                     <!-- BENCHMARK HEADER -->
                     <div class="benchmark-header-box">
                         <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:15px;">
@@ -1674,7 +1792,7 @@
 
             <!-- COCKPIT / SPREADSHEET VIEW -->
             <div id="cockpit-view">
-                <div style="max-width: 1400px; margin: 0 auto;">
+                <div style="max-width: 1680px; width: 100%; margin: 0 auto; padding: 0 16px;">
                     <!-- PLAN SELECTION PILLS (INTERACTIVE TABS) -->
                     <div class="cockpit-plan-pills" style="display:flex; gap:12px; margin-bottom:20px; flex-wrap:wrap;">
                         <button class="plan-pill-btn active" id="pill-plan1" onclick="changePlan('plan1')" style="flex:1; min-width:280px;">
@@ -2990,17 +3108,17 @@
 
                         <div class="emb-col-dispatch">
                             <div>⏰ <strong>Salida CEDI:</strong> <span style="color:var(--primary); font-weight:700;">${r.departure}</span></div>
-                            <div>🏁 <strong>1ra Entrega:</strong> <span style="color:var(--primary); font-weight:700;">${r.stops[0].eta}</span> ${r.stops[0].cita && r.stops[0].cita.toUpperCase().includes('CITA') ? '<span style="color:var(--emerald-text); font-size:9.5px; font-weight:700; margin-left:4px; background:var(--emerald-bg); padding:1px 5px; border-radius:4px; border:1px solid var(--emerald-border);">✓ CUMPLE CITA</span>' : ''}</div>
+                            <div>🏁 <strong>1ra Entrega:</strong> <span style="color:var(--primary); font-weight:700;">${r.stops[0].eta}</span> ${r.stops[0].cita && r.stops[0].cita.toUpperCase().includes('CITA') ? '<span class="badge-cita-live"><span class="hw-live-led"></span> CUMPLE CITA</span>' : ''}</div>
                         </div>
 
                         <div class="emb-col-actions" onclick="event.stopPropagation()">
                             <button class="btn-emb-action btn-emb-whatsapp" onclick="copyWhatsAppDispatch('${r.emb_id}')">
                                 <span>📲 WhatsApp Chofer</span>
                             </button>
-                            <button class="btn-emb-action" onclick="viewTripOnMap('${r.emb_id}')">
+                            <button class="btn-emb-action btn-emb-map" onclick="viewTripOnMap('${r.emb_id}')">
                                 <span>🗺️ Ver en Mapa</span>
                             </button>
-                            <button class="btn-emb-action" onclick="toggleOrdersDrawer('${drawerId}')">
+                            <button class="btn-emb-action btn-emb-orders" onclick="toggleOrdersDrawer('${drawerId}')">
                                 <span id="toggle-icon-${drawerId}">🔽 ${r.orders_count} Pedidos</span>
                             </button>
                         </div>
