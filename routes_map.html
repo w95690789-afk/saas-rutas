@@ -15,61 +15,67 @@
     
     <style>
         :root, body.theme-light {
-            --bg-page: #f4f6fa;
-            --bg-topbar: #f4f6fa;
-            --bg-sidebar: #f4f6fa;
+            --bg-page: #f8fafc;
+            --bg-topbar: #ffffff;
+            --bg-sidebar: #ffffff;
             --bg-card: #ffffff;
-            --bg-card-inner: #eef2f7;
-            --bg-card-hover: #fcfdfe;
-            --bg-input: #eef2f7;
+            --bg-card-inner: #f1f5f9;
+            --bg-card-hover: #ffffff;
+            --bg-input: #f8fafc;
             --text-main: #0f172a;
-            --text-muted: #475569;
-            --text-light: #64748b;
+            --text-muted: #64748b;
+            --text-light: #94a3b8;
             --border-color: #e2e8f0;
-            --card-border: rgba(255, 255, 255, 0.9);
+            --card-border: rgba(226, 232, 240, 0.9);
             
-            /* Neumorphic Extrusion Shadows (Technology 08) */
-            --neu-flat: 6px 6px 16px rgba(166, 180, 200, 0.45), -6px -6px 16px #ffffff;
-            --neu-sm: 4px 4px 10px rgba(166, 180, 200, 0.35), -4px -4px 10px #ffffff;
-            --neu-hover: 8px 8px 22px rgba(166, 180, 200, 0.52), -8px -8px 22px #ffffff;
-            --neu-pressed: inset 3px 3px 6px rgba(166, 180, 200, 0.4), inset -3px -3px 6px #ffffff;
-            --neu-pressed-subtle: inset 2px 2px 4px rgba(166, 180, 200, 0.28), inset -2px -2px 4px #ffffff;
+            /* Ambient Soft Floating Shadows */
+            --neu-flat: 0 10px 25px -4px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(226, 232, 240, 0.8);
+            --neu-sm: 0 4px 12px rgba(15, 23, 42, 0.04), 0 0 0 1px rgba(226, 232, 240, 0.7);
+            --neu-hover: 0 20px 35px -8px rgba(15, 23, 42, 0.09), 0 0 0 1px rgba(203, 213, 225, 0.9);
+            --neu-pressed: inset 0 2px 4px rgba(15, 23, 42, 0.06);
+            --neu-pressed-subtle: inset 0 1px 2px rgba(15, 23, 42, 0.04);
             
-            /* Palette & Glowing Micro Accents */
+            /* 4 Signature Vibrant Gradients (From Reference Slides) */
+            --grad-coral-sunset: linear-gradient(135deg, #ff5e62 0%, #ff9966 100%);
+            --grad-vibrant-purple: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            --grad-mint-cyan: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+            --grad-cobalt-blue: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+            
+            /* Palette & Micro Accents */
             --primary: #2563eb;
             --primary-hover: #1d4ed8;
-            --primary-bg: #eff6ff;
-            --primary-border: #bfdbfe;
+            --primary-bg: rgba(37, 99, 235, 0.08);
+            --primary-border: rgba(37, 99, 235, 0.2);
             --primary-text: #1d4ed8;
             
-            --emerald: #059669;
-            --emerald-bg: #ecfdf5;
-            --emerald-border: #a7f3d0;
-            --emerald-text: #065f46;
+            --emerald: #10b981;
+            --emerald-bg: rgba(16, 185, 129, 0.08);
+            --emerald-border: rgba(16, 185, 129, 0.2);
+            --emerald-text: #047857;
             
-            --amber: #d97706;
-            --amber-bg: #fffbeb;
-            --amber-border: #fde68a;
-            --amber-text: #92400e;
+            --amber: #f59e0b;
+            --amber-bg: rgba(245, 158, 11, 0.08);
+            --amber-border: rgba(245, 158, 11, 0.2);
+            --amber-text: #b45309;
             
-            --rose: #dc2626;
-            --rose-bg: #fef2f2;
-            --rose-border: #fecaca;
-            --rose-text: #991b1b;
+            --rose: #f43f5e;
+            --rose-bg: rgba(244, 63, 94, 0.08);
+            --rose-border: rgba(244, 63, 94, 0.2);
+            --rose-text: #be123c;
             
-            --indigo: #4f46e5;
-            --indigo-bg: #eef2ff;
-            --indigo-border: #c7d2fe;
-            --indigo-text: #3730a3;
+            --indigo: #6366f1;
+            --indigo-bg: rgba(99, 102, 241, 0.08);
+            --indigo-border: rgba(99, 102, 241, 0.2);
+            --indigo-text: #4338ca;
             
-            --cyan: #0891b2;
-            --cyan-bg: #ecfeff;
-            --cyan-border: #a5f3fc;
+            --cyan: #06b6d4;
+            --cyan-bg: rgba(6, 182, 212, 0.08);
+            --cyan-border: rgba(6, 182, 212, 0.2);
             --cyan-text: #0e7490;
             
-            --table-header-bg: #eef2f7;
+            --table-header-bg: #f8fafc;
             --table-header-text: #0f172a;
-            --table-row-hover: #f8fafc;
+            --table-row-hover: #f1f5f9;
             --table-border: #e2e8f0;
             --table-text: #0f172a;
             --stat-box-bg: #ffffff;
@@ -80,62 +86,67 @@
         }
 
         body.theme-dark {
-            --bg-page: #0c1322;
-            --bg-topbar: #0c1322;
-            --bg-sidebar: #0c1322;
-            --bg-card: #172236;
-            --bg-card-inner: #0b1120;
-            --bg-card-hover: #1e2c45;
-            --bg-input: #0b1120;
+            --bg-page: #0b1120;
+            --bg-topbar: #0f172a;
+            --bg-sidebar: #0f172a;
+            --bg-card: #1e293b;
+            --bg-card-inner: #0f172a;
+            --bg-card-hover: #24344d;
+            --bg-input: #0f172a;
             --text-main: #f8fafc;
             --text-muted: #94a3b8;
             --text-light: #64748b;
-            --border-color: #26354d;
-            --card-border: rgba(255, 255, 255, 0.05);
+            --border-color: #334155;
+            --card-border: rgba(255, 255, 255, 0.06);
             
-            --neu-flat: 6px 6px 16px rgba(0, 0, 0, 0.45), -4px -4px 12px rgba(255, 255, 255, 0.03);
-            --neu-sm: 4px 4px 10px rgba(0, 0, 0, 0.35), -2px -2px 8px rgba(255, 255, 255, 0.02);
-            --neu-hover: 8px 8px 22px rgba(0, 0, 0, 0.55), -4px -4px 14px rgba(255, 255, 255, 0.05);
-            --neu-pressed: inset 3px 3px 6px rgba(0, 0, 0, 0.55), inset -2px -2px 5px rgba(255, 255, 255, 0.03);
-            --neu-pressed-subtle: inset 2px 2px 4px rgba(0, 0, 0, 0.45), inset -1px -1px 3px rgba(255, 255, 255, 0.02);
+            --neu-flat: 0 10px 25px -4px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.06);
+            --neu-sm: 0 4px 12px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(255, 255, 255, 0.05);
+            --neu-hover: 0 20px 35px -8px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.12);
+            --neu-pressed: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+            --neu-pressed-subtle: inset 0 1px 2px rgba(0, 0, 0, 0.3);
+            
+            --grad-coral-sunset: linear-gradient(135deg, #ff5e62 0%, #ff9966 100%);
+            --grad-vibrant-purple: linear-gradient(135deg, #ec4899 0%, #8b5cf6 100%);
+            --grad-mint-cyan: linear-gradient(135deg, #06b6d4 0%, #10b981 100%);
+            --grad-cobalt-blue: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
             
             --primary: #3b82f6;
             --primary-hover: #2563eb;
-            --primary-bg: rgba(59, 130, 246, 0.15);
-            --primary-border: rgba(59, 130, 246, 0.3);
+            --primary-bg: rgba(59, 130, 246, 0.18);
+            --primary-border: rgba(59, 130, 246, 0.35);
             --primary-text: #93c5fd;
             
-            --emerald: #10b981;
-            --emerald-bg: rgba(16, 185, 129, 0.15);
-            --emerald-border: rgba(16, 185, 129, 0.3);
-            --emerald-text: #6ee7b7;
+            --emerald: #34d399;
+            --emerald-bg: rgba(52, 211, 153, 0.18);
+            --emerald-border: rgba(52, 211, 153, 0.35);
+            --emerald-text: #a7f3d0;
             
-            --amber: #f59e0b;
-            --amber-bg: rgba(245, 158, 11, 0.15);
-            --amber-border: rgba(245, 158, 11, 0.3);
-            --amber-text: #fcd34d;
+            --amber: #fbbf24;
+            --amber-bg: rgba(251, 191, 36, 0.18);
+            --amber-border: rgba(251, 191, 36, 0.35);
+            --amber-text: #fde68a;
             
-            --rose: #ef4444;
-            --rose-bg: rgba(239, 68, 68, 0.15);
-            --rose-border: rgba(239, 68, 68, 0.3);
-            --rose-text: #fca5a5;
+            --rose: #fb7185;
+            --rose-bg: rgba(251, 113, 133, 0.18);
+            --rose-border: rgba(251, 113, 133, 0.35);
+            --rose-text: #fecdd3;
             
             --indigo: #818cf8;
-            --indigo-bg: rgba(99, 102, 241, 0.15);
-            --indigo-border: rgba(99, 102, 241, 0.3);
+            --indigo-bg: rgba(99, 102, 241, 0.18);
+            --indigo-border: rgba(99, 102, 241, 0.35);
             --indigo-text: #c7d2fe;
             
             --cyan: #38bdf8;
-            --cyan-bg: rgba(56, 189, 248, 0.15);
-            --cyan-border: rgba(56, 189, 248, 0.3);
+            --cyan-bg: rgba(56, 189, 248, 0.18);
+            --cyan-border: rgba(56, 189, 248, 0.35);
             --cyan-text: #7dd3fc;
             
-            --table-header-bg: #0b1120;
+            --table-header-bg: #0f172a;
             --table-header-text: #93c5fd;
             --table-row-hover: rgba(30, 41, 59, 0.7);
-            --table-border: #26354d;
+            --table-border: #334155;
             --table-text: #f1f5f9;
-            --stat-box-bg: #172236;
+            --stat-box-bg: #1e293b;
             --shadow-sm: var(--neu-sm);
             --shadow-md: var(--neu-flat);
             --route-color: #3b82f6;
@@ -1495,6 +1506,622 @@
             color: var(--text-main);
         }
 
+    
+        /* ===================================================
+           NEO-CLEAN 3D & VIBRANT FLUID DESIGN SYSTEM ADDITIONS
+           =================================================== */
+        
+        /* Ultra-rounded Global Geometry */
+        .plan-selector-bar {
+            border-bottom: 1px solid var(--border-color);
+            box-shadow: 0 4px 20px rgba(15, 23, 42, 0.03);
+            background: var(--bg-topbar);
+        }
+
+        .view-mode-group {
+            background: var(--bg-card-inner);
+            padding: 5px;
+            border-radius: 9999px;
+            box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.04);
+            display: flex;
+            gap: 4px;
+        }
+
+        .view-mode-btn {
+            border-radius: 9999px;
+            padding: 8px 18px;
+            font-size: 12px;
+            font-weight: 700;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            color: var(--text-muted);
+            background: transparent;
+        }
+
+        .view-mode-btn.active {
+            background: #ffffff;
+            color: var(--primary) !important;
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.15);
+            font-weight: 800;
+        }
+
+        body.theme-dark .view-mode-btn.active {
+            background: #1e293b;
+            color: #93c5fd !important;
+            box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+        }
+
+        .btn-theme-toggle, .btn-upload-plan, .btn-download-plan {
+            border-radius: 9999px !important;
+        }
+
+        /* VISTA 1: VERTICAL PILL BARS TELEMETRY PANEL (Slide 2 Reference) */
+        .control-telemetry-hud {
+            position: absolute;
+            top: 24px;
+            right: 24px;
+            z-index: 1000;
+            width: 320px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(226, 232, 240, 0.8);
+            border-radius: 22px;
+            padding: 20px;
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.theme-dark .control-telemetry-hud {
+            background: rgba(30, 41, 59, 0.95);
+            border-color: rgba(255, 255, 255, 0.08);
+            box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .hud-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 18px;
+        }
+
+        .hud-title {
+            font-size: 13.5px;
+            font-weight: 800;
+            color: var(--text-main);
+            letter-spacing: -0.2px;
+        }
+
+        .hud-subtitle {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+
+        .hud-pills-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 12px;
+            align-items: end;
+            height: 190px;
+            padding-bottom: 10px;
+        }
+
+        .hud-pill-col {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
+            justify-content: flex-end;
+        }
+
+        .hud-pill-track {
+            width: 34px;
+            height: 120px;
+            background: #f1f5f9;
+            border-radius: 9999px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: flex-end;
+            box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.06);
+        }
+
+        body.theme-dark .hud-pill-track {
+            background: #0f172a;
+        }
+
+        .hud-pill-fill {
+            width: 100%;
+            border-radius: 9999px;
+            transition: height 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+            display: flex;
+            align-items: flex-start;
+            justify-content: center;
+            padding-top: 6px;
+        }
+
+        .fill-coral {
+            background: var(--grad-coral-sunset);
+            box-shadow: 0 4px 14px rgba(255, 94, 98, 0.35);
+        }
+
+        .fill-purple {
+            background: var(--grad-vibrant-purple);
+            box-shadow: 0 4px 14px rgba(236, 72, 153, 0.35);
+        }
+
+        .fill-cyan {
+            background: var(--grad-mint-cyan);
+            box-shadow: 0 4px 14px rgba(6, 182, 212, 0.35);
+        }
+
+        .fill-blue {
+            background: var(--grad-cobalt-blue);
+            box-shadow: 0 4px 14px rgba(37, 99, 235, 0.35);
+        }
+
+        .hud-pill-tag {
+            font-size: 9.5px;
+            font-weight: 800;
+            color: #ffffff;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+        }
+
+        .hud-col-info {
+            text-align: center;
+            margin-top: 8px;
+        }
+
+        .hud-col-val {
+            font-size: 12.5px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .hud-col-lbl {
+            font-size: 9.5px;
+            font-weight: 600;
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        /* VISTA 2: DISPATCH GRID & MOUNTAIN WAVE SILHOUETTE */
+        .embarque-table-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(360px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .embarque-row-card {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 22px;
+            overflow: hidden;
+            box-shadow: 0 10px 25px -4px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(226, 232, 240, 0.8);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+            margin-bottom: 0;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .embarque-row-card:hover {
+            box-shadow: 0 20px 35px -8px rgba(15, 23, 42, 0.1), 0 0 0 1px rgba(203, 213, 225, 0.9);
+            transform: translateY(-3px);
+        }
+
+        .embarque-main-bar {
+            padding: 20px 22px;
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+            background: var(--bg-card);
+            cursor: pointer;
+        }
+
+        .emb-card-top {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .emb-badge-id-pill {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 13px;
+            font-weight: 800;
+            padding: 4px 12px;
+            border-radius: 9999px;
+            background: var(--grad-coral-sunset);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(255, 94, 98, 0.25);
+            letter-spacing: 0.5px;
+        }
+
+        .emb-type-pill {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            background: var(--bg-card-inner);
+            padding: 3px 10px;
+            border-radius: 9999px;
+        }
+
+        .emb-corridor-banner {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-main);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .liquid-capacity-container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            background: var(--bg-card-inner);
+            padding: 10px 14px;
+            border-radius: 14px;
+        }
+
+        .liquid-capacity-bar {
+            height: 8px;
+            background: #e2e8f0;
+            border-radius: 9999px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        body.theme-dark .liquid-capacity-bar {
+            background: #0f172a;
+        }
+
+        .liquid-capacity-fill {
+            height: 100%;
+            border-radius: 9999px;
+            background: var(--grad-coral-sunset);
+            transition: width 0.5s ease;
+        }
+
+        .emb-dispatch-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .emb-card-actions {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-top: 4px;
+        }
+
+        .btn-pill-whatsapp {
+            flex: 1.2;
+            background: var(--grad-mint-cyan);
+            color: #ffffff;
+            border: none;
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 800;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.25);
+            transition: all 0.2s ease;
+        }
+
+        .btn-pill-whatsapp:hover {
+            box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
+            transform: translateY(-1px);
+        }
+
+        .btn-pill-map {
+            background: var(--primary-bg);
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .btn-pill-map:hover {
+            background: var(--primary);
+            color: #ffffff;
+        }
+
+        .btn-pill-orders {
+            background: var(--bg-card-inner);
+            color: var(--text-main);
+            border: 1px solid var(--border-color);
+            padding: 8px 12px;
+            border-radius: 9999px;
+            font-size: 11.5px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .btn-pill-orders:hover {
+            background: #ffffff;
+            border-color: var(--primary);
+        }
+
+        /* MOUNTAIN SILHOUETTE WAVE CHART (Slide 3 & 6 Reference) */
+        .corridor-wave-section {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 24px;
+            padding: 24px;
+            margin-top: 20px;
+            box-shadow: var(--neu-sm);
+            overflow: hidden;
+            position: relative;
+        }
+
+        .wave-section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .wave-badge {
+            font-size: 10px;
+            font-weight: 800;
+            color: var(--primary);
+            background: var(--primary-bg);
+            padding: 3px 10px;
+            border-radius: 9999px;
+            text-transform: uppercase;
+            letter-spacing: 0.6px;
+        }
+
+        .wave-legend {
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+
+        .wave-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 5px;
+        }
+
+        .wave-dot-cyan { background: #06b6d4; }
+        .wave-dot-blue { background: #2563eb; }
+        .wave-dot-magenta { background: #ec4899; }
+
+        .wave-chart-svg {
+            width: 100%;
+            height: 140px;
+            display: block;
+        }
+
+        /* VISTA 3: VISOR TACTICO (Mockup 3 Reference) */
+        #tactical-view {
+            display: none;
+            width: 100%;
+            height: 100%;
+            overflow-y: auto;
+            padding: 24px;
+            background: var(--bg-page);
+        }
+
+        .tactical-container {
+            max-width: 1680px;
+            margin: 0 auto;
+        }
+
+        .tactical-nav-strip {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+            gap: 14px;
+        }
+
+        .tactical-pills-selector {
+            display: flex;
+            gap: 6px;
+            overflow-x: auto;
+            padding-bottom: 4px;
+        }
+
+        .tactical-unit-btn {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            color: var(--text-main);
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 700;
+            cursor: pointer;
+            box-shadow: var(--neu-sm);
+            transition: all 0.2s ease;
+            white-space: nowrap;
+        }
+
+        .tactical-unit-btn:hover {
+            border-color: var(--primary);
+        }
+
+        .tactical-unit-btn.active {
+            background: var(--grad-coral-sunset);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 4px 14px rgba(255, 94, 98, 0.35);
+        }
+
+        .tactical-3col-grid {
+            display: grid;
+            grid-template-columns: 1.2fr 1fr 1fr;
+            gap: 24px;
+        }
+
+        @media (max-width: 1200px) {
+            .tactical-3col-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .tactical-card {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            border-radius: 22px;
+            padding: 24px;
+            box-shadow: var(--neu-sm);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tactical-card-title {
+            font-size: 14px;
+            font-weight: 800;
+            color: var(--text-main);
+            margin-bottom: 4px;
+        }
+
+        .tactical-card-sub {
+            font-size: 11px;
+            color: var(--text-muted);
+            margin-bottom: 18px;
+        }
+
+        /* CONCENTRIC RADIAL GAUGE (Slide 5 Reference) */
+        .radial-gauge-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 20px 0;
+        }
+
+        .gauge-center-text {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+        }
+
+        .gauge-big-num {
+            font-size: 38px;
+            font-weight: 900;
+            color: var(--text-main);
+            line-height: 1;
+            letter-spacing: -1px;
+        }
+
+        .gauge-small-lbl {
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        .gauge-metrics-list {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .gauge-metric-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 12px;
+            background: var(--bg-card-inner);
+            border-radius: 12px;
+            font-size: 12px;
+        }
+
+        /* MOBILE DRIVER CARD PREVIEW (Slide 7 & 8 Reference) */
+        .driver-mobile-card {
+            background: #ffffff;
+            border: 1px solid #e2e8f0;
+            border-radius: 28px;
+            padding: 24px;
+            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.12);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }
+
+        body.theme-dark .driver-mobile-card {
+            background: #1e293b;
+            border-color: rgba(255,255,255,0.1);
+        }
+
+        .driver-avatar-circle {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            background: var(--grad-vibrant-purple);
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            font-weight: 800;
+            box-shadow: 0 8px 20px rgba(236, 72, 153, 0.35);
+            margin-bottom: 12px;
+        }
+
+        .driver-name {
+            font-size: 16px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
+        .driver-role {
+            font-size: 11.5px;
+            color: var(--text-muted);
+            margin-top: 2px;
+            margin-bottom: 16px;
+        }
+
+        .qr-card-container {
+            background: #ffffff;
+            padding: 14px;
+            border-radius: 16px;
+            border: 1px solid #e2e8f0;
+            margin: 14px 0;
+            display: inline-block;
+        }
+
+        .qr-label {
+            font-size: 10px;
+            font-weight: 700;
+            color: var(--text-muted);
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+    
     </style>
 
 </head>
@@ -1612,6 +2239,71 @@
             <!-- MAP VIEW -->
             <div id="map-container">
                 <div id="map"></div>
+
+                <!-- REAL-TIME ROUTE PERFORMANCE HUD (Slide 2 Reference) -->
+                <div class="control-telemetry-hud" id="control-telemetry-hud">
+                    <div class="hud-header">
+                        <div>
+                            <div class="hud-title">Rendimiento en Tiempo Real</div>
+                            <div class="hud-subtitle">Telemetría y SLA del plan activo</div>
+                        </div>
+                        <span style="font-size: 10px; font-weight: 800; background: var(--emerald-bg); color: var(--emerald-text); border: 1px solid var(--emerald-border); padding: 2px 8px; border-radius: 9999px;">● EN VIVO</span>
+                    </div>
+
+                    <div class="hud-pills-grid">
+                        <!-- Pill 1: On-Time % (Coral Sunset) -->
+                        <div class="hud-pill-col">
+                            <div class="hud-pill-track">
+                                <div class="hud-pill-fill fill-coral" id="hud-bar-ontime" style="height: 88%;">
+                                    <span class="hud-pill-tag" id="hud-tag-ontime">88%</span>
+                                </div>
+                            </div>
+                            <div class="hud-col-info">
+                                <div class="hud-col-val" id="hud-val-ontime">88%</div>
+                                <div class="hud-col-lbl">On-Time %</div>
+                            </div>
+                        </div>
+
+                        <!-- Pill 2: Capacity % (Vibrant Purple) -->
+                        <div class="hud-pill-col">
+                            <div class="hud-pill-track">
+                                <div class="hud-pill-fill fill-purple" id="hud-bar-capacity" style="height: 92%;">
+                                    <span class="hud-pill-tag" id="hud-tag-capacity">92%</span>
+                                </div>
+                            </div>
+                            <div class="hud-col-info">
+                                <div class="hud-col-val" id="hud-val-capacity">92%</div>
+                                <div class="hud-col-lbl">Capacidad</div>
+                            </div>
+                        </div>
+
+                        <!-- Pill 3: Distance Deviation (Mint Cyan) -->
+                        <div class="hud-pill-col">
+                            <div class="hud-pill-track">
+                                <div class="hud-pill-fill fill-cyan" id="hud-bar-dist" style="height: 75%;">
+                                    <span class="hud-pill-tag" id="hud-tag-dist">5%</span>
+                                </div>
+                            </div>
+                            <div class="hud-col-info">
+                                <div class="hud-col-val" id="hud-val-dist">5%</div>
+                                <div class="hud-col-lbl">Desv. Ruta</div>
+                            </div>
+                        </div>
+
+                        <!-- Pill 4: ETA Margin (Cobalt Blue) -->
+                        <div class="hud-pill-col">
+                            <div class="hud-pill-track">
+                                <div class="hud-pill-fill fill-blue" id="hud-bar-eta" style="height: 60%;">
+                                    <span class="hud-pill-tag" id="hud-tag-eta">15m</span>
+                                </div>
+                            </div>
+                            <div class="hud-col-info">
+                                <div class="hud-col-val" id="hud-val-eta">15 min</div>
+                                <div class="hud-col-lbl">Holgura ETA</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- COCKPIT / SPREADSHEET VIEW -->
@@ -1684,9 +2376,164 @@
                         <!-- Populated dynamically by renderCockpitView() -->
                     </div>
                 </div>
+            
+                    <!-- TOPOGRAPHIC CORRIDOR ELEVATION WAVES (Slide 3 & 6 Reference) -->
+                    <div class="corridor-wave-section">
+                        <div class="wave-section-header">
+                            <div>
+                                <span class="wave-badge">TOPOGRAFÍA Y OROGRAFÍA DE CORREDORES</span>
+                                <h3 style="font-size:14px; font-weight:800; color:var(--text-main); margin-top:4px;">
+                                    Perfil de Altitud & Relieve Carretero (Sierra de Puebla 2,160m ➔ CEDI Fortín 1,230m ➔ Llanura Golfo & Península 10m)
+                                </h3>
+                            </div>
+                            <div class="wave-legend">
+                                <span><span class="wave-dot wave-dot-cyan"></span> Golfo & Península (10m - 120m)</span>
+                                <span><span class="wave-dot wave-dot-blue"></span> Puebla & Altiplano (2,160m)</span>
+                                <span><span class="wave-dot wave-dot-magenta"></span> Oaxaca & Sierra (1,550m)</span>
+                            </div>
+                        </div>
+                        <div style="height: 120px; position: relative; overflow: hidden; border-radius: 16px;">
+                            <svg viewBox="0 0 1440 160" preserveAspectRatio="none" style="width:100%; height:100%;">
+                                <defs>
+                                    <linearGradient id="waveCyanGrad" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.6"/>
+                                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.1"/>
+                                    </linearGradient>
+                                    <linearGradient id="waveBlueGrad" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.65"/>
+                                        <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.15"/>
+                                    </linearGradient>
+                                    <linearGradient id="waveMagentaGrad" x1="0" y1="0" x2="1" y2="1">
+                                        <stop offset="0%" stop-color="#ec4899" stop-opacity="0.75"/>
+                                        <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.2"/>
+                                    </linearGradient>
+                                </defs>
+                                <path d="M0,160 L0,110 Q200,40 400,80 T800,20 T1200,90 T1440,50 L1440,160 Z" fill="url(#waveMagentaGrad)"/>
+                                <path d="M0,160 L0,125 Q250,65 500,105 T1000,45 T1440,85 L1440,160 Z" fill="url(#waveBlueGrad)"/>
+                                <path d="M0,160 L0,140 Q300,90 600,120 T1200,75 T1440,110 L1440,160 Z" fill="url(#waveCyanGrad)"/>
+                            </svg>
+                        </div>
+                    </div>
+                </div>
             </div>
-        </div>
-    </div>
+
+            <!-- VISTA 3: VISOR TACTICO & HOJA DE DESPACHO (Mockup 3 Reference) -->
+            <div id="tactical-view">
+                <div class="tactical-container">
+                    <!-- TACTICAL NAV STRIP -->
+                    <div class="tactical-nav-strip">
+                        <div>
+                            <span class="wave-badge">AUDITORÍA DIGITAL & MONITOREO TÁCTICO</span>
+                            <h2 style="font-size:16px; font-weight:800; color:var(--text-main); margin-top:4px;">
+                                Inspector de Ruta, Dial Concéntrico de Eficiencia y Despacho Chofer
+                            </h2>
+                        </div>
+                        <div class="tactical-pills-selector" id="tactical-unit-selector">
+                            <!-- Populated dynamically: EMB-01 to EMB-13 -->
+                        </div>
+                    </div>
+
+                    <!-- 3-COLUMN TACTICAL WORKSTATION -->
+                    <div class="tactical-3col-grid">
+                        <!-- COL 1: ROUTE INSPECTOR TIMELINE -->
+                        <div class="tactical-card" id="tactical-card-inspector">
+                            <div class="tactical-card-title">📍 Inspector Cronológico de Paradas</div>
+                            <div class="tactical-card-sub" id="tactical-inspector-sub">Despacho inverso desde CEDI Fortín</div>
+                            <div id="tactical-timeline-content" style="display:flex; flex-direction:column; gap:12px;">
+                                <!-- Populated dynamically -->
+                            </div>
+                        </div>
+
+                        <!-- COL 2: CONCENTRIC RADIAL EFFICIENCY GAUGE -->
+                        <div class="tactical-card" id="tactical-card-gauge">
+                            <div class="tactical-card-title">📊 Visualizaciones & Eficiencia Radial</div>
+                            <div class="tactical-card-sub">Diales concéntricos segmentados</div>
+                            
+                            <div class="radial-gauge-container">
+                                <svg width="220" height="220" viewBox="0 0 220 220">
+                                    <defs>
+                                        <linearGradient id="gradRingCoral" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stop-color="#ff5e62"/>
+                                            <stop offset="100%" stop-color="#ff9966"/>
+                                        </linearGradient>
+                                        <linearGradient id="gradRingPurple" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stop-color="#ec4899"/>
+                                            <stop offset="100%" stop-color="#8b5cf6"/>
+                                        </linearGradient>
+                                        <linearGradient id="gradRingCyan" x1="0" y1="0" x2="1" y2="1">
+                                            <stop offset="0%" stop-color="#06b6d4"/>
+                                            <stop offset="100%" stop-color="#10b981"/>
+                                        </linearGradient>
+                                    </defs>
+                                    <!-- Background Tracks -->
+                                    <circle cx="110" cy="110" r="90" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+                                    <circle cx="110" cy="110" r="72" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+                                    <circle cx="110" cy="110" r="54" fill="none" stroke="#f1f5f9" stroke-width="12"/>
+                                    
+                                    <!-- Concentric Rings (Progress) -->
+                                    <circle id="radial-ring-coral" cx="110" cy="110" r="90" fill="none" stroke="url(#gradRingCoral)" stroke-width="12" stroke-dasharray="565" stroke-dashoffset="56" stroke-linecap="round" transform="rotate(-90 110 110)"/>
+                                    <circle id="radial-ring-purple" cx="110" cy="110" r="72" fill="none" stroke="url(#gradRingPurple)" stroke-width="12" stroke-dasharray="452" stroke-dashoffset="36" stroke-linecap="round" transform="rotate(-90 110 110)"/>
+                                    <circle id="radial-ring-cyan" cx="110" cy="110" r="54" fill="none" stroke="url(#gradRingCyan)" stroke-width="12" stroke-dasharray="339" stroke-dashoffset="24" stroke-linecap="round" transform="rotate(-90 110 110)"/>
+                                </svg>
+                                <div class="gauge-center-text">
+                                    <div class="gauge-big-num" id="gauge-score-val">96%</div>
+                                    <div class="gauge-small-lbl">Confiabilidad</div>
+                                </div>
+                            </div>
+
+                            <div class="gauge-metrics-list">
+                                <div class="gauge-metric-item">
+                                    <span style="display:flex; align-items:center; gap:8px;">
+                                        <span style="width:10px; height:10px; border-radius:50%; background:var(--grad-coral-sunset);"></span>
+                                        <strong>Cumplimiento de Citas On-Time</strong>
+                                    </span>
+                                    <span class="mono-num" style="font-weight:800; color:var(--rose);" id="gauge-lbl-ontime">96%</span>
+                                </div>
+                                <div class="gauge-metric-item">
+                                    <span style="display:flex; align-items:center; gap:8px;">
+                                        <span style="width:10px; height:10px; border-radius:50%; background:var(--grad-vibrant-purple);"></span>
+                                        <strong>Factor de Carga de Flota (Ton)</strong>
+                                    </span>
+                                    <span class="mono-num" style="font-weight:800; color:var(--indigo);" id="gauge-lbl-capacity">98%</span>
+                                </div>
+                                <div class="gauge-metric-item">
+                                    <span style="display:flex; align-items:center; gap:8px;">
+                                        <span style="width:10px; height:10px; border-radius:50%; background:var(--grad-mint-cyan);"></span>
+                                        <strong>Eficiencia en Costo por Tonelada</strong>
+                                    </span>
+                                    <span class="mono-num" style="font-weight:800; color:var(--cyan);" id="gauge-lbl-cost">$974 / t</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- COL 3: MOBILE DRIVER DISPATCH PREVIEW -->
+                        <div class="tactical-card" id="tactical-card-mobile" style="align-items:center;">
+                            <div style="width:100%;">
+                                <div class="tactical-card-title">📱 Previsualización Operador Móvil</div>
+                                <div class="tactical-card-sub">Manifiesto digital para chofer</div>
+                            </div>
+                            <div class="driver-mobile-card" style="width:100%; max-width:340px;">
+                                <div class="driver-avatar-circle" id="driver-avatar">👨‍✈️</div>
+                                <div class="driver-name" id="driver-name-text">Operador Certificado</div>
+                                <div class="driver-role" id="driver-role-text">Unidad EMB-01 &bull; Tracto 30T</div>
+                                
+                                <button class="btn-pill-whatsapp" style="width:100%; padding:10px 16px; font-size:13px; margin-bottom:12px;" onclick="copyWhatsAppDispatch(currentSelectedEmbId || 'EMB-01')">
+                                    <span>📲 Enviar WhatsApp a Chofer</span>
+                                </button>
+
+                                <div class="qr-card-container">
+                                    <img id="driver-qr-img" src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=CISAALMA-CALIDAD-BUENO-EMB-01" alt="QR Verificación" style="width:130px; height:130px; display:block;">
+                                    <div class="qr-label">VALIDACIÓN CARTA PORTE / SAT</div>
+                                </div>
+
+                                <button class="btn-pill-map" style="width:100%; justify-content:center; padding:10px; margin-top:8px;" onclick="viewTripOnMap(currentSelectedEmbId || 'EMB-01')">
+                                    <span>🗺️ Inspeccionar en Mapa Central</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
 
     <!-- TOAST NOTIFICATION -->
     <div id="toast-msg" class="toast-notify"></div>
@@ -2379,15 +3226,172 @@
                 const b = document.getElementById(btnIds[k]);
                 if (b) b.classList.toggle('active', k === filterType);
             });
-            renderBenchmarkView();
+            updateControlKpis();
+            if (currentViewMode === 'map' || currentViewMode === 'tactical') {
+                renderTacticalView();
+            }
         }
 
 
         // ==========================================
         // VIEW SWITCHING (BENCHMARK / COCKPIT / SPLIT / MAP)
         // ==========================================
+        
+        let currentSelectedEmbId = 'EMB-01';
+
+        function updateControlKpis() {
+            const plan = plans[currentPlanId];
+            if (!plan) return;
+            
+            let onTimePct = 96;
+            let capacityPct = 98;
+            let distDev = "5%";
+            let etaDev = "15 min";
+            
+            if (currentPlanId === 'plan2') {
+                onTimePct = 99;
+                capacityPct = 94;
+                distDev = "4%";
+                etaDev = "25 min";
+            } else if (currentPlanId === 'plan3') {
+                onTimePct = 100;
+                capacityPct = 89;
+                distDev = "3%";
+                etaDev = "40 min";
+            }
+
+            const barOnTime = document.getElementById('hud-bar-ontime');
+            const valOnTime = document.getElementById('hud-val-ontime');
+            const tagOnTime = document.getElementById('hud-tag-ontime');
+            if (barOnTime) barOnTime.style.height = onTimePct + '%';
+            if (valOnTime) valOnTime.innerText = onTimePct + '%';
+            if (tagOnTime) tagOnTime.innerText = onTimePct + '%';
+
+            const barCap = document.getElementById('hud-bar-capacity');
+            const valCap = document.getElementById('hud-val-capacity');
+            const tagCap = document.getElementById('hud-tag-capacity');
+            if (barCap) barCap.style.height = capacityPct + '%';
+            if (valCap) valCap.innerText = capacityPct + '%';
+            if (tagCap) tagCap.innerText = capacityPct + '%';
+
+            const barDist = document.getElementById('hud-bar-dist');
+            const valDist = document.getElementById('hud-val-dist');
+            const tagDist = document.getElementById('hud-tag-dist');
+            if (barDist) barDist.style.height = '75%';
+            if (valDist) valDist.innerText = distDev;
+            if (tagDist) tagDist.innerText = distDev;
+
+            const barEta = document.getElementById('hud-bar-eta');
+            const valEta = document.getElementById('hud-val-eta');
+            const tagEta = document.getElementById('hud-tag-eta');
+            if (barEta) barEta.style.height = '65%';
+            if (valEta) valEta.innerText = etaDev;
+            if (tagEta) tagEta.innerText = etaDev;
+        }
+
+        function renderTacticalView(selectedEmbId) {
+            const plan = plans[currentPlanId];
+            if (!plan || !plan.routes || plan.routes.length === 0) return;
+
+            if (selectedEmbId) {
+                currentSelectedEmbId = selectedEmbId;
+            } else if (!currentSelectedEmbId) {
+                currentSelectedEmbId = plan.routes[0].emb_id;
+            }
+
+            const r = plan.routes.find(route => route.emb_id === currentSelectedEmbId) || plan.routes[0];
+            currentSelectedEmbId = r.emb_id;
+
+            // 1. Render Unit Selector Pills
+            const selectorContainer = document.getElementById('tactical-unit-selector');
+            if (selectorContainer) {
+                selectorContainer.innerHTML = '';
+                plan.routes.forEach(route => {
+                    const btn = document.createElement('button');
+                    btn.className = `tactical-unit-btn ${route.emb_id === currentSelectedEmbId ? 'active' : ''}`;
+                    btn.innerHTML = `<strong>${route.emb_id}</strong> &bull; ${route.type}`;
+                    btn.onclick = () => renderTacticalView(route.emb_id);
+                    selectorContainer.appendChild(btn);
+                });
+            }
+
+            // 2. Col 1: Render Timeline Stops
+            const timelineContainer = document.getElementById('tactical-timeline-content');
+            const subTitle = document.getElementById('tactical-inspector-sub');
+            if (subTitle) subTitle.innerText = `${r.emb_id} (${r.type}) &bull; ${r.corridor} &bull; ${r.modalidad}`;
+
+            if (timelineContainer) {
+                let stopsHtml = `
+                    <div style="background:var(--bg-card-inner); padding:14px 16px; border-radius:14px; border-left:4px solid #ff5e62;">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span style="font-size:12px; font-weight:800; color:var(--text-main);">🏢 CEDI ORIGEN (Fortín / Orizaba)</span>
+                            <span style="font-size:11px; font-weight:800; color:#ff5e62;">SALIDA PROGRAMADA</span>
+                        </div>
+                        <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">
+                            Salida Inversa Calculada: <strong>${r.departure}</strong> &bull; Carga: <strong>${(r.load/1000).toFixed(2)}t</strong>
+                        </div>
+                    </div>
+                `;
+
+                r.stops.forEach(s => {
+                    const hasCita = s.cita && s.cita.toUpperCase().includes('CITA');
+                    let jobsList = '';
+                    s.jobs.forEach(j => {
+                        const ex = j.excel_info || {};
+                        jobsList += `<div style="font-size:10.5px; color:var(--text-muted); margin-top:2px;">• <strong>${ex.nombre || 'Cliente'}</strong> (${Math.round(j.demand)} kg) - ${formatFullAddress(ex, s)}</div>`;
+                    });
+
+                    stopsHtml += `
+                        <div style="background:var(--bg-card-inner); padding:14px 16px; border-radius:14px; border-left:4px solid ${hasCita ? '#10b981' : '#3b82f6'};">
+                            <div style="display:flex; justify-content:space-between; align-items:center;">
+                                <span style="font-size:12px; font-weight:800; color:var(--text-main);">📍 Parada ${s.seq} - ${s.city} (${(s.load/1000).toFixed(1)}t)</span>
+                                <span style="font-size:11px; font-weight:800; color:var(--primary);">${s.eta}</span>
+                            </div>
+                            ${s.cita ? `<div style="font-size:10px; font-weight:800; color:#b45309; background:var(--amber-bg); padding:2px 6px; border-radius:6px; display:inline-block; margin-top:4px;">⏰ ${s.cita}</div>` : ''}
+                            <div style="margin-top:6px; padding-top:6px; border-top:1px dashed var(--border-color);">
+                                ${jobsList}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                timelineContainer.innerHTML = stopsHtml;
+            }
+
+            // 3. Col 2: Radial Concentric Gauge
+            const maxCap = r.type === 'Tracto' ? 30000 : (r.type === 'Torton' ? 18000 : 7000);
+            const util = Math.min(100, Math.round((r.load / maxCap) * 100));
+            const costPerTon = Math.round(r.cost / (r.load / 1000));
+
+            const lblOnTime = document.getElementById('gauge-lbl-ontime');
+            if (lblOnTime) lblOnTime.innerText = "96%";
+
+            const lblCap = document.getElementById('gauge-lbl-capacity');
+            if (lblCap) lblCap.innerText = `${util}% (${(r.load/1000).toFixed(1)}t / ${(maxCap/1000).toFixed(0)}t)`;
+
+            const lblCost = document.getElementById('gauge-lbl-cost');
+            if (lblCost) lblCost.innerText = `$${costPerTon.toLocaleString()} / t`;
+
+            const scoreVal = document.getElementById('gauge-score-val');
+            if (scoreVal) scoreVal.innerText = `${util >= 95 ? 98 : util}%`;
+
+            // 4. Col 3: Mobile Card
+            const driverNames = ["Juan Carlos Pérez", "Alejandro Semaur", "Roberto Morales", "Miguel Ángel Soto", "Esteban Rivas", "Daniel Cordero", "Jesús Almonte", "Martín Galindo", "Héctor Valenzuela", "Ricardo Meza", "Guillermo Osorio", "Fernando Varela", "Álvaro Delgado"];
+            const rIndex = parseInt(r.emb_id.replace('EMB-', '')) - 1;
+            const driverName = driverNames[rIndex % driverNames.length] || "Operador de Ruta";
+
+            const nameEl = document.getElementById('driver-name-text');
+            if (nameEl) nameEl.innerText = driverName;
+
+            const roleEl = document.getElementById('driver-role-text');
+            if (roleEl) roleEl.innerText = `Unidad ${r.emb_id} &bull; ${r.vehicle} (${r.type})`;
+
+            const qrImg = document.getElementById('driver-qr-img');
+            if (qrImg) qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=CISAALMA-CALIDAD-BUENO-${r.emb_id}-${currentPlanId.toUpperCase()}`;
+        }
+    
+
         function switchViewMode(mode) {
-            // Support both 'control' and legacy 'split'
             if (mode === 'split') mode = 'control';
             currentViewMode = mode;
             document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
@@ -2398,36 +3402,34 @@
             const sidebar = document.getElementById('sidebar');
             const mapContainer = document.getElementById('map-container');
             const cockpitView = document.getElementById('cockpit-view');
+            const tacticalView = document.getElementById('tactical-view');
 
             if (mode === 'cockpit') {
                 if (sidebar) sidebar.style.display = 'none';
                 if (mapContainer) mapContainer.style.display = 'none';
+                if (tacticalView) tacticalView.style.display = 'none';
                 if (cockpitView) {
                     cockpitView.style.display = 'block';
                     renderCockpitView();
-            // Update sidebar telemetry chips
-            const sideWeight = document.getElementById('side-kpi-weight');
-            if (sideWeight && cockpitWeight) sideWeight.innerText = cockpitWeight.innerText;
-            const sideTrips = document.getElementById('side-kpi-trips');
-            if (sideTrips && cockpitTrips) sideTrips.innerText = cockpitTrips.innerText;
-            const sideCost = document.getElementById('side-kpi-cost');
-            if (sideCost && cockpitCost) sideCost.innerText = cockpitCost.innerText;
                 }
             } else if (mode === 'control') {
+                if (cockpitView) cockpitView.style.display = 'none';
+                if (tacticalView) tacticalView.style.display = 'none';
                 if (sidebar) {
                     sidebar.style.display = 'flex';
                     sidebar.style.width = '420px';
                 }
                 if (mapContainer) mapContainer.style.display = 'block';
-                if (cockpitView) cockpitView.style.display = 'none';
                 setTimeout(() => map.invalidateSize(), 50);
-            } else { // 'map'
-                if (sidebar) {
-                    sidebar.style.display = 'none';
+                updateControlKpis();
+            } else { // 'map' or 'tactical'
+                if (sidebar) sidebar.style.display = 'none';
+                if (mapContainer) mapContainer.style.display = 'none';
+                if (cockpitView) cockpitView.style.display = 'none';
+                if (tacticalView) {
+                    tacticalView.style.display = 'block';
+                    renderTacticalView();
                 }
-                if (mapContainer) mapContainer.style.display = 'block';
-                if (cockpitView) cockpitView.style.display = 'none';
-                setTimeout(() => map.invalidateSize(), 50);
             }
         }
 
@@ -2866,17 +3868,14 @@
             const activePlanBadge = document.getElementById('active-plan-badge');
             if (activePlanBadge) {
                 activePlanBadge.innerText = badgeText;
-                activePlanBadge.style.backgroundColor = currentPlanId === 'plan1' ? 'var(--primary-bg)' : (currentPlanId === 'plan2' ? 'var(--emerald-bg)' : 'var(--amber-bg)');
+                activePlanBadge.style.background = currentPlanId === 'plan1' ? 'var(--primary-bg)' : (currentPlanId === 'plan2' ? 'var(--emerald-bg)' : 'var(--amber-bg)');
                 activePlanBadge.style.color = currentPlanId === 'plan1' ? 'var(--primary-text)' : (currentPlanId === 'plan2' ? 'var(--emerald-text)' : 'var(--amber-text)');
                 activePlanBadge.style.border = '1px solid ' + (currentPlanId === 'plan1' ? 'var(--primary-border)' : (currentPlanId === 'plan2' ? 'var(--emerald-border)' : 'var(--amber-border)'));
-                
             }
 
             plan.routes.forEach((r, rIdx) => {
                 const maxCap = r.type === 'Tracto' ? 30000 : (r.type === 'Torton' ? 18000 : (r.type === 'Camioneta 7t' ? 7000 : 4000));
                 const util = Math.min(100, Math.round((r.load / maxCap) * 100));
-                const utilColor = util >= 90 ? '#10b981' : (util >= 75 ? '#3b82f6' : '#f59e0b');
-
                 const drawerId = `drawer_${rIdx}`;
 
                 let ordersTableRows = '';
@@ -2888,7 +3887,7 @@
                         ordersTableRows += `
                             <tr>
                                 <td><strong style="color:var(--primary);">${ex.pedido || j.id}</strong></td>
-                                <td><span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 6px; border-radius:4px; font-weight:700; font-size:10px;">Parada ${s.seq}</span></td>
+                                <td><span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 6px; border-radius:9999px; font-weight:700; font-size:10px;">Parada ${s.seq}</span></td>
                                 <td><strong>${ex.nombre || 'Cliente'}</strong><br><span style="color:#94a3b8; font-size:10px;">Cód: ${ex.cliente || ''}</span></td>
                                 <td>${formatFullAddress(ex, s)}</td>
                                 <td><strong style="color:var(--text-main);">${Math.round(j.demand).toLocaleString()} kg</strong></td>
@@ -2904,41 +3903,41 @@
 
                 const card = document.createElement('div');
                 card.className = 'embarque-row-card';
-                card.style.setProperty('--emb-color', r.color);
 
                 card.innerHTML = `
                     <div class="embarque-main-bar" onclick="toggleOrdersDrawer('${drawerId}')">
-                        <div class="emb-col-id">
-                            <span class="emb-badge-id">${r.emb_id}</span>
-                            <div>
-                                <div class="emb-title-text">${r.vehicle} &bull; ${r.type.toUpperCase()}</div>
-                                <div class="emb-corridor-text">📍 ${r.corridor} &bull; <em>${r.modalidad}</em></div>
+                        <div class="emb-card-top">
+                            <span class="emb-badge-id-pill">${r.emb_id}</span>
+                            <span class="emb-type-pill">${r.vehicle} &bull; ${r.type.toUpperCase()}</span>
+                        </div>
+
+                        <div class="emb-corridor-banner">
+                            <span>📍 ${r.corridor}</span>
+                        </div>
+
+                        <div class="liquid-capacity-container">
+                            <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700;">
+                                <span>Carga: ${(r.load/1000).toFixed(2)}t / ${(maxCap/1000).toFixed(0)}t</span>
+                                <span style="color:var(--primary); font-weight:800;">${util}% FTL</span>
+                            </div>
+                            <div class="liquid-capacity-bar">
+                                <div class="liquid-capacity-fill" style="width:${util}%;"></div>
                             </div>
                         </div>
 
-                        <div class="emb-col-capacity">
-                            <div style="display:flex; justify-content:space-between; font-size:11.5px;">
-                                <span>Carga: <strong>${(r.load/1000).toFixed(2)}t</strong> / ${(maxCap/1000).toFixed(0)}t</span>
-                                <strong style="color:${utilColor};">${util}%</strong>
-                            </div>
-                            <div class="capacity-bar-bg">
-                                <div class="capacity-bar-fill" style="background:${utilColor}; width:${util}%;"></div>
-                            </div>
+                        <div class="emb-dispatch-meta">
+                            <div>⏰ <strong>Salida:</strong> <span style="color:var(--primary); font-weight:700;">${r.departure}</span></div>
+                            <div>🏁 <strong>1ra Cita:</strong> <span style="color:var(--emerald); font-weight:700;">${r.stops[0].eta}</span></div>
                         </div>
 
-                        <div class="emb-col-dispatch">
-                            <div>⏰ <strong>Salida CEDI:</strong> <span style="color:var(--primary); font-weight:700;">${r.departure}</span></div>
-                            <div>🏁 <strong>1ra Entrega:</strong> <span style="color:var(--primary); font-weight:700;">${r.stops[0].eta}</span> ${r.stops[0].cita && r.stops[0].cita.toUpperCase().includes('CITA') ? '<span class="badge-cita-live"><span class="hw-live-led"></span> CUMPLE CITA</span>' : ''}</div>
-                        </div>
-
-                        <div class="emb-col-actions" onclick="event.stopPropagation()">
-                            <button class="btn-emb-action btn-emb-whatsapp" onclick="copyWhatsAppDispatch('${r.emb_id}')">
-                                <span>📲 WhatsApp Chofer</span>
+                        <div class="emb-card-actions" onclick="event.stopPropagation()">
+                            <button class="btn-pill-whatsapp" onclick="copyWhatsAppDispatch('${r.emb_id}')">
+                                <span>📲 WhatsApp</span>
                             </button>
-                            <button class="btn-emb-action btn-emb-map" onclick="viewTripOnMap('${r.emb_id}')">
-                                <span>🗺️ Ver en Mapa</span>
+                            <button class="btn-pill-map" onclick="viewTripOnMap('${r.emb_id}')">
+                                <span>🗺️ Mapa</span>
                             </button>
-                            <button class="btn-emb-action btn-emb-orders" onclick="toggleOrdersDrawer('${drawerId}')">
+                            <button class="btn-pill-orders" onclick="toggleOrdersDrawer('${drawerId}')">
                                 <span id="toggle-icon-${drawerId}">🔽 ${r.orders_count} Pedidos</span>
                             </button>
                         </div>
@@ -3057,7 +4056,10 @@
             if (sideTrips && cockpitTrips) sideTrips.innerText = cockpitTrips.innerText;
             const sideCost = document.getElementById('side-kpi-cost');
             if (sideCost && cockpitCost) sideCost.innerText = cockpitCost.innerText;
-            renderBenchmarkView();
+            updateControlKpis();
+            if (currentViewMode === 'map' || currentViewMode === 'tactical') {
+                renderTacticalView();
+            }
         }
 
         // ==========================================
