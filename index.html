@@ -2042,62 +2042,7 @@
             border-color: var(--primary);
         }
 
-        /* MOUNTAIN SILHOUETTE WAVE CHART (Slide 3 & 6 Reference) */
-        .corridor-wave-section {
-            background: var(--bg-card);
-            border: 1px solid var(--card-border);
-            border-radius: 24px;
-            padding: 24px;
-            margin-top: 20px;
-            box-shadow: var(--neu-sm);
-            overflow: hidden;
-            position: relative;
-        }
-
-        .wave-section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            flex-wrap: wrap;
-            gap: 12px;
-            margin-bottom: 16px;
-        }
-
-        .wave-badge {
-            font-size: 10px;
-            font-weight: 800;
-            color: var(--primary);
-            background: var(--primary-bg);
-            padding: 3px 10px;
-            border-radius: 9999px;
-            text-transform: uppercase;
-            letter-spacing: 0.6px;
-        }
-
-        .wave-legend {
-            display: flex;
-            gap: 16px;
-            font-size: 11px;
-            color: var(--text-muted);
-        }
-
-        .wave-dot {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: inline-block;
-            margin-right: 5px;
-        }
-
-        .wave-dot-cyan { background: #06b6d4; }
-        .wave-dot-blue { background: #2563eb; }
-        .wave-dot-magenta { background: #ec4899; }
-
-        .wave-chart-svg {
-            width: 100%;
-            height: 140px;
-            display: block;
-        }
+        
 
         /* VISTA 3: VISOR TACTICO (Mockup 3 Reference) */
         #tactical-view {
@@ -3833,43 +3778,7 @@ body.theme-dark .route-util-track {
                     </div>
                 </div>
             
-                    <!-- TOPOGRAPHIC CORRIDOR ELEVATION WAVES (Slide 3 & 6 Reference) -->
-                    <div class="corridor-wave-section">
-                        <div class="wave-section-header">
-                            <div>
-                                <span class="wave-badge">TOPOGRAFÍA Y OROGRAFÍA DE CORREDORES</span>
-                                <h3 style="font-size:14px; font-weight:800; color:var(--text-main); margin-top:4px;">
-                                    Perfil de Altitud & Relieve Carretero (Sierra de Puebla 2,160m ➔ CEDI Fortín 1,230m ➔ Llanura Golfo & Península 10m)
-                                </h3>
-                            </div>
-                            <div class="wave-legend">
-                                <span><span class="wave-dot wave-dot-cyan"></span> Golfo & Península (10m - 120m)</span>
-                                <span><span class="wave-dot wave-dot-blue"></span> Puebla & Altiplano (2,160m)</span>
-                                <span><span class="wave-dot wave-dot-magenta"></span> Oaxaca & Sierra (1,550m)</span>
-                            </div>
-                        </div>
-                        <div style="height: 120px; position: relative; overflow: hidden; border-radius: 16px;">
-                            <svg viewBox="0 0 1440 160" preserveAspectRatio="none" style="width:100%; height:100%;">
-                                <defs>
-                                    <linearGradient id="waveCyanGrad" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stop-color="#06b6d4" stop-opacity="0.6"/>
-                                        <stop offset="100%" stop-color="#10b981" stop-opacity="0.1"/>
-                                    </linearGradient>
-                                    <linearGradient id="waveBlueGrad" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.65"/>
-                                        <stop offset="100%" stop-color="#1d4ed8" stop-opacity="0.15"/>
-                                    </linearGradient>
-                                    <linearGradient id="waveMagentaGrad" x1="0" y1="0" x2="1" y2="1">
-                                        <stop offset="0%" stop-color="#ec4899" stop-opacity="0.75"/>
-                                        <stop offset="100%" stop-color="#8b5cf6" stop-opacity="0.2"/>
-                                    </linearGradient>
-                                </defs>
-                                <path d="M0,160 L0,110 Q200,40 400,80 T800,20 T1200,90 T1440,50 L1440,160 Z" fill="url(#waveMagentaGrad)"/>
-                                <path d="M0,160 L0,125 Q250,65 500,105 T1000,45 T1440,85 L1440,160 Z" fill="url(#waveBlueGrad)"/>
-                                <path d="M0,160 L0,140 Q300,90 600,120 T1200,75 T1440,110 L1440,160 Z" fill="url(#waveCyanGrad)"/>
-                            </svg>
-                        </div>
-                    </div>
+                    
                 </div>
             </div>
 
