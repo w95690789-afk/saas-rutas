@@ -1462,6 +1462,39 @@
             color: var(--amber-text);
             border: 1px solid var(--amber-border);
         }
+    
+        .sidebar-telemetry-chips {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+
+        .telemetry-chip {
+            background: var(--bg-card);
+            border: 1px solid var(--card-border);
+            padding: 8px 10px;
+            border-radius: 10px;
+            box-shadow: var(--neu-sm);
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .telemetry-lbl {
+            font-size: 9px;
+            font-weight: 800;
+            color: var(--text-light);
+            letter-spacing: 0.6px;
+            text-transform: uppercase;
+        }
+
+        .telemetry-val {
+            font-size: 13px;
+            font-weight: 800;
+            color: var(--text-main);
+        }
+
     </style>
 
 </head>
@@ -1494,17 +1527,14 @@
 
         <!-- VIEW MODE SELECTOR (BENCHMARK vs COCKPIT vs SPLIT vs MAP) -->
         <div class="view-mode-group">
-            <button class="view-mode-btn active" id="btn-view-benchmark" onclick="switchViewMode('benchmark')">
-                <span>⚖️ Benchmark</span>
+            <button class="view-mode-btn active" id="btn-view-control" onclick="switchViewMode('control')">
+                <span>🎯 Centro de Control</span>
             </button>
             <button class="view-mode-btn" id="btn-view-cockpit" onclick="switchViewMode('cockpit')">
-                <span>📋 Despacho</span>
-            </button>
-            <button class="view-mode-btn" id="btn-view-split" onclick="switchViewMode('split')">
-                <span>🔀 Vista Dividida</span>
+                <span>📋 Consola de Despacho</span>
             </button>
             <button class="view-mode-btn" id="btn-view-map" onclick="switchViewMode('map')">
-                <span>🗺️ Mapa</span>
+                <span>🗺️ Visor Táctico</span>
             </button>
         </div>
 
@@ -1538,6 +1568,25 @@
             </div>
             
             <div class="sidebar-header-panel" id="filter-sidebar-panel">
+                <!-- TELEMETRY CHIPS -->
+                <div class="sidebar-telemetry-chips">
+                    <div class="telemetry-chip">
+                        <span class="telemetry-lbl">CARGA TOTAL</span>
+                        <span class="telemetry-val mono-num" id="side-kpi-weight">290.3t</span>
+                    </div>
+                    <div class="telemetry-chip">
+                        <span class="telemetry-lbl">FLOTA ACTIVA</span>
+                        <span class="telemetry-val mono-num" id="side-kpi-trips" style="color:var(--emerald);">13 Fletes</span>
+                    </div>
+                    <div class="telemetry-chip">
+                        <span class="telemetry-lbl">COSTO GLOBAL</span>
+                        <span class="telemetry-val mono-num" id="side-kpi-cost" style="color:var(--amber);">$282,838</span>
+                    </div>
+                    <div class="telemetry-chip">
+                        <span class="telemetry-lbl">CITAS SAP</span>
+                        <span class="telemetry-val mono-num" style="color:var(--cyan);">100% OK</span>
+                    </div>
+                </div>
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
                     <span class="total-trips-title">Viajes Programados (<span id="total-trips-count">0</span>)</span>
                     <div style="display:flex; gap: 8px;">
@@ -1563,231 +1612,6 @@
             <!-- MAP VIEW -->
             <div id="map-container">
                 <div id="map"></div>
-            </div>
-
-            <!-- BENCHMARK / AUDITORIA VIEW -->
-            <div id="benchmark-view">
-                <div style="max-width: 1680px; width: 100%; margin: 0 auto; padding: 0 16px;">
-                    <!-- BENCHMARK HEADER -->
-                    <div class="benchmark-header-box">
-                        <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:15px;">
-                            <div>
-                                <span class="benchmark-pill" id="bench-header-pill">AUDITORÍA LOGÍSTICA COMPARATIVA: PLAN 1</span>
-                                <h1 class="benchmark-title" id="bench-header-title">Programación Manual (Excel) vs. Algoritmo Optimizador</h1>
-                                <p class="benchmark-sub" id="bench-header-sub">Auditoría técnica lado a lado de los 13 embarques programados por Isabel vs. la optimización del software</p>
-                            </div>
-                            <div style="display:flex; gap:10px;">
-                                <button class="btn-emb-action" onclick="switchViewMode('cockpit')">
-                                    <span>📋 Ver Tabla de Despacho</span>
-                                </button>
-                                <button class="btn-emb-action" onclick="switchViewMode('split')">
-                                    <span>🗺️ Ver Rutas en Mapa</span>
-                                </button>
-                            </div>
-                        </div>
-
-                        <!-- BENCHMARK PLAN SELECTOR PILLS -->
-                        <div class="cockpit-plan-pills" style="display:flex; gap:10px; margin-top:18px; flex-wrap:wrap;">
-                            <button class="plan-pill-btn active" id="bench-pill-plan1" onclick="changePlan('plan1')" style="flex:1; min-width:240px; padding:10px 14px;">
-                                <div style="font-size:12.5px; font-weight:800; color:var(--primary); display:flex; justify-content:space-between;">
-                                    <span>🚛 PLAN 1: Máxima Consolidación</span>
-                                    <span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 6px; border-radius:4px; font-size:10px;">13 Fletes</span>
-                                </div>
-                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">6 Tráilers + 7 Tortons &bull; <strong>$282,838 MXN</strong></div>
-                            </button>
-                            <button class="plan-pill-btn" id="bench-pill-plan2" onclick="changePlan('plan2')" style="flex:1; min-width:240px; padding:10px 14px;">
-                                <div style="font-size:12.5px; font-weight:800; color:var(--emerald); display:flex; justify-content:space-between;">
-                                    <span>⚖️ PLAN 2: Flota Balanceada</span>
-                                    <span style="background:var(--emerald-bg); color:var(--emerald-text); border:1px solid var(--emerald-border); padding:2px 6px; border-radius:4px; font-size:10px;">14 Fletes</span>
-                                </div>
-                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">6 Tráilers + 7 Tortons + 1 Camioneta &bull; <strong>$289,680 MXN</strong></div>
-                            </button>
-                            <button class="plan-pill-btn" id="bench-pill-plan3" onclick="changePlan('plan3')" style="flex:1; min-width:240px; padding:10px 14px;">
-                                <div style="font-size:12.5px; font-weight:800; color:var(--amber); display:flex; justify-content:space-between;">
-                                    <span>⚡ PLAN 3: Nivel de Servicio & Citas</span>
-                                    <span style="background:var(--amber-bg); color:var(--amber-text); border:1px solid var(--amber-border); padding:2px 6px; border-radius:4px; font-size:10px;">15 Fletes</span>
-                                </div>
-                                <div style="font-size:11px; color:var(--text-muted); margin-top:3px;">6 Tráilers + 6 Tortons + 3 Camionetas &bull; <strong>$289,758 MXN</strong></div>
-                            </button>
-                        </div>
-                    </div>
-
-                    
-                    <!-- TECHNOLOGY 08: EXECUTIVE FINANCIAL BENCHMARK SHOWCASE -->
-                    <div class="tech-benchmark-showcase">
-                        <!-- Pod 01: Plan Isabel -->
-                        <div class="tech-bench-pod tech-pod-isabel">
-                            <div class="tech-pod-badge">
-                                <span class="tech-pod-num">01</span>
-                                <span class="tech-pod-tag">PLAN MANUAL (ISABEL)</span>
-                            </div>
-                            <div class="tech-pod-cost">$297,300 <span class="tech-pod-curr">MXN</span></div>
-                            <div class="tech-pod-metrics">
-                                <div class="tech-metric-item">
-                                    <span class="tech-metric-lbl">Flota Programada:</span>
-                                    <span class="tech-metric-val">15 Unidades</span>
-                                </div>
-                                <div class="tech-metric-item">
-                                    <span class="tech-metric-lbl">Factor Ocupación:</span>
-                                    <span class="tech-metric-val">81.2%</span>
-                                </div>
-                                <div class="tech-metric-item">
-                                    <span class="tech-metric-lbl">Tiempo de Proceso:</span>
-                                    <span class="tech-metric-val">4 a 6 Horas</span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Center Capsule: High-Precision Concentric Ring Gauge -->
-                        <div class="tech-bench-dial-pod">
-                            <div class="dial-container">
-                                <svg class="concentric-dial-svg" viewBox="0 0 200 200">
-                                    <defs>
-                                        <linearGradient id="dialGradSaaS" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="#00e5ff"/>
-                                            <stop offset="100%" stop-color="#059669"/>
-                                        </linearGradient>
-                                        <linearGradient id="dialGradManual" x1="0%" y1="0%" x2="100%" y2="100%">
-                                            <stop offset="0%" stop-color="#94a3b8"/>
-                                            <stop offset="100%" stop-color="#cbd5e1"/>
-                                        </linearGradient>
-                                    </defs>
-                                    <!-- Outer Track Background & Active (SaaS) -->
-                                    <circle cx="100" cy="100" r="80" fill="none" stroke="rgba(226,232,240,0.5)" stroke-width="12"/>
-                                    <circle id="dial-outer-ring" cx="100" cy="100" r="80" fill="none" stroke="url(#dialGradSaaS)" stroke-width="12"
-                                            stroke-dasharray="502" stroke-dashoffset="24" stroke-linecap="round"
-                                            style="filter: drop-shadow(0 0 6px rgba(0,229,255,0.4));"/>
-                                    <!-- Inner Track Background & Active (Manual) -->
-                                    <circle cx="100" cy="100" r="62" fill="none" stroke="rgba(226,232,240,0.3)" stroke-width="8"/>
-                                    <circle cx="100" cy="100" r="62" fill="none" stroke="url(#dialGradManual)" stroke-width="8"
-                                            stroke-dasharray="390" stroke-dashoffset="74" stroke-linecap="round"/>
-                                </svg>
-                                <div class="dial-center-content">
-                                    <div class="dial-pct-label">EFICIENCIA</div>
-                                    <div class="dial-pct-val mono-num" id="dial-saas-efficiency">95.4%</div>
-                                    <div class="dial-sub-diff mono-num" id="dial-saas-diff">+14.2 pts</div>
-                                </div>
-                            </div>
-                            <div class="tech-savings-pill">
-                                <span class="savings-glow-led"></span>
-                                <span class="savings-title">AHORRO NETO:</span>
-                                <span class="savings-amount" id="tech-savings-amount">$14,500 MXN</span>
-                            </div>
-                        </div>
-
-                        <!-- Pod 02: Algoritmo SaaS -->
-                        <div class="tech-bench-pod tech-pod-saas">
-                            <div class="tech-pod-badge">
-                                <span class="tech-pod-num">02</span>
-                                <span class="tech-pod-tag" id="tech-pod-saas-tag">ALGORITMO SAAS (BUENO)</span>
-                            </div>
-                            <div class="tech-pod-cost" id="tech-pod-saas-cost" style="color:var(--emerald);">$282,838 <span class="tech-pod-curr">MXN</span></div>
-                            <div class="tech-pod-metrics">
-                                <div class="tech-metric-item">
-                                    <span class="tech-metric-lbl">Flota Requerida:</span>
-                                    <span class="tech-metric-val" id="tech-pod-saas-fleet">13 Fletes (-2 Unid)</span>
-                                </div>
-                                <div class="tech-metric-item">
-                                    <span class="tech-metric-lbl">Factor Ocupación:</span>
-                                    <span class="tech-metric-val" id="tech-pod-saas-occ" style="color:var(--emerald);">94.8%</span>
-                                </div>
-                                <div class="tech-metric-item">
-                                    <span class="tech-metric-lbl">Tiempo de Proceso:</span>
-                                    <span class="tech-metric-val" style="color:var(--primary);">0.8 seg (-99.9%)</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- 4 KPI SCORECARDS -->
-                    <div class="cockpit-header-stats" style="margin-top:20px;">
-                        <div class="stat-box">
-                            <div class="stat-box-title">TIEMPO DE PROGRAMACIÓN</div>
-                            <div class="stat-box-val" id="bench-kpi-time" style="color:var(--primary);">0.8 seg <span id="bench-kpi-time-badge" style="font-size:14px; font-weight:700; color:var(--emerald);">-99.9%</span></div>
-                            <div class="stat-box-sub" id="bench-kpi-time-sub">Manual: 4 a 6 horas &bull; Respuesta inmediata a cancelaciones</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-box-title">FACTOR DE OCUPACIÓN PONDERADO</div>
-                            <div class="stat-box-val" id="bench-kpi-occ" style="color:var(--emerald);">94.8% <span id="bench-kpi-occ-badge" style="font-size:14px; font-weight:700; color:var(--emerald);">+10.6%</span></div>
-                            <div class="stat-box-sub" id="bench-kpi-occ-sub">Manual: 84.2% &bull; Corrección de capacidad ociosa en Mérida</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-box-title">COSTO GLOBAL PROYECTADO</div>
-                            <div class="stat-box-val" id="bench-kpi-cost" style="color:var(--amber);">$282,838 <span id="bench-kpi-cost-badge" style="font-size:14px; font-weight:700; color:var(--emerald);">- $14,462 MXN</span></div>
-                            <div class="stat-box-sub" id="bench-kpi-cost-sub">Manual Est.: ~$297,300 &bull; Ahorro neto en fletes de larga distancia</div>
-                        </div>
-                        <div class="stat-box">
-                            <div class="stat-box-title">CONFIABILIDAD Y FLOTA</div>
-                            <div class="stat-box-val" id="bench-kpi-service" style="color:var(--indigo);">13 Fletes</div>
-                            <div class="stat-box-sub" id="bench-kpi-service-sub">6 Tráilers FTL + 7 Tortons &bull; 100% Citas con Despacho Inverso</div>
-                        </div>
-                    </div>
-
-                    <!-- 3 EXECUTIVE INSIGHT PILLARS -->
-                    <div class="benchmark-insights-grid">
-                        <div class="benchmark-insight-card">
-                            <div class="benchmark-insight-title" style="color:var(--emerald);">
-                                <span>✅ 1. Validación de Criterio Comercial FTL</span>
-                            </div>
-                            <div class="benchmark-insight-body" id="bench-insight1-body">
-                                El algoritmo <strong>confirma y valida al 100%</strong> el criterio comercial para clientes de carga completa de 30t (Villahermosa, Suchiate, Tapachula, Puebla y Tuxtla). No se altera la relación comercial con grandes clientes, integrándola al flujo automatizado.
-                            </div>
-                        </div>
-                        <div class="benchmark-insight-card">
-                            <div class="benchmark-insight-title" id="bench-insight2-title" style="color:var(--primary);">
-                                <span>🔄 2. Optimización de Tipología Vehicular</span>
-                            </div>
-                            <div class="benchmark-insight-body" id="bench-insight2-body">
-                                Detección de sobrecostos por capacidad ociosa: enviar un tracto de 30t con solo 10t a Mérida cuesta ~$38,000 MXN. El software reconfigura a Torton / LTL, generando un <strong>ahorro directo de ~$11,000 MXN</strong> en una sola ruta de 2,100 km.
-                            </div>
-                        </div>
-                        <div class="benchmark-insight-card">
-                            <div class="benchmark-insight-title" id="bench-insight3-title" style="color:var(--indigo);">
-                                <span>⏰ 3. Trazabilidad con Despacho Inverso</span>
-                            </div>
-                            <div class="benchmark-insight-body" id="bench-insight3-body">
-                                De citas anotadas como texto estático a <strong>ventanas de salida en origen</strong>. El software calcula el itinerario inverso exacto (ej. Tapachula salida 15:30 hrs para cita 8:00 AM; Tuxtla salida 19:15 hrs para cita 7:00 AM), garantizando puntualidad y cero multas.
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- AUDIT TABLE (SIDE BY SIDE 13/14/15 EMBARQUES) -->
-                    <div style="margin-top:25px; margin-bottom:15px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:10px;">
-                        <h2 style="font-size: 15px; font-weight: 800; color: var(--text-main); display:flex; align-items:center; gap:8px;">
-                            <span id="bench-table-count-title">📋 AUDITORÍA TÉCNICA COMPARATIVA (13 FLETES PROGRAMADOS)</span>
-                        </h2>
-                        <div style="display:flex; gap:6px; flex-wrap:wrap;">
-                            <button class="cat-filter-btn active" id="btn-bench-all" onclick="filterBenchmarkTable('all')">Todos (13)</button>
-                            <button class="cat-filter-btn" id="btn-bench-opt" onclick="filterBenchmarkTable('optimizacion_flota')">Tipología Vehicular (1)</button>
-                            <button class="cat-filter-btn" id="btn-bench-cita" onclick="filterBenchmarkTable('despacho_inverso')">Despacho Inverso (3)</button>
-                            <button class="cat-filter-btn" id="btn-bench-paradas" onclick="filterBenchmarkTable('densidad_paradas')">Densidad de Paradas (1)</button>
-                            <button class="cat-filter-btn" id="btn-bench-val" onclick="filterBenchmarkTable('validado')">Validados FTL (8)</button>
-                        </div>
-                    </div>
-
-                    <!-- PLAN SPECIFIC NOTICE BANNER -->
-                    <div id="bench-plan-notice" style="margin-bottom:14px; padding:12px 16px; border-radius:8px; background:var(--bg-card); border:1px solid var(--border-color); font-size:12.5px; color:var(--text-main); display:flex; align-items:center; gap:10px;">
-                        <!-- Injected dynamically by renderBenchmarkView() -->
-                    </div>
-
-                    <div class="benchmark-table-wrapper">
-                        <table class="benchmark-table">
-                            <thead>
-                                <tr>
-                                    <th style="width:120px;">Unidad Manual</th>
-                                    <th style="width:230px;">Cliente & Destino (Excel)</th>
-                                    <th style="width:140px;">Carga Manual</th>
-                                    <th style="width:220px;">Propuesta Algoritmo</th>
-                                    <th style="width:190px;">Horario & Cita</th>
-                                    <th>Dictamen Logístico y Optimización</th>
-                                </tr>
-                            </thead>
-                            <tbody id="benchmark-table-body">
-                                <!-- Populated dynamically by renderBenchmarkView() -->
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
             </div>
 
             <!-- COCKPIT / SPREADSHEET VIEW -->
@@ -2563,6 +2387,8 @@
         // VIEW SWITCHING (BENCHMARK / COCKPIT / SPLIT / MAP)
         // ==========================================
         function switchViewMode(mode) {
+            // Support both 'control' and legacy 'split'
+            if (mode === 'split') mode = 'control';
             currentViewMode = mode;
             document.querySelectorAll('.view-mode-btn').forEach(b => b.classList.remove('active'));
             
@@ -2572,45 +2398,39 @@
             const sidebar = document.getElementById('sidebar');
             const mapContainer = document.getElementById('map-container');
             const cockpitView = document.getElementById('cockpit-view');
-            const benchmarkView = document.getElementById('benchmark-view');
 
-            if (mode === 'benchmark') {
+            if (mode === 'cockpit') {
                 if (sidebar) sidebar.style.display = 'none';
                 if (mapContainer) mapContainer.style.display = 'none';
-                if (cockpitView) cockpitView.style.display = 'none';
-                if (benchmarkView) {
-                    benchmarkView.style.display = 'block';
-                    renderBenchmarkView();
+                if (cockpitView) {
+                    cockpitView.style.display = 'block';
+                    renderCockpitView();
+            // Update sidebar telemetry chips
+            const sideWeight = document.getElementById('side-kpi-weight');
+            if (sideWeight && cockpitWeight) sideWeight.innerText = cockpitWeight.innerText;
+            const sideTrips = document.getElementById('side-kpi-trips');
+            if (sideTrips && cockpitTrips) sideTrips.innerText = cockpitTrips.innerText;
+            const sideCost = document.getElementById('side-kpi-cost');
+            if (sideCost && cockpitCost) sideCost.innerText = cockpitCost.innerText;
                 }
-            } else if (mode === 'cockpit') {
-                if (sidebar) sidebar.style.display = 'none';
-                if (mapContainer) mapContainer.style.display = 'none';
-                if (cockpitView) cockpitView.style.display = 'block';
-                if (benchmarkView) benchmarkView.style.display = 'none';
-            } else if (mode === 'split') {
+            } else if (mode === 'control') {
                 if (sidebar) {
                     sidebar.style.display = 'flex';
-                    sidebar.style.width = '390px';
+                    sidebar.style.width = '420px';
                 }
                 if (mapContainer) mapContainer.style.display = 'block';
                 if (cockpitView) cockpitView.style.display = 'none';
-                if (benchmarkView) benchmarkView.style.display = 'none';
                 setTimeout(() => map.invalidateSize(), 50);
             } else { // 'map'
                 if (sidebar) {
-                    sidebar.style.display = 'flex';
-                    sidebar.style.width = '390px';
+                    sidebar.style.display = 'none';
                 }
                 if (mapContainer) mapContainer.style.display = 'block';
                 if (cockpitView) cockpitView.style.display = 'none';
-                if (benchmarkView) benchmarkView.style.display = 'none';
                 setTimeout(() => map.invalidateSize(), 50);
             }
         }
 
-        // ==========================================
-        // HELPERS: FORMATEO INTELIGENTE DE DIRECCIÓN Y TIEMPOS
-        // ==========================================
         function formatFullAddress(ex, s) {
             if (!ex) return 'Destino programado';
             let dir = String(ex.direccion || '').trim();
@@ -3164,7 +2984,7 @@
         }
 
         function viewTripOnMap(embId) {
-            switchViewMode('split');
+            switchViewMode('control');
             setTimeout(() => {
                 focusEmbarqueCluster(embId);
             }, 100);
@@ -3230,6 +3050,13 @@
             renderMapRoutes();
             renderSidebar();
             renderCockpitView();
+            // Update sidebar telemetry chips
+            const sideWeight = document.getElementById('side-kpi-weight');
+            if (sideWeight && cockpitWeight) sideWeight.innerText = cockpitWeight.innerText;
+            const sideTrips = document.getElementById('side-kpi-trips');
+            if (sideTrips && cockpitTrips) sideTrips.innerText = cockpitTrips.innerText;
+            const sideCost = document.getElementById('side-kpi-cost');
+            if (sideCost && cockpitCost) sideCost.innerText = cockpitCost.innerText;
             renderBenchmarkView();
         }
 
@@ -3874,7 +3701,7 @@
 
         // Initialize view
         changePlan('plan1');
-        switchViewMode('benchmark');
+        switchViewMode('control');
     </script>
 </body>
 </html>
