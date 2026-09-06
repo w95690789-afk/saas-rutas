@@ -165,6 +165,18 @@
             font-family: 'JetBrains Mono', monospace !important;
         }
 
+        *, *::before, *::after {
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            max-width: 100vw;
+            overflow-x: hidden;
+            margin: 0;
+            padding: 0;
+        }
+
         body {
             background-color: var(--bg-page);
             color: var(--text-main);
@@ -175,19 +187,23 @@
             transition: background-color 0.25s ease, color 0.25s ease;
         }
 
-        /* Top Plan Selector Bar */
+        /* Top Plan Selector Bar - High Density Responsive Header */
         .plan-selector-bar {
-            height: 70px;
-            min-height: 70px;
+            height: 60px;
+            min-height: 60px;
             background: var(--bg-topbar);
             border-bottom: 1px solid var(--border-color);
             z-index: 1000;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 0 22px;
-            box-shadow: var(--neu-sm);
-            gap: 14px;
+            padding: 0 14px;
+            box-shadow: 0 2px 10px rgba(15, 23, 42, 0.04);
+            gap: 8px;
+            width: 100%;
+            max-width: 100vw;
+            box-sizing: border-box;
+            overflow: hidden;
             transition: all 0.25s ease;
         }
 
@@ -195,22 +211,23 @@
         .hw-console-header {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 8px;
+            flex-shrink: 0;
         }
 
         .hw-dots-group {
             display: flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             background: var(--bg-card-inner);
-            padding: 5px 8px;
-            border-radius: 12px;
+            padding: 4px 6px;
+            border-radius: 10px;
             box-shadow: var(--neu-pressed-subtle);
         }
 
         .hw-dot {
-            width: 8px;
-            height: 8px;
+            width: 7px;
+            height: 7px;
             border-radius: 50%;
             display: inline-block;
         }
@@ -222,10 +239,11 @@
         .hw-brand-title {
             display: flex;
             align-items: center;
-            gap: 6px;
-            font-size: 13.5px;
+            gap: 5px;
+            font-size: 13px;
             font-weight: 800;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.3px;
+            white-space: nowrap;
         }
 
         .brand-main {
@@ -244,26 +262,27 @@
         }
 
         .hw-live-badge {
-            margin-left: 6px;
+            margin-left: 2px;
             display: inline-flex;
             align-items: center;
-            gap: 5px;
+            gap: 4px;
             background: var(--emerald-bg);
             color: var(--emerald-text);
             border: 1px solid var(--emerald-border);
-            padding: 2px 7px;
-            border-radius: 10px;
-            font-size: 9.5px;
+            padding: 2px 6px;
+            border-radius: 8px;
+            font-size: 9px;
             font-weight: 800;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
+            white-space: nowrap;
         }
 
         .hw-live-led {
-            width: 6px;
-            height: 6px;
+            width: 5px;
+            height: 5px;
             border-radius: 50%;
             background: var(--emerald);
-            box-shadow: 0 0 6px var(--emerald);
+            box-shadow: 0 0 5px var(--emerald);
             animation: pulseLed 2s infinite ease-in-out;
         }
 
@@ -276,34 +295,43 @@
         .plan-selector-container {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
             background: var(--bg-card);
-            padding: 5px 12px;
-            border-radius: 12px;
+            padding: 4px 8px;
+            border-radius: 10px;
             box-shadow: var(--neu-sm);
             border: 1px solid var(--card-border);
+            flex-shrink: 1;
+            min-width: 130px;
+            max-width: 250px;
         }
 
         .plan-selector-label {
-            font-size: 11px;
+            font-size: 10.5px;
             font-weight: 800;
-            letter-spacing: 0.6px;
+            letter-spacing: 0.5px;
             color: var(--primary);
             text-transform: uppercase;
+            white-space: nowrap;
         }
 
         .plan-select {
             background: var(--bg-input);
             color: var(--text-main);
             border: 1px solid var(--border-color);
-            padding: 6px 12px;
-            border-radius: 8px;
-            font-size: 12px;
+            padding: 5px 8px;
+            border-radius: 6px;
+            font-size: 11.5px;
             font-weight: 700;
             cursor: pointer;
             outline: none;
             box-shadow: var(--neu-pressed-subtle);
             transition: all 0.2s ease;
+            max-width: 100%;
+            width: 100%;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
         }
 
         .plan-select:hover {
@@ -314,24 +342,27 @@
         .view-mode-group {
             display: flex;
             background: var(--bg-card-inner);
-            padding: 4px;
-            border-radius: 14px;
-            box-shadow: var(--neu-pressed);
-            gap: 4px;
+            padding: 3px;
+            border-radius: 9999px;
+            box-shadow: inset 0 2px 4px rgba(15, 23, 42, 0.05);
+            gap: 3px;
+            flex-shrink: 0;
         }
 
         .view-mode-btn {
             background: transparent;
             border: none;
             color: var(--text-muted);
-            padding: 7px 14px;
-            font-size: 12px;
+            padding: 6px 12px;
+            font-size: 11.5px;
             font-weight: 700;
-            border-radius: 10px;
+            border-radius: 9999px;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
+            white-space: nowrap !important;
+            user-select: none;
             transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
@@ -342,7 +373,7 @@
         .view-mode-btn.active {
             background: var(--bg-card);
             color: var(--primary) !important;
-            box-shadow: var(--neu-sm);
+            box-shadow: 0 2px 8px rgba(37, 99, 235, 0.15);
             font-weight: 800;
         }
 
@@ -350,21 +381,26 @@
         .btn-action-group {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .btn-action-group button {
+            white-space: nowrap !important;
         }
 
         .btn-theme-toggle {
             background: var(--bg-card);
             color: var(--text-main);
             border: 1px solid var(--card-border);
-            padding: 7px 12px;
-            border-radius: 10px;
-            font-size: 11.5px;
+            padding: 6px 10px;
+            border-radius: 9999px !important;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             box-shadow: var(--neu-sm);
             transition: all 0.2s ease;
         }
@@ -378,14 +414,14 @@
             background: var(--bg-card);
             color: var(--primary-text);
             border: 1px solid var(--primary-border);
-            padding: 7px 14px;
-            border-radius: 10px;
-            font-size: 11.5px;
+            padding: 6px 10px;
+            border-radius: 9999px !important;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             box-shadow: var(--neu-sm);
             transition: all 0.2s ease;
         }
@@ -400,14 +436,14 @@
             background: var(--bg-card);
             color: var(--emerald-text);
             border: 1px solid var(--emerald-border);
-            padding: 7px 13px;
-            border-radius: 10px;
-            font-size: 11.5px;
+            padding: 6px 10px;
+            border-radius: 9999px !important;
+            font-size: 11px;
             font-weight: 700;
             cursor: pointer;
-            display: flex;
+            display: inline-flex;
             align-items: center;
-            gap: 6px;
+            gap: 5px;
             box-shadow: var(--neu-sm);
             transition: all 0.2s ease;
         }
@@ -422,7 +458,9 @@
         .workspace-container {
             display: flex;
             flex: 1;
-            height: calc(100vh - 70px);
+            height: calc(100vh - 60px);
+            width: 100vw;
+            max-width: 100vw;
             position: relative;
             overflow: hidden;
             background: var(--bg-page);
@@ -430,20 +468,34 @@
 
         /* Sidebar in Map & Split Mode */
         .sidebar {
-            width: 390px;
+            width: 350px;
+            min-width: 350px;
+            max-width: 350px;
             background-color: var(--bg-sidebar);
             border-right: 1px solid var(--border-color);
             display: flex;
             flex-direction: column;
             height: 100%;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: margin-left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             z-index: 999;
-            box-shadow: 4px 0 16px rgba(166, 180, 200, 0.25);
+            box-shadow: 4px 0 16px rgba(166, 180, 200, 0.2);
+            flex-shrink: 0;
         }
 
         .sidebar.collapsed {
-            margin-left: -390px;
+            margin-left: -350px !important;
+        }
+
+        @media (max-width: 1100px) {
+            .sidebar {
+                width: 310px;
+                min-width: 310px;
+                max-width: 310px;
+            }
+            .sidebar.collapsed {
+                margin-left: -310px !important;
+            }
         }
 
         .sidebar-toggle-btn {
@@ -1559,24 +1611,138 @@
         /* VISTA 1: VERTICAL PILL BARS TELEMETRY PANEL (Slide 2 Reference) */
         .control-telemetry-hud {
             position: absolute;
-            top: 24px;
-            right: 24px;
+            top: 14px;
+            right: 14px;
             z-index: 1000;
-            width: 320px;
-            background: rgba(255, 255, 255, 0.95);
+            width: 290px;
+            background: rgba(255, 255, 255, 0.94);
             backdrop-filter: blur(16px);
             -webkit-backdrop-filter: blur(16px);
-            border: 1px solid rgba(226, 232, 240, 0.8);
-            border-radius: 22px;
-            padding: 20px;
-            box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.1);
+            border: 1px solid rgba(226, 232, 240, 0.85);
+            border-radius: 20px;
+            padding: 16px 18px;
+            box-shadow: 0 16px 36px -8px rgba(15, 23, 42, 0.12);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform-origin: top right;
+        }
+
+        .control-telemetry-hud.minimized {
+            transform: scale(0.85) translateY(-15px);
+            opacity: 0;
+            pointer-events: none;
+            visibility: hidden;
         }
 
         body.theme-dark .control-telemetry-hud {
-            background: rgba(30, 41, 59, 0.95);
+            background: rgba(30, 41, 59, 0.94);
             border-color: rgba(255, 255, 255, 0.08);
             box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.5);
+        }
+
+        .hud-close-btn {
+            background: var(--bg-card-inner);
+            border: 1px solid var(--border-color);
+            border-radius: 50%;
+            width: 22px;
+            height: 22px;
+            font-size: 11px;
+            font-weight: 800;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            color: var(--text-muted);
+            transition: all 0.15s ease;
+        }
+        .hud-close-btn:hover {
+            background: var(--rose-bg);
+            color: var(--rose);
+            border-color: var(--rose-border);
+        }
+
+        /* FLOATING PILL TRIGGER (Always accessible on Map) */
+        .map-hud-toggle-pill {
+            position: absolute;
+            top: 14px;
+            right: 14px;
+            z-index: 998;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(226, 232, 240, 0.9);
+            border-radius: 9999px;
+            padding: 6px 12px;
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            box-shadow: 0 6px 20px -4px rgba(15, 23, 42, 0.1);
+            cursor: pointer;
+            color: var(--text-main);
+            transition: all 0.2s ease;
+            user-select: none;
+        }
+
+        body.theme-dark .map-hud-toggle-pill {
+            background: rgba(30, 41, 59, 0.92);
+            border-color: rgba(255, 255, 255, 0.12);
+            box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
+        }
+
+        .map-hud-toggle-pill:hover {
+            transform: translateY(-1px);
+            border-color: var(--primary);
+            box-shadow: 0 10px 24px -4px rgba(37, 99, 235, 0.2);
+        }
+
+        .hud-live-dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--emerald);
+            box-shadow: 0 0 6px var(--emerald);
+            animation: pulseLed 2s infinite ease-in-out;
+        }
+
+        .hud-badge-mini {
+            background: var(--emerald-bg);
+            color: var(--emerald-text);
+            border: 1px solid var(--emerald-border);
+            padding: 1px 6px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 800;
+        }
+
+        /* Responsive Breakpoints for Tablet & Laptops */
+        @media (max-width: 1280px) {
+            .hide-on-tablet {
+                display: none !important;
+            }
+            .btn-label-full {
+                display: none !important;
+            }
+            .btn-label-short {
+                display: inline !important;
+            }
+            .plan-selector-container {
+                max-width: 190px;
+            }
+            .plan-selector-bar {
+                padding: 0 8px;
+                gap: 6px;
+            }
+            .view-mode-btn {
+                padding: 5px 8px;
+                font-size: 11px;
+            }
+        }
+        @media (min-width: 1281px) {
+            .btn-label-short {
+                display: none !important;
+            }
+            .btn-label-full {
+                display: inline !important;
+            }
         }
 
         .hud-header {
@@ -2362,55 +2528,65 @@
             </div>
             <div class="hw-brand-title">
                 <span class="brand-main">CISAALMA</span>
-                <span class="brand-sep">/</span>
-                <span class="brand-sub">CALIDAD BUENO</span>
-                <span class="hw-live-badge"><span class="hw-live-led"></span>ONLINE</span>
+                <span class="brand-sep hide-on-tablet">/</span>
+                <span class="brand-sub hide-on-tablet">CALIDAD BUENO</span>
+                <span class="hw-live-badge"><span class="hw-live-led"></span>LIVE</span>
             </div>
         </div>
 
         <div class="plan-selector-container">
             <span class="plan-selector-label">📋 PLAN:</span>
             <select id="plan-select" class="plan-select" onchange="changePlan(this.value)">
-                <option value="plan1" selected>Plan 1: Máxima Consolidación (6 Tráilers + 7 Tortons)</option>
-                <option value="plan2">Plan 2: Flota Balanceada (Mix Tráiler, Torton y Camionetas)</option>
-                <option value="plan3">Plan 3: Nivel de Servicio & Citas (Rutas Capilares y Citas 7:00 AM)</option>
+                <option value="plan1" selected>Plan 1: Consolidación (13 Fletes)</option>
+                <option value="plan2">Plan 2: Flota Balanceada (14 Fletes)</option>
+                <option value="plan3">Plan 3: Nivel Servicio & Citas (15 Fletes)</option>
             </select>
         </div>
 
-        <!-- VIEW MODE SELECTOR (BENCHMARK vs COCKPIT vs SPLIT vs MAP) -->
+        <!-- VIEW MODE SELECTOR -->
         <div class="view-mode-group">
             <button class="view-mode-btn active" id="btn-view-control" onclick="switchViewMode('control')">
-                <span>🎯 Centro de Control</span>
+                <span>🎯</span>
+                <span class="btn-label-full">Centro de Control</span>
+                <span class="btn-label-short">Control</span>
             </button>
             <button class="view-mode-btn" id="btn-view-cockpit" onclick="switchViewMode('cockpit')">
-                <span>📋 Consola de Despacho</span>
+                <span>📋</span>
+                <span class="btn-label-full">Consola Despacho</span>
+                <span class="btn-label-short">Despacho</span>
             </button>
             <button class="view-mode-btn" id="btn-view-map" onclick="switchViewMode('map')">
-                <span>🗺️ Visor Táctico</span>
+                <span>🗺️</span>
+                <span class="btn-label-full">Visor Táctico</span>
+                <span class="btn-label-short">Táctico</span>
             </button>
         </div>
 
         <div class="btn-action-group">
             <button id="btn-deferred-pill" class="btn-deferred-pill" onclick="openDeferredOrdersModal()" title="Ver y gestionar pedidos diferidos">
-                <span>📦 Diferidos:</span>
+                <span>📦</span>
+                <span class="hide-on-tablet">Diferidos:</span>
                 <span id="deferred-badge-count" class="mono-num" style="font-weight:800;">0</span>
             </button>
     
             <button id="btn-theme-toggle" class="btn-theme-toggle" onclick="toggleColorTheme()" title="Cambiar Tema (Claro / Oscuro)">
                 <span id="theme-toggle-icon">🌙</span>
-                <span id="theme-toggle-text">Modo</span>
+                <span class="hide-on-tablet" id="theme-toggle-text">Modo</span>
             </button>
 
             <button class="btn-upload-plan" onclick="document.getElementById('excel-file-input').click()">
-                <span>📂 Pedidos</span>
+                <span>📂</span>
+                <span class="hide-on-tablet">Pedidos</span>
             </button>
             <input type="file" id="excel-file-input" style="display:none;" accept=".xlsx,.xls,.csv" onchange="handleExcelUpload(this.files)">
             
             <button class="btn-download-plan" onclick="downloadActivePlanXLSX()">
-                <span>📊 Excel</span>
+                <span>📊</span>
+                <span>Excel</span>
             </button>
             <button class="btn-download-plan" onclick="downloadActivePlanCSV()" style="background:var(--primary); color:white; border:none;">
-                <span>📄 CSV</span>
+                <span>📄</span>
+                <span>CSV</span>
             </button>
         </div>
     </div>
@@ -2470,6 +2646,14 @@
             <div id="map-container">
                 <div id="map"></div>
 
+                <!-- FLOATING PILL TRIGGER (Visible on Map when HUD is minimized) -->
+                <button class="map-hud-toggle-pill" id="map-hud-toggle-pill" onclick="toggleTelemetryHud()" title="Mostrar / Ocultar Telemetría del Plan">
+                    <span class="hud-live-dot"></span>
+                    <span style="font-weight: 800; font-size: 11px;">📊 Rendimiento SLA</span>
+                    <span class="hud-badge-mini" id="hud-mini-ontime">96%</span>
+                    <span style="font-size: 10px; opacity: 0.7;">▾</span>
+                </button>
+
                 <!-- REAL-TIME ROUTE PERFORMANCE HUD (Slide 2 Reference) -->
                 <div class="control-telemetry-hud" id="control-telemetry-hud">
                     <div class="hud-header">
@@ -2477,7 +2661,10 @@
                             <div class="hud-title">Rendimiento en Tiempo Real</div>
                             <div class="hud-subtitle">Telemetría y SLA del plan activo</div>
                         </div>
-                        <span style="font-size: 10px; font-weight: 800; background: var(--emerald-bg); color: var(--emerald-text); border: 1px solid var(--emerald-border); padding: 2px 8px; border-radius: 9999px;">● EN VIVO</span>
+                        <div style="display: flex; align-items: center; gap: 6px;">
+                            <span style="font-size: 10px; font-weight: 800; background: var(--emerald-bg); color: var(--emerald-text); border: 1px solid var(--emerald-border); padding: 2px 7px; border-radius: 9999px;">● EN VIVO</span>
+                            <button class="hud-close-btn" onclick="toggleTelemetryHud(false)" title="Minimizar panel">✕</button>
+                        </div>
                     </div>
 
                     <div class="hud-pills-grid">
@@ -2828,7 +3015,8 @@
         
         const depot = { "lat": 18.91131092627553, "lng": -97.00090357086486 };
 
-        const map = L.map('map').setView([17.8, -94.5], 7);
+        const map = L.map('map', { zoomControl: false }).setView([17.8, -94.5], 7);
+        L.control.zoom({ position: 'bottomright' }).addTo(map);
 
         const hereApiKey = 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
 
@@ -3943,6 +4131,21 @@
             if (barEta) barEta.style.height = '65%';
             if (valEta) valEta.innerText = etaDev;
             if (tagEta) tagEta.innerText = etaDev;
+
+            const miniOnTime = document.getElementById('hud-mini-ontime');
+            if (miniOnTime) miniOnTime.innerText = onTimePct + '%';
+        }
+
+        function toggleTelemetryHud(forceOpen) {
+            const hud = document.getElementById('control-telemetry-hud');
+            if (!hud) return;
+            const isMinimized = hud.classList.contains('minimized');
+            const shouldOpen = forceOpen !== undefined ? forceOpen : isMinimized;
+            if (shouldOpen) {
+                hud.classList.remove('minimized');
+            } else {
+                hud.classList.add('minimized');
+            }
         }
 
         function renderTacticalView(selectedEmbId) {
@@ -4073,7 +4276,7 @@
                 if (tacticalView) tacticalView.style.display = 'none';
                 if (sidebar) {
                     sidebar.style.display = 'flex';
-                    sidebar.style.width = '420px';
+                    sidebar.style.width = '';
                 }
                 if (mapContainer) mapContainer.style.display = 'block';
                 setTimeout(() => map.invalidateSize(), 50);
@@ -4153,6 +4356,7 @@
                 rl.markers.forEach(m => map.removeLayer(m));
             });
             routeLayers = [];
+            const usedCoords = {};
 
             activeRoutes.forEach((route, idx) => {
                 const routeKey = `route_${idx}`;
@@ -4214,7 +4418,21 @@
                         </div>
                     `;
 
-                    const m = L.marker([s.lat, s.lng], {icon: icon})
+                    let mLat = Number(s.lat);
+                    let mLng = Number(s.lng);
+                    const coordKey = `${mLat.toFixed(3)},${mLng.toFixed(3)}`;
+                    if (usedCoords[coordKey] !== undefined) {
+                        usedCoords[coordKey]++;
+                        const offsetIdx = usedCoords[coordKey];
+                        const angle = (offsetIdx * (2 * Math.PI)) / 6;
+                        const distOffset = 0.015 * Math.ceil(offsetIdx / 6);
+                        mLat += distOffset * Math.cos(angle);
+                        mLng += distOffset * Math.sin(angle);
+                    } else {
+                        usedCoords[coordKey] = 0;
+                    }
+
+                    const m = L.marker([mLat, mLng], {icon: icon})
                         .bindPopup(popupHtml);
                     
                     m.bindTooltip(`<strong>${route.emb_id} (${route.vehicle})</strong><br>📍 Parada ${s.seq}: ${s.city} (${(s.load/1000).toFixed(1)}t)<br><span style="color:var(--primary);">${route.corridor}</span>`, {
@@ -5420,6 +5638,12 @@
             toast.innerText = msg;
             toast.style.display = 'block';
             setTimeout(() => { toast.style.display = 'none'; }, 4000);
+        }
+
+        // Auto-minimize HUD on tablet/laptop screens (<= 1280px)
+        if (window.innerWidth <= 1280) {
+            const hud = document.getElementById('control-telemetry-hud');
+            if (hud) hud.classList.add('minimized');
         }
 
         // Initialize view
