@@ -2879,6 +2879,353 @@
             background: rgba(15, 23, 42, 0.94);
         }
     
+    /* ==========================================
+   ENHANCED SIDEBAR ROUTE CARDS (MODERN TMS)
+   ========================================== */
+
+.route-card {
+    background: var(--bg-card);
+    border-radius: 14px;
+    padding: 14px;
+    border: 1.5px solid var(--card-border);
+    border-left: 4px solid var(--route-color) !important;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.04);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.route-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(15, 23, 42, 0.08);
+    border-color: var(--primary);
+}
+
+.route-card.active {
+    box-shadow: 0 0 0 2px var(--primary), 0 8px 20px rgba(37, 99, 235, 0.15);
+    background: var(--bg-card-inner);
+}
+
+/* Card Header */
+.route-card-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+}
+
+.route-header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.route-toggle-checkbox {
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    accent-color: var(--route-color);
+    border-radius: 4px;
+}
+
+.route-code-group {
+    display: flex;
+    align-items: baseline;
+    gap: 6px;
+}
+
+.route-emb-code {
+    font-size: 14px;
+    font-weight: 800;
+    color: var(--text-main);
+    letter-spacing: -0.2px;
+}
+
+.route-veh-name {
+    font-size: 11.5px;
+    font-weight: 600;
+    color: var(--text-muted);
+}
+
+.route-type-tag {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 8px;
+    border-radius: 9999px;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
+.route-type-tag.tracto {
+    background: rgba(59, 130, 246, 0.12);
+    color: #2563eb;
+    border: 1px solid rgba(59, 130, 246, 0.25);
+}
+
+.route-type-tag.torton {
+    background: rgba(16, 185, 129, 0.12);
+    color: #059669;
+    border: 1px solid rgba(16, 185, 129, 0.25);
+}
+
+.route-type-tag.camioneta {
+    background: rgba(245, 158, 11, 0.12);
+    color: #d97706;
+    border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+/* Corridor & Departure Row */
+.route-corridor-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 11.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+    background: var(--bg-card-inner);
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+}
+
+.route-corridor-name {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-weight: 700;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    max-width: 170px;
+}
+
+.route-corridor-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    flex-shrink: 0;
+}
+
+.route-dep-time {
+    font-size: 10.5px;
+    color: var(--primary);
+    font-weight: 700;
+    white-space: nowrap;
+}
+
+/* Modern Vertical Timeline */
+.route-timeline-v2 {
+    display: flex;
+    flex-direction: column;
+    margin: 4px 0;
+    position: relative;
+}
+
+.timeline-item-v2 {
+    display: flex;
+    align-items: flex-start;
+    position: relative;
+    padding-bottom: 8px;
+}
+
+.timeline-item-v2:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-left-time {
+    width: 62px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    text-align: right;
+    padding-right: 8px;
+}
+
+.timeline-time-clock {
+    font-size: 11px;
+    font-weight: 800;
+    color: var(--primary);
+    font-family: var(--font-mono);
+    white-space: nowrap;
+    line-height: 1.2;
+}
+
+.timeline-time-date {
+    font-size: 9.5px;
+    color: var(--text-muted);
+    font-weight: 600;
+}
+
+.timeline-axis {
+    width: 14px;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+    align-self: stretch;
+}
+
+.timeline-dot {
+    width: 9px;
+    height: 9px;
+    border-radius: 50%;
+    background: var(--bg-card);
+    border: 2.5px solid var(--route-color);
+    box-sizing: border-box;
+    z-index: 2;
+    margin-top: 2px;
+    flex-shrink: 0;
+}
+
+.timeline-line {
+    position: absolute;
+    top: 10px;
+    bottom: -2px;
+    width: 1.5px;
+    background: var(--border-color);
+    z-index: 1;
+}
+
+.timeline-item-v2:last-child .timeline-line {
+    display: none;
+}
+
+.timeline-right-info {
+    flex: 1;
+    min-width: 0;
+    padding-left: 6px;
+}
+
+.timeline-dest-line {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 4px;
+}
+
+.timeline-dest-text {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--text-main);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.timeline-dest-seq {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 10.5px;
+    margin-right: 2px;
+}
+
+.timeline-dest-load {
+    font-size: 10px;
+    font-weight: 800;
+    color: var(--primary);
+    background: rgba(37, 99, 235, 0.08);
+    padding: 1px 5px;
+    border-radius: 4px;
+    white-space: nowrap;
+}
+
+.timeline-cita-badge {
+    background: #fffbeb;
+    border: 1px solid #fde68a;
+    color: #b45309;
+    font-size: 10px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    margin-top: 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    line-height: 1.2;
+    max-width: 100%;
+}
+body.theme-dark .timeline-cita-badge {
+    background: rgba(245, 158, 11, 0.15);
+    border-color: rgba(245, 158, 11, 0.3);
+    color: #fde68a;
+}
+
+/* Expandable Itinerary Trigger */
+.btn-toggle-itinerary {
+    background: var(--bg-card-inner);
+    border: 1px dashed var(--border-color);
+    border-radius: 6px;
+    padding: 5px 8px;
+    font-size: 10.5px;
+    font-weight: 700;
+    color: var(--primary);
+    cursor: pointer;
+    text-align: center;
+    width: 100%;
+    margin: 4px 0 2px 0;
+    transition: all 0.15s ease;
+}
+
+.btn-toggle-itinerary:hover {
+    background: rgba(37, 99, 235, 0.06);
+    border-color: var(--primary);
+}
+
+/* Capacity Utilization Progress Bar */
+.route-util-track {
+    width: 100%;
+    height: 4px;
+    background: rgba(15, 23, 42, 0.08);
+    border-radius: 9999px;
+    overflow: hidden;
+    margin-top: 4px;
+}
+body.theme-dark .route-util-track {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.route-util-fill {
+    height: 100%;
+    border-radius: 9999px;
+    transition: width 0.3s ease;
+}
+
+/* Footer Chips */
+.route-meta-chips-v2 {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 4px;
+    padding-top: 4px;
+    border-top: 1px solid var(--border-color);
+}
+
+.route-meta-chip {
+    font-size: 10.5px;
+    color: var(--text-muted);
+    background: var(--bg-card-inner);
+    padding: 3px 6px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+    font-weight: 600;
+}
+
+.route-meta-chip strong {
+    color: var(--text-main);
+    font-weight: 800;
+}
+
     </style>
 
 </head>
@@ -5557,8 +5904,37 @@
             renderSidebar();
         }
 
+        function formatCleanEta(etaStr) {
+            if (!etaStr) return { date: '', time: '--:--' };
+            const parts = etaStr.trim().split(' ');
+            if (parts.length >= 3) {
+                const d = parts[0].replace('Aug', 'Ago').replace('Jul', 'Jul');
+                const t = `${parts[1]} ${parts[2]}`;
+                return { date: d, time: t };
+            } else if (parts.length === 2) {
+                return { date: '', time: `${parts[0]} ${parts[1]}` };
+            }
+            return { date: '', time: etaStr };
+        }
+
+        function formatCleanCita(citaStr) {
+            if (!citaStr) return null;
+            let c = citaStr.replace(/^CITA\s*/i, '').trim();
+            c = c.replace(/MIERCOLES/i, 'Mié').replace(/SABADO/i, 'Sáb').replace(/MARTES/i, 'Mar').replace(/JUEVES/i, 'Jue').replace(/VIERNES/i, 'Vie').replace(/LUNES/i, 'Lun');
+            c = c.replace(/\s+/g, ' ');
+            return c;
+        }
+
+        let routeStopsExpanded = {};
+        function toggleCardStops(embId, e) {
+            if (e) e.stopPropagation();
+            routeStopsExpanded[embId] = !routeStopsExpanded[embId];
+            renderSidebar();
+        }
+
         function renderSidebar() {
             const listContainer = document.getElementById('route-list');
+            if (!listContainer) return;
             listContainer.innerHTML = '';
             let totalVisibleTrips = 0;
 
@@ -5577,53 +5953,132 @@
                 card.style.setProperty('--route-color', rl.color);
                 if (!isVisible) card.style.opacity = '0.4';
 
-                const typeLabel = `🚛 ${rl.type.toUpperCase()}`;
-                let tagBg = 'var(--primary-bg)';
-                let tagColor = 'var(--primary-text)';
+                // Type label & styling
+                let typeClass = 'tracto';
+                let typeIcon = '🚛';
                 if (rl.type === 'Torton') {
-                    tagBg = 'var(--emerald-bg)';
-                    tagColor = 'var(--emerald-text)';
+                    typeClass = 'torton';
+                    typeIcon = '🚚';
                 } else if (rl.type.includes('Camioneta')) {
-                    tagBg = 'var(--amber-bg)';
-                    tagColor = 'var(--amber-text)';
+                    typeClass = 'camioneta';
+                    typeIcon = '⚡';
                 }
+                const typeLabel = `${typeIcon} ${rl.type.toUpperCase()}`;
+
+                // Capacity utilization
+                const maxCap = rl.type === 'Tracto' ? 30000 : (rl.type === 'Torton' ? 18000 : (rl.type === 'Camioneta 7t' ? 7000 : 3500));
+                const util = Math.min(100, Math.round((rl.load / maxCap) * 100));
+                let utilColor = '#10b981';
+                if (util > 98) utilColor = '#10b981';
+                else if (util >= 85) utilColor = '#3b82f6';
+                else if (util < 75) utilColor = '#f59e0b';
+
+                // Format departure
+                const cleanDep = rl.departure.replace('Aug', 'Ago').replace('Jul', 'Jul');
+
+                // Determine stops to show (Smart Accordion)
+                const isExpanded = !!routeStopsExpanded[rl.emb_id];
+                const stopsToShow = (rl.stops.length <= 2 || isExpanded) 
+                    ? rl.stops 
+                    : [rl.stops[0], rl.stops[1]];
 
                 let timelineHtml = '';
-                rl.stops.forEach(s => {
+                stopsToShow.forEach((s, sIdx) => {
                     const clientNames = s.jobs.map(j => (j.excel_info ? j.excel_info.nombre : 'Cliente')).join(' | ');
+                    const etaInfo = formatCleanEta(s.eta);
+                    const cleanCita = formatCleanCita(s.cita);
+                    const isLastNode = (sIdx === stopsToShow.length - 1) && (rl.stops.length <= 2 || isExpanded);
+
                     timelineHtml += `
-                        <div class="timeline-stop" title="${clientNames}">
-                            <span class="stop-eta">[${s.eta}]</span> 
-                            Parada ${s.seq} - ${s.city} (${(s.load/1000).toFixed(1)}t)
-                            ${s.cita ? `<br><span style="color:#eab308; font-size:10px;">⏰ ${s.cita}</span>` : ''}
+                        <div class="timeline-item-v2" title="${clientNames}">
+                            <div class="timeline-left-time">
+                                <span class="timeline-time-clock">${etaInfo.time}</span>
+                                ${etaInfo.date ? `<span class="timeline-time-date">${etaInfo.date}</span>` : ''}
+                            </div>
+                            <div class="timeline-axis">
+                                <span class="timeline-dot" style="border-color:${rl.color};"></span>
+                                ${isLastNode ? '' : '<span class="timeline-line"></span>'}
+                            </div>
+                            <div class="timeline-right-info">
+                                <div class="timeline-dest-line">
+                                    <div class="timeline-dest-text" title="${s.city}">
+                                        <span class="timeline-dest-seq">#${s.seq}</span>
+                                        ${s.city}
+                                    </div>
+                                    <span class="timeline-dest-load">${(s.load/1000).toFixed(1)}t</span>
+                                </div>
+                                ${cleanCita ? `
+                                    <div class="timeline-cita-badge" title="${s.cita}">
+                                        <span>⏰ ${cleanCita}</span>
+                                    </div>
+                                ` : ''}
+                            </div>
                         </div>
                     `;
                 });
 
+                // Toggle button if > 2 stops
+                let toggleStopsBtn = '';
+                if (rl.stops.length > 2) {
+                    const hiddenCount = rl.stops.length - 2;
+                    toggleStopsBtn = `
+                        <button class="btn-toggle-itinerary" onclick="toggleCardStops('${rl.emb_id}', event)">
+                            ${isExpanded ? `▴ Contraer itinerario (${rl.stops.length} paradas)` : `▾ +${hiddenCount} paradas más (Ver itinerario completo)`}
+                        </button>
+                    `;
+                }
+
                 card.innerHTML = `
-                    <div style="display: flex; align-items: flex-start; gap: 10px; width: 100%;">
-                        <input type="checkbox" class="route-toggle-checkbox" ${isVisible ? 'checked' : ''} 
-                            onclick="event.stopPropagation(); toggleRouteVisibility('${rl.key}', this.checked)" 
-                            style="margin-top: 4px; cursor: pointer; width: 16px; height: 16px; accent-color: var(--route-color);">
-                        <div style="flex: 1;">
-                            <div class="route-card-header">
-                                <span class="route-title">${rl.emb_id} (${rl.vehicle})</span>
-                                <span class="route-tag" style="background-color: ${tagBg}; color: ${tagColor}">${typeLabel}</span>
-                            </div>
-                            <div style="font-size:12px; color:var(--text-muted); margin-top:4px; font-weight:600; display:flex; align-items:center; gap:6px;">
-                                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background-color:${rl.color}; border:1px solid #fff;"></span>
-                                <span>${rl.corridor}</span>
-                            </div>
-                            <div style="font-size:11px; color:#60a5fa; margin-top:4px;">📅 Salida CEDI: ${rl.departure}</div>
-                            <div class="route-timeline">
-                                ${timelineHtml}
-                            </div>
-                            <div class="route-meta">
-                                <span>📦 Carga: ${(rl.load/1000).toFixed(2)}t</span>
-                                <span>📍 Paradas: ${rl.stops.length}</span>
-                                <span>📄 Pedidos: ${rl.orders_count}</span>
+                    <!-- 1. HEADER ROW -->
+                    <div class="route-card-top">
+                        <div class="route-header-left">
+                            <input type="checkbox" class="route-toggle-checkbox" ${isVisible ? 'checked' : ''} 
+                                onclick="event.stopPropagation(); toggleRouteVisibility('${rl.key}', this.checked)">
+                            <div class="route-code-group">
+                                <span class="route-emb-code">${rl.emb_id}</span>
+                                <span class="route-veh-name">(${rl.vehicle})</span>
                             </div>
                         </div>
+                        <span class="route-type-tag ${typeClass}">${typeLabel}</span>
+                    </div>
+
+                    <!-- 2. CORRIDOR & DEPARTURE BAR -->
+                    <div class="route-corridor-bar">
+                        <div class="route-corridor-name" title="${rl.corridor}">
+                            <span class="route-corridor-dot" style="background:${rl.color};"></span>
+                            <span>${rl.corridor}</span>
+                        </div>
+                        <span class="route-dep-time">🕒 ${cleanDep}</span>
+                    </div>
+
+                    <!-- 3. TIMELINE -->
+                    <div class="route-timeline-v2">
+                        ${timelineHtml}
+                    </div>
+                    ${toggleStopsBtn}
+
+                    <!-- 4. CAPACITY UTILIZATION BAR -->
+                    <div class="route-util-track" title="Ocupación: ${util}% (${(rl.load/1000).toFixed(2)}t de ${(maxCap/1000).toFixed(0)}t)">
+                        <div class="route-util-fill" style="width:${util}%; background:${utilColor};"></div>
+                    </div>
+
+                    <!-- 5. META KPI CHIPS FOOTER -->
+                    <div class="route-meta-chips-v2">
+                        <span class="route-meta-chip">
+                            <span>⚖️</span>
+                            <strong>${(rl.load/1000).toFixed(2)}t</strong>
+                            <span style="font-size:9.5px; opacity:0.75;">(${util}%)</span>
+                        </span>
+                        <span class="route-meta-chip">
+                            <span>📍</span>
+                            <strong>${rl.stops.length}</strong>
+                            <span style="font-size:9.5px; opacity:0.75;">${rl.stops.length === 1 ? 'parada' : 'paradas'}</span>
+                        </span>
+                        <span class="route-meta-chip">
+                            <span>📦</span>
+                            <strong>${rl.orders_count}</strong>
+                            <span style="font-size:9.5px; opacity:0.75;">pedidos</span>
+                        </span>
                     </div>
                 `;
 
@@ -5662,7 +6117,8 @@
             if (btnTorton) btnTorton.innerText = `Tortones (${countTorton})`;
             if (btnCam) btnCam.innerText = `Camionetas (${countCam})`;
 
-            document.getElementById('total-trips-count').innerText = totalVisibleTrips;
+            const totalTripsEl = document.getElementById('total-trips-count');
+            if (totalTripsEl) totalTripsEl.innerText = totalVisibleTrips;
         }
 
         function resetFocus() {
