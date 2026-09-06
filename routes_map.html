@@ -1034,15 +1034,20 @@
         }
 
         .embarque-orders-drawer {
-            padding: 16px 22px;
+            padding: 14px 18px;
             background: var(--bg-card-inner);
             display: none;
             border-top: 1px solid var(--border-color);
             box-shadow: var(--neu-pressed-subtle);
+            overflow-x: auto;
+            width: 100%;
+            box-sizing: border-box;
+            -webkit-overflow-scrolling: touch;
         }
 
         .orders-table {
             width: 100%;
+            min-width: 760px;
             border-collapse: collapse;
             font-size: 11.5px;
             text-align: left;
@@ -1861,6 +1866,17 @@
             margin-bottom: 30px;
         }
 
+        .embarque-row-card.expanded {
+            grid-column: 1 / -1 !important;
+            box-shadow: 0 20px 40px -8px rgba(15, 23, 42, 0.15), 0 0 0 2px var(--primary);
+        }
+
+        @media (max-width: 1280px) {
+            .embarque-table-container {
+                grid-template-columns: 1fr !important;
+            }
+        }
+
         .embarque-row-card {
             background: var(--bg-card);
             border: 1px solid var(--card-border);
@@ -2370,7 +2386,7 @@
             box-shadow: 0 2px 8px rgba(245, 158, 11, 0.35);
         }
 
-        /* MODAL / DRAWER FOR DEFERRED ORDERS */
+        /* MODAL / DRAWER FOR DEFERRED ORDERS (STICKY FOOTER, ZERO CUT-OFF) */
         .defer-modal-backdrop {
             display: none;
             position: fixed;
@@ -2378,41 +2394,62 @@
             left: 0;
             width: 100vw;
             height: 100vh;
-            background: rgba(15, 23, 42, 0.5);
+            background: rgba(15, 23, 42, 0.65);
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
             z-index: 2000;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 14px;
+            box-sizing: border-box;
         }
 
         .defer-modal-box {
             background: var(--bg-card);
             border: 1px solid var(--card-border);
-            border-radius: 24px;
-            width: 100%;
-            max-width: 680px;
-            max-height: 90vh;
-            overflow-y: auto;
-            padding: 28px;
-            box-shadow: 0 25px 50px -12px rgba(15, 23, 42, 0.25);
+            border-radius: 20px;
+            width: 96%;
+            max-width: 620px;
+            max-height: 86vh;
+            box-shadow: 0 25px 60px -10px rgba(15, 23, 42, 0.4);
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            overflow: hidden;
+            box-sizing: border-box;
+            animation: modalPopIn 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @keyframes modalPopIn {
+            from { opacity: 0; transform: scale(0.96) translateY(8px); }
+            to { opacity: 1; transform: scale(1) translateY(0); }
         }
 
         .defer-modal-header {
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border-color);
+            background: var(--bg-card);
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            flex-shrink: 0;
+        }
+
+        .defer-modal-body {
+            padding: 16px 20px;
+            overflow-y: auto;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            box-sizing: border-box;
+            max-height: calc(86vh - 140px);
         }
 
         .defer-order-card {
             background: var(--bg-card-inner);
             border: 1px solid var(--border-color);
-            border-radius: 18px;
-            padding: 16px 20px;
+            border-radius: 16px;
+            padding: 14px 18px;
             display: flex;
             flex-direction: column;
             gap: 10px;
@@ -2421,10 +2458,10 @@
         .defer-impact-grid {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 12px;
+            gap: 10px;
             background: var(--bg-card-inner);
-            padding: 14px;
-            border-radius: 16px;
+            padding: 12px;
+            border-radius: 14px;
             border: 1px solid var(--border-color);
         }
 
@@ -2441,18 +2478,56 @@
         }
 
         .defer-impact-lbl {
-            font-size: 10.5px;
+            font-size: 10px;
             font-weight: 700;
             color: var(--text-muted);
             margin-top: 2px;
         }
 
         .defer-actions-row {
+            padding: 12px 20px;
+            border-top: 1px solid var(--border-color);
+            background: var(--bg-topbar);
             display: flex;
-            gap: 12px;
+            gap: 8px;
             justify-content: flex-end;
+            align-items: center;
+            flex-shrink: 0;
             flex-wrap: wrap;
-            margin-top: 10px;
+            box-shadow: 0 -4px 16px rgba(15, 23, 42, 0.06);
+            z-index: 10;
+        }
+
+        .btn-defer-table-btn {
+            background: #fffbeb;
+            color: #b45309;
+            border: 1.5px solid #f59e0b;
+            border-radius: 8px;
+            padding: 5px 8px;
+            font-size: 10.5px;
+            font-weight: 700;
+            cursor: pointer;
+            display: inline-flex;
+            flex-direction: column;
+            gap: 2px;
+            text-align: left;
+            transition: all 0.2s ease;
+            box-shadow: 0 2px 6px rgba(245, 158, 11, 0.2);
+            margin-top: 4px;
+        }
+        .btn-defer-table-btn:hover {
+            background: #f59e0b;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        body.theme-dark .btn-defer-table-btn {
+            background: rgba(245, 158, 11, 0.15);
+            color: #fde68a;
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+        body.theme-dark .btn-defer-table-btn:hover {
+            background: #f59e0b;
+            color: #1e293b;
         }
 
         .btn-modal-global {
@@ -2953,43 +3028,46 @@
             </div>
 
     
-    <!-- MODAL / DRAWER PARA GESTIÓN DE PEDIDOS DIFERIDOS & OUTLIERS -->
+    <!-- MODAL / DRAWER PARA GESTIÓN DE PEDIDOS DIFERIDOS & OUTLIERS (PINNED FOOTER) -->
     <div id="defer-modal-backdrop" class="defer-modal-backdrop" onclick="closeDeferredOrdersModal(event)">
         <div class="defer-modal-box" onclick="event.stopPropagation()">
             <div class="defer-modal-header">
                 <div>
-                    <span class="wave-badge" style="background:rgba(245,158,11,0.15); color:#b45309;">GESTIÓN TÁCTICA DE BACKORDER</span>
-                    <h2 style="font-size:18px; font-weight:800; color:var(--text-main); margin-top:6px;">
+                    <span class="wave-badge" style="background:rgba(245,158,11,0.15); color:#b45309; font-weight:800; font-size:10px; padding:2px 8px; border-radius:9999px;">GESTIÓN TÁCTICA DE BACKORDER</span>
+                    <h2 style="font-size:16px; font-weight:800; color:var(--text-main); margin:4px 0 2px 0;">
                         📦 Pedidos Diferidos & Simulación de Flota
                     </h2>
-                    <div style="font-size:12px; color:var(--text-muted); margin-top:2px;">
+                    <div style="font-size:11px; color:var(--text-muted);">
                         Retén pedidos atípicos para optimizar el flete o envíalos al siguiente corte de consolidación.
                     </div>
                 </div>
-                <button class="btn-modal-close" style="padding:6px 12px;" onclick="closeDeferredOrdersModal()">✕</button>
+                <button class="btn-modal-close" style="padding:4px 10px; font-size:14px; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="closeDeferredOrdersModal()">✕</button>
             </div>
 
-            <div id="defer-modal-content">
-                <!-- Populated dynamically: Active deferred orders or empty state -->
+            <div class="defer-modal-body">
+                <div id="defer-modal-content">
+                    <!-- Populated dynamically: Active deferred orders or prompt -->
+                </div>
+
+                <div id="defer-impact-summary" class="defer-impact-grid" style="display:none;">
+                    <div class="defer-impact-col">
+                        <span class="defer-impact-val" id="defer-km-saved">-450 km</span>
+                        <span class="defer-impact-lbl">Distancia Ahorrada</span>
+                    </div>
+                    <div class="defer-impact-col">
+                        <span class="defer-impact-val" id="defer-cost-saved">-$8,100 MXN</span>
+                        <span class="defer-impact-lbl">Ahorro en Flete</span>
+                    </div>
+                    <div class="defer-impact-col">
+                        <span class="defer-impact-val" id="defer-hours-saved">-6.5 hrs</span>
+                        <span class="defer-impact-lbl">Tiempo de Chofer</span>
+                    </div>
+                </div>
             </div>
 
-            <div id="defer-impact-summary" class="defer-impact-grid" style="display:none;">
-                <div class="defer-impact-col">
-                    <span class="defer-impact-val" id="defer-km-saved">-450 km</span>
-                    <span class="defer-impact-lbl">Distancia Ahorrada</span>
-                </div>
-                <div class="defer-impact-col">
-                    <span class="defer-impact-val" id="defer-cost-saved">-$8,100 MXN</span>
-                    <span class="defer-impact-lbl">Ahorro en Flete</span>
-                </div>
-                <div class="defer-impact-col">
-                    <span class="defer-impact-val" id="defer-hours-saved">-6.5 hrs</span>
-                    <span class="defer-impact-lbl">Tiempo de Chofer</span>
-                </div>
-            </div>
-
+            <!-- PINNED ACTIONS FOOTER (ALWAYS 100% VISIBLE) -->
             <div class="defer-actions-row" id="defer-modal-actions">
-                <button class="btn-modal-close" onclick="closeDeferredOrdersModal()">Cerrar</button>
+                <button class="btn-modal-close" onclick="closeDeferredOrdersModal()">✕ Cancelar</button>
                 <button class="btn-modal-local" id="btn-apply-local" onclick="applyDeferLocal()" title="Poda quirúrgica solo en el camión afectado">
                     <span>🔒 Ajustar solo Rutas Afectadas</span>
                 </button>
@@ -3861,6 +3939,20 @@
                 document.getElementById('defer-km-saved').innerText = `-${outlier.kmDesvio} km`;
                 document.getElementById('defer-cost-saved').innerText = `-$${outlier.costoMarginal.toLocaleString()} MXN`;
                 document.getElementById('defer-hours-saved').innerText = `-${(outlier.kmDesvio/65).toFixed(1)} hrs`;
+            }
+
+            // Pinned action buttons
+            const actionsRow = document.getElementById('defer-modal-actions');
+            if (actionsRow) {
+                actionsRow.innerHTML = `
+                    <button class="btn-modal-close" onclick="closeDeferredOrdersModal()">✕ Cancelar</button>
+                    <button class="btn-modal-local" id="btn-apply-local" onclick="applyDeferLocal()" title="Remover parada de ${embId} sin alterar los demás camiones">
+                        <span>🔒 Ajustar solo ${embId}</span>
+                    </button>
+                    <button class="btn-modal-global" id="btn-apply-global" onclick="applyDeferGlobal()" title="Vuelve a correr el algoritmo K-Means / VRP completo">
+                        <span>🚀 Re-Optimizar Todo el Plan</span>
+                    </button>
+                `;
             }
 
             document.getElementById('defer-modal-backdrop').style.display = 'flex';
@@ -4784,8 +4876,15 @@
                         ordersTableRows += `
                             <tr style="${stopOutlier ? 'background:rgba(239,68,68,0.04);' : ''}">
                                 <td>
-                                    <strong style="color:var(--primary);">${pId}</strong>
-                                    ${stopOutlier ? `<div style="margin-top:2px;"><span class="badge-outlier-alert">⚠️ Desvío +${stopOutlier.kmDesvio}km</span></div>` : ''}
+                                    <strong style="color:var(--primary); font-size:12px;">${pId}</strong>
+                                    ${stopOutlier ? `
+                                        <div style="margin-top:4px;">
+                                            <button class="btn-defer-table-btn" onclick="promptDeferOrder('${pId}', '${r.emb_id}')" title="Diferir parada atípica">
+                                                <span>⚠️ Desvío +${stopOutlier.kmDesvio}km</span>
+                                                <span style="text-decoration:underline; font-weight:800;">[ ⏸️ DIFERIR ESTE PEDIDO ]</span>
+                                            </button>
+                                        </div>
+                                    ` : ''}
                                 </td>
                                 <td><span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 6px; border-radius:9999px; font-weight:700; font-size:10px;">Parada ${s.seq}</span></td>
                                 <td><strong>${ex.nombre || 'Cliente'}</strong><br><span style="color:#94a3b8; font-size:10px;">Cód: ${ex.cliente || ''}</span></td>
@@ -4883,8 +4982,17 @@
 
         function toggleOrdersDrawer(drawerId) {
             const drawer = document.getElementById(drawerId);
+            if (!drawer) return;
+            const card = drawer.closest('.embarque-row-card');
             const isHidden = drawer.style.display === 'none' || !drawer.style.display;
             drawer.style.display = isHidden ? 'block' : 'none';
+            if (card) {
+                if (isHidden) {
+                    card.classList.add('expanded');
+                } else {
+                    card.classList.remove('expanded');
+                }
+            }
         }
 
         function filterCockpitTable(query) {
