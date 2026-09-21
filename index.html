@@ -4996,10 +4996,213 @@ body.theme-dark .route-util-track {
 
         function selectReoptStrategy(stratKey) {
             selectedReoptStrategy = stratKey;
+            updateReoptStrategyUI();
+        }
+
+        function updateReoptStrategyUI() {
+            // 1. Update cards selected state
             ['strategy1', 'strategy2', 'strategy3'].forEach(k => {
                 const el = document.getElementById(`card-${k}`);
-                if (el) el.classList.toggle('selected', k === stratKey);
+                if (el) el.classList.toggle('selected', k === selectedReoptStrategy);
             });
+
+            // 2. Update KPI values and labels
+            const kpiOrdersVal = document.getElementById('reopt-kpi-orders-val');
+            const kpiOrdersLbl = document.getElementById('reopt-kpi-orders-lbl');
+            const kpiCostVal = document.getElementById('reopt-kpi-cost-val');
+            const kpiCostLbl = document.getElementById('reopt-kpi-cost-lbl');
+            const kpiKmVal = document.getElementById('reopt-kpi-km-val');
+            const kpiKmLbl = document.getElementById('reopt-kpi-km-lbl');
+            const kpiTimeVal = document.getElementById('reopt-kpi-time-val');
+            const kpiTimeLbl = document.getElementById('reopt-kpi-time-lbl');
+            const modalTitle = document.getElementById('defer-modal-title');
+
+            if (selectedReoptStrategy === 'strategy1') {
+                if (modalTitle) modalTitle.innerHTML = `🚀 Simulador & Re-Optimización de Red (56 Pedidos Activos)`;
+                if (kpiOrdersVal) { kpiOrdersVal.innerText = '56 de 57'; kpiOrdersVal.style.color = 'var(--primary)'; }
+                if (kpiOrdersLbl) kpiOrdersLbl.innerText = 'Pedidos Activos (+1 Backorder)';
+                if (kpiCostVal) { kpiCostVal.innerText = '-$8,748 MXN'; kpiCostVal.style.color = '#10b981'; }
+                if (kpiCostLbl) kpiCostLbl.innerText = 'Ahorro Neto en Flete';
+                if (kpiKmVal) { kpiKmVal.innerText = '-486 km'; kpiKmVal.style.color = '#10b981'; }
+                if (kpiKmLbl) kpiKmLbl.innerText = 'Kilómetros Recortados';
+                if (kpiTimeVal) { kpiTimeVal.innerText = '-7.5 hrs'; kpiTimeVal.style.color = '#f59e0b'; }
+                if (kpiTimeLbl) kpiTimeLbl.innerText = 'Tiempo de Chofer Ahorrado';
+            } else if (selectedReoptStrategy === 'strategy2') {
+                if (modalTitle) modalTitle.innerHTML = `🚀 Simulador & Re-Optimización de Red (57 Pedidos - 100% Hoy)`;
+                if (kpiOrdersVal) { kpiOrdersVal.innerText = '57 de 57'; kpiOrdersVal.style.color = '#10b981'; }
+                if (kpiOrdersLbl) kpiOrdersLbl.innerText = '100% Entregados Hoy (0 Backorder)';
+                if (kpiCostVal) { kpiCostVal.innerText = '+$7,704 MXN'; kpiCostVal.style.color = '#10b981'; }
+                if (kpiCostLbl) kpiCostLbl.innerText = 'Ahorro Neto Global Red';
+                if (kpiKmVal) { kpiKmVal.innerText = '-428 km'; kpiKmVal.style.color = '#10b981'; }
+                if (kpiKmLbl) kpiKmLbl.innerText = 'Desvío Neto (+58 km Istmo)';
+                if (kpiTimeVal) { kpiTimeVal.innerText = '-6.2 hrs'; kpiTimeVal.style.color = '#10b981'; }
+                if (kpiTimeLbl) kpiTimeLbl.innerText = 'Tiempo Chofer Optimizado';
+            } else if (selectedReoptStrategy === 'strategy3') {
+                if (modalTitle) modalTitle.innerHTML = `🚀 Simulador & Re-Optimización de Red (57 Pedidos - Unidad Express)`;
+                if (kpiOrdersVal) { kpiOrdersVal.innerText = '57 de 57'; kpiOrdersVal.style.color = '#10b981'; }
+                if (kpiOrdersLbl) kpiOrdersLbl.innerText = '100% Entregados Hoy (14 Unidades)';
+                if (kpiCostVal) { kpiCostVal.innerText = '+$4,548 MXN'; kpiCostVal.style.color = '#10b981'; }
+                if (kpiCostLbl) kpiCostLbl.innerText = 'Ahorro Neto (-$4,200 Camioneta)';
+                if (kpiKmVal) { kpiKmVal.innerText = '-486 km'; kpiKmVal.style.color = '#10b981'; }
+                if (kpiKmLbl) kpiKmLbl.innerText = 'Sierra compacta + Directo';
+                if (kpiTimeVal) { kpiTimeVal.innerText = '11:30 AM'; kpiTimeVal.style.color = '#3b82f6'; }
+                if (kpiTimeLbl) kpiTimeLbl.innerText = 'Llegada Puntual Express';
+            }
+
+            // 3. Update comparison table rows
+            const tbody = document.getElementById('reopt-fleet-table-tbody');
+            if (tbody) {
+                let emb11Row = '';
+                let emb13Row = '';
+                let emb14Row = '';
+
+                if (selectedReoptStrategy === 'strategy1') {
+                    emb11Row = `
+                        <tr>
+                            <td><strong>EMB-11</strong></td>
+                            <td>Torton</td>
+                            <td>Oaxaca (Istmo)</td>
+                            <td>14.6t</td>
+                            <td>81% FTL</td>
+                            <td>Capacidad disponible: 3.4t</td>
+                        </tr>
+                    `;
+                    emb13Row = `
+                        <tr class="row-opt" style="background:rgba(16,185,129,0.08); border-left:3px solid #10b981;">
+                            <td><strong>EMB-13</strong></td>
+                            <td>Torton</td>
+                            <td>Sierra Norte & Costa</td>
+                            <td><strong style="color:#10b981;">16.3t</strong> <span style="font-size:9.5px; opacity:0.8;">(antes 17.8t)</span></td>
+                            <td><span style="color:#10b981; font-weight:800;">91% FTL</span></td>
+                            <td><strong style="color:#10b981;">12 paradas compactas (750 km, -$8,748 MXN)</strong></td>
+                        </tr>
+                    `;
+                } else if (selectedReoptStrategy === 'strategy2') {
+                    emb11Row = `
+                        <tr style="background:rgba(59,130,246,0.12); border-left:3px solid #3b82f6; font-weight:700;">
+                            <td><strong>EMB-11</strong></td>
+                            <td>Torton</td>
+                            <td>Oaxaca (Istmo)</td>
+                            <td><strong style="color:#2563eb;">16.1t</strong> <span style="font-size:9.5px; opacity:0.8;">(antes 14.6t)</span></td>
+                            <td><span style="color:#2563eb; font-weight:800;">90% FTL</span></td>
+                            <td><strong style="color:#2563eb;">⭐ Absorbe Jáltipan (+58 km) • Capacidad segura</strong></td>
+                        </tr>
+                    `;
+                    emb13Row = `
+                        <tr class="row-opt" style="background:rgba(16,185,129,0.08); border-left:3px solid #10b981;">
+                            <td><strong>EMB-13</strong></td>
+                            <td>Torton</td>
+                            <td>Sierra Norte & Costa</td>
+                            <td><strong style="color:#10b981;">16.3t</strong> <span style="font-size:9.5px; opacity:0.8;">(antes 17.8t)</span></td>
+                            <td><span style="color:#10b981; font-weight:800;">91% FTL</span></td>
+                            <td><strong style="color:#10b981;">12 paradas compactas (750 km, liberada de Jáltipan)</strong></td>
+                        </tr>
+                    `;
+                } else if (selectedReoptStrategy === 'strategy3') {
+                    emb11Row = `
+                        <tr>
+                            <td><strong>EMB-11</strong></td>
+                            <td>Torton</td>
+                            <td>Oaxaca (Istmo)</td>
+                            <td>14.6t</td>
+                            <td>81% FTL</td>
+                            <td>Capacidad disponible: 3.4t</td>
+                        </tr>
+                    `;
+                    emb13Row = `
+                        <tr class="row-opt" style="background:rgba(16,185,129,0.08); border-left:3px solid #10b981;">
+                            <td><strong>EMB-13</strong></td>
+                            <td>Torton</td>
+                            <td>Sierra Norte & Costa</td>
+                            <td><strong style="color:#10b981;">16.3t</strong> <span style="font-size:9.5px; opacity:0.8;">(antes 17.8t)</span></td>
+                            <td><span style="color:#10b981; font-weight:800;">91% FTL</span></td>
+                            <td><strong style="color:#10b981;">12 paradas compactas (750 km, Sierra Norte)</strong></td>
+                        </tr>
+                    `;
+                    emb14Row = `
+                        <tr style="background:rgba(245,158,11,0.12); border-left:3px solid #f59e0b; font-weight:700;">
+                            <td><strong style="color:#d97706;">⚡ EMB-14 (Express)</strong></td>
+                            <td>Camioneta 3.5t</td>
+                            <td>Orizaba ➔ Jáltipan (Dedicada)</td>
+                            <td><strong style="color:#d97706;">1.5t</strong></td>
+                            <td><span style="color:#d97706; font-weight:800;">43% Cap.</span></td>
+                            <td><strong style="color:#d97706;">🚚 Unidad Express Dedicada ($4,200 MXN • Llega 11:30 AM)</strong></td>
+                        </tr>
+                    `;
+                }
+
+                tbody.innerHTML = `
+                    <tr class="row-ftl">
+                        <td><strong>EMB-01 a 06</strong></td>
+                        <td>Tráiler (x6)</td>
+                        <td>Tabasco, Chiapas, Puebla</td>
+                        <td>29.9t - 31.0t</td>
+                        <td><span style="color:#10b981; font-weight:800;">100% FTL</span></td>
+                        <td>Blindados a capacidad máxima legal</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EMB-07</strong></td>
+                        <td>Torton</td>
+                        <td>Península (Mérida)</td>
+                        <td>10.1t</td>
+                        <td>56% FTL</td>
+                        <td>Ruta Peninsular exclusiva</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EMB-08 y 09</strong></td>
+                        <td>Torton (x2)</td>
+                        <td>Coatzacoalcos (Mié/Sáb)</td>
+                        <td>16.9t / 17.6t</td>
+                        <td><span style="color:#f59e0b; font-weight:800;">94% - 98%</span></td>
+                        <td>Saturados (+1.5t causaría sobrepeso)</td>
+                    </tr>
+                    <tr>
+                        <td><strong>EMB-10</strong></td>
+                        <td>Torton</td>
+                        <td>Oaxaca (Valles Centrales)</td>
+                        <td>18.0t</td>
+                        <td><span style="color:#10b981; font-weight:800;">100% FTL</span></td>
+                        <td>Ruta Suroeste completa</td>
+                    </tr>
+                    ${emb11Row}
+                    <tr>
+                        <td><strong>EMB-12</strong></td>
+                        <td>Torton</td>
+                        <td>Veracruz Costa Centro-Norte</td>
+                        <td>14.3t</td>
+                        <td>80% FTL</td>
+                        <td>San Rafael / Martínez de la Torre</td>
+                    </tr>
+                    ${emb13Row}
+                    ${emb14Row}
+                `;
+            }
+
+            // 4. Update the Action Button text
+            const btnApplyNow = document.getElementById('btn-apply-reopt-now');
+            if (btnApplyNow) {
+                if (selectedReoptStrategy === 'strategy1') {
+                    btnApplyNow.innerHTML = `<span>📦 Aplicar Estrategia 1: Guardar en Backorder (56 Pedidos) ➔</span>`;
+                    btnApplyNow.style.background = 'linear-gradient(135deg, #10b981, #059669)';
+                } else if (selectedReoptStrategy === 'strategy2') {
+                    btnApplyNow.innerHTML = `<span>🔄 Aplicar Estrategia 2: Reasignar a EMB-11 (57 Pedidos Hoy) ➔</span>`;
+                    btnApplyNow.style.background = 'linear-gradient(135deg, var(--primary), #4338ca)';
+                } else if (selectedReoptStrategy === 'strategy3') {
+                    btnApplyNow.innerHTML = `<span>⚡ Aplicar Estrategia 3: Despachar Camioneta Express (57 Pedidos Hoy) ➔</span>`;
+                    btnApplyNow.style.background = 'linear-gradient(135deg, #f59e0b, #d97706)';
+                }
+            }
+
+            const btnApplyGlobal = document.getElementById('btn-apply-global');
+            if (btnApplyGlobal) {
+                if (selectedReoptStrategy === 'strategy1') {
+                    btnApplyGlobal.innerHTML = `<span>📦 Aplicar Estrategia 1: Guardar en Backorder (56 Pedidos) ➔</span>`;
+                } else if (selectedReoptStrategy === 'strategy2') {
+                    btnApplyGlobal.innerHTML = `<span>🔄 Aplicar Estrategia 2: Reasignar a EMB-11 (57 Pedidos) ➔</span>`;
+                } else if (selectedReoptStrategy === 'strategy3') {
+                    btnApplyGlobal.innerHTML = `<span>⚡ Aplicar Estrategia 3: Despachar Camioneta Express (57 Pedidos) ➔</span>`;
+                }
+            }
         }
 
         function renderReoptConsole() {
@@ -5012,20 +5215,20 @@ body.theme-dark .route-util-track {
                 <!-- 1. COMPARATIVE KPI MATRIX -->
                 <div class="reopt-kpi-grid">
                     <div class="reopt-kpi-box">
-                        <span class="reopt-kpi-val" style="color:var(--primary);">56 de 57</span>
-                        <span class="reopt-kpi-lbl">Pedidos Activos (+1 Backorder)</span>
+                        <span class="reopt-kpi-val" id="reopt-kpi-orders-val" style="color:var(--primary);">56 de 57</span>
+                        <span class="reopt-kpi-lbl" id="reopt-kpi-orders-lbl">Pedidos Activos (+1 Backorder)</span>
                     </div>
                     <div class="reopt-kpi-box">
-                        <span class="reopt-kpi-val" style="color:#10b981;">-$8,748 MXN</span>
-                        <span class="reopt-kpi-lbl">Ahorro Neto en Flete</span>
+                        <span class="reopt-kpi-val" id="reopt-kpi-cost-val" style="color:#10b981;">-$8,748 MXN</span>
+                        <span class="reopt-kpi-lbl" id="reopt-kpi-cost-lbl">Ahorro Neto en Flete</span>
                     </div>
                     <div class="reopt-kpi-box">
-                        <span class="reopt-kpi-val" style="color:#10b981;">-486 km</span>
-                        <span class="reopt-kpi-lbl">Kilómetros Recortados</span>
+                        <span class="reopt-kpi-val" id="reopt-kpi-km-val" style="color:#10b981;">-486 km</span>
+                        <span class="reopt-kpi-lbl" id="reopt-kpi-km-lbl">Kilómetros Recortados</span>
                     </div>
                     <div class="reopt-kpi-box">
-                        <span class="reopt-kpi-val" style="color:#f59e0b;">-7.5 hrs</span>
-                        <span class="reopt-kpi-lbl">Tiempo de Chofer Ahorrado</span>
+                        <span class="reopt-kpi-val" id="reopt-kpi-time-val" style="color:#f59e0b;">-7.5 hrs</span>
+                        <span class="reopt-kpi-lbl" id="reopt-kpi-time-lbl">Tiempo de Chofer Ahorrado</span>
                     </div>
                 </div>
 
