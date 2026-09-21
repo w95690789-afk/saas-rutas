@@ -3657,7 +3657,7 @@ body.theme-dark .route-util-track {
         <div class="reopt-banner-left">
             <span class="geo-audit-badge-pill" id="geo-audit-pill">⚠️ AUDITORÍA GEOGRÁFICA</span>
             <span id="geo-audit-banner-msg">
-                <strong>76 Pedidos Auditados</strong> &bull; <span id="geo-audit-stat-text">Discrepancias detectadas (&gt;500m)</span>
+                <strong><span id="geo-audit-total-count">0</span> Pedidos Auditados</strong> &bull; <span id="geo-audit-stat-text">Discrepancias detectadas (&gt;500m)</span>
             </span>
         </div>
         <div class="reopt-banner-actions">
@@ -7546,9 +7546,9 @@ body.theme-dark .route-util-track {
         }
 
         // Global State for Audit
-        let coordinateAuditDiscrepancies = [];
-        let lastUploadedJobs = [];
-        let totalAuditedCount = 0;
+        var coordinateAuditDiscrepancies = [];
+        var lastUploadedJobs = [];
+        var totalAuditedCount = 0;
 
         function updateGeoAuditBannerUI(totalJobsCount) {
             totalAuditedCount = totalJobsCount || 0;
@@ -7562,6 +7562,9 @@ body.theme-dark .route-util-track {
             }
 
             banner.style.display = 'flex';
+            const totalCountEl = document.getElementById('geo-audit-total-count');
+            if (totalCountEl) totalCountEl.innerText = totalAuditedCount;
+
             const statText = document.getElementById('geo-audit-stat-text');
             const pill = document.getElementById('geo-audit-pill');
             const critCount = coordinateAuditDiscrepancies.filter(d => d.level === 'CRITICA').length;
