@@ -3600,9 +3600,9 @@ body.theme-dark .route-util-track {
         <div class="plan-selector-container">
             <span class="plan-selector-label">📋 PLAN:</span>
             <select id="plan-select" class="plan-select" onchange="changePlan(this.value)">
-                <option value="plan1" selected>Plan 1: Consolidación (13 Fletes)</option>
-                <option value="plan2">Plan 2: Flota Balanceada (14 Fletes)</option>
-                <option value="plan3">Plan 3: Nivel Servicio & Citas (15 Fletes)</option>
+                <option value="plan1" selected>Plan 1: Máxima Consolidación</option>
+                <option value="plan2">Plan 2: Balance Flota & Servicio</option>
+                <option value="plan3">Plan 3: Reparto Capilar Rápido</option>
             </select>
         </div>
 
@@ -7067,8 +7067,21 @@ body.theme-dark .route-util-track {
 
             // Synchronize select dropdown
             const planSelect = document.getElementById('plan-select');
-            if (planSelect && planSelect.value !== planId) {
-                planSelect.value = planId;
+            if (planSelect) {
+                if (planSelect.value !== planId) {
+                    planSelect.value = planId;
+                }
+                if (planSelect.options) {
+                    if (plans.plan1 && plans.plan1.routes && plans.plan1.routes.length > 0) {
+                        if (planSelect.options[0]) planSelect.options[0].text = `Plan 1: Consolidación (${plans.plan1.routes.length} Fletes)`;
+                        if (planSelect.options[1]) planSelect.options[1].text = `Plan 2: Balance Flota (${plans.plan2.routes.length} Fletes)`;
+                        if (planSelect.options[2]) planSelect.options[2].text = `Plan 3: Reparto Capilar (${plans.plan3.routes.length} Fletes)`;
+                    } else {
+                        if (planSelect.options[0]) planSelect.options[0].text = `Plan 1: Máxima Consolidación`;
+                        if (planSelect.options[1]) planSelect.options[1].text = `Plan 2: Balance Flota & Servicio`;
+                        if (planSelect.options[2]) planSelect.options[2].text = `Plan 3: Reparto Capilar Rápido`;
+                    }
+                }
             }
 
             // Synchronize cockpit pill buttons
