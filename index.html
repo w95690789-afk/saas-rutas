@@ -5334,7 +5334,7 @@ body.theme-dark .route-util-track {
                                 <th>Diagnóstico</th>
                             </tr>
                         </thead>
-                        <tbody>
+                        <tbody id="reopt-fleet-table-tbody">
                             <tr class="row-ftl">
                                 <td><strong>EMB-01 a 06</strong></td>
                                 <td>Tráiler (x6)</td>
@@ -5395,6 +5395,7 @@ body.theme-dark .route-util-track {
                     </table>
                 </div>
             `;
+            updateReoptStrategyUI();
         }
 
         // Apply the chosen reoptimization strategy with visual feedback
