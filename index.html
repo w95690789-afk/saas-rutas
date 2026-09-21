@@ -4270,6 +4270,28 @@ body.theme-dark .route-util-track {
 
         var routeLayers = [];
 
+        // ==========================================
+        // FLEET CAPACITIES & NOM-012-SCT REGULATIONS
+        // ==========================================
+        var VEHICLE_CAPACITIES = {
+            'Tracto': 32000,
+            'Torton': 16000,
+            'Camioneta 7t': 7000,
+            'Camioneta 4t': 4000,
+            'Camioneta 3.5t': 3500
+        };
+
+        function getVehicleMaxCapacity(vType) {
+            if (!vType) return 16000;
+            const t = String(vType).toLowerCase();
+            if (t.includes('tracto')) return 32000;
+            if (t.includes('torton')) return 16000;
+            if (t.includes('7t')) return 7000;
+            if (t.includes('4t')) return 4000;
+            if (t.includes('3.5t') || t.includes('camioneta')) return 3500;
+            return 16000;
+        }
+
         
         // ==========================================
         // THEME MANAGEMENT (MODO CLARO POR DEFECTO / OSCURO)
@@ -5079,7 +5101,7 @@ body.theme-dark .route-util-track {
                 let rowsHtml = '';
                 routes.forEach(r => {
                     const isOrigin = deferredOrders.some(d => d.routeOrigin === r.emb_id);
-                    const maxCap = r.type && r.type.toLowerCase().includes('tracto') ? 31000 : 18000;
+                    const maxCap = getVehicleMaxCapacity(r.type);
                     const util = Math.min(100, Math.round((r.load / maxCap) * 100));
 
                     if (isOrigin) {
@@ -5484,8 +5506,7 @@ body.theme-dark .route-util-track {
 
                     // Reassign
                     jobsToReassign.forEach(item => {
-                        const maxCap = 18000;
-                        let candidate = p.routes.find(r => r.emb_id !== item.originEmbId && (r.load + item.job.demand) <= maxCap);
+                        let candidate = p.routes.find(r => r.emb_id !== item.originEmbId && (r.load + item.job.demand) <= getVehicleMaxCapacity(r.type));
                         if (!candidate) {
                             candidate = p.routes.find(r => r.emb_id !== item.originEmbId);
                         }
@@ -6157,21 +6178,22 @@ body.theme-dark .route-util-track {
             }
 
             // 3. Col 2: Radial Concentric Gauge
-            const maxCap = r.type === 'Tracto' ? 30000 : (r.type === 'Torton' ? 18000 : 7000);
-            const util = Math.min(100, Math.round((r.load / maxCap) * 100));
+            const maxCap = getVehicleMaxCapacity(r.type);
+            const isOverload = r.load > maxCap;
+            const util = Math.round((r.load / maxCap) * 100);
             const costPerTon = Math.round(r.cost / (r.load / 1000));
 
             const lblOnTime = document.getElementById('gauge-lbl-ontime');
             if (lblOnTime) lblOnTime.innerText = "96%";
 
             const lblCap = document.getElementById('gauge-lbl-capacity');
-            if (lblCap) lblCap.innerText = `${util}% (${(r.load/1000).toFixed(1)}t / ${(maxCap/1000).toFixed(0)}t)`;
+            if (lblCap) lblCap.innerText = `${util}% (${(r.load/1000).toFixed(1)}t / ${(maxCap/1000).toFixed(0)}t)${isOverload ? ' ⚠️ SOBRECARGA' : ''}`;
 
             const lblCost = document.getElementById('gauge-lbl-cost');
             if (lblCost) lblCost.innerText = `$${costPerTon.toLocaleString()} / t`;
 
             const scoreVal = document.getElementById('gauge-score-val');
-            if (scoreVal) scoreVal.innerText = `${util >= 95 ? 98 : util}%`;
+            if (scoreVal) scoreVal.innerText = `${isOverload ? '50%' : (util >= 90 ? '98%' : util + '%')}`;
 
             // 4. Col 3: Mobile Card
             const driverNames = ["Juan Carlos Pérez", "Alejandro Semaur", "Roberto Morales", "Miguel Ángel Soto", "Esteban Rivas", "Daniel Cordero", "Jesús Almonte", "Martín Galindo", "Héctor Valenzuela", "Ricardo Meza", "Guillermo Osorio", "Fernando Varela", "Álvaro Delgado"];
@@ -6583,10 +6605,13 @@ body.theme-dark .route-util-track {
                 const typeLabel = `${typeIcon} ${rl.type.toUpperCase()}`;
 
                 // Capacity utilization
-                const maxCap = rl.type === 'Tracto' ? 30000 : (rl.type === 'Torton' ? 18000 : (rl.type === 'Camioneta 7t' ? 7000 : 3500));
-                const util = Math.min(100, Math.round((rl.load / maxCap) * 100));
+                const maxCap = getVehicleMaxCapacity(rl.type);
+                const isOverload = rl.load > maxCap;
+                const util = Math.round((rl.load / maxCap) * 100);
+                const barWidth = Math.min(100, util);
                 let utilColor = '#10b981';
-                if (util > 98) utilColor = '#10b981';
+                if (isOverload) utilColor = '#ef4444';
+                else if (util > 98) utilColor = '#10b981';
                 else if (util >= 85) utilColor = '#3b82f6';
                 else if (util < 75) utilColor = '#f59e0b';
 
@@ -6675,16 +6700,16 @@ body.theme-dark .route-util-track {
                     ${toggleStopsBtn}
 
                     <!-- 4. CAPACITY UTILIZATION BAR -->
-                    <div class="route-util-track" title="Ocupación: ${util}% (${(rl.load/1000).toFixed(2)}t de ${(maxCap/1000).toFixed(0)}t)">
-                        <div class="route-util-fill" style="width:${util}%; background:${utilColor};"></div>
+                    <div class="route-util-track" title="Ocupación: ${util}% (${(rl.load/1000).toFixed(2)}t de ${(maxCap/1000).toFixed(0)}t)${isOverload ? ' - SOBRECARGA NOM-012' : ''}">
+                        <div class="route-util-fill" style="width:${barWidth}%; background:${utilColor};"></div>
                     </div>
 
                     <!-- 5. META KPI CHIPS FOOTER -->
                     <div class="route-meta-chips-v2">
-                        <span class="route-meta-chip">
+                        <span class="route-meta-chip" style="${isOverload ? 'color:#ef4444; font-weight:800; border-color:#ef4444;' : ''}">
                             <span>⚖️</span>
                             <strong>${(rl.load/1000).toFixed(2)}t</strong>
-                            <span style="font-size:9.5px; opacity:0.75;">(${util}%)</span>
+                            <span style="font-size:9.5px; opacity:0.85;">(${util}%${isOverload ? ' ⚠️ SOBRECARGA' : ''})</span>
                         </span>
                         <span class="route-meta-chip">
                             <span>📍</span>
@@ -6838,15 +6863,11 @@ body.theme-dark .route-util-track {
             document.getElementById('cockpit-weight').innerText = `${((plan.total_weight || 0)/1000).toFixed(2)} t`;
             document.getElementById('cockpit-trips').innerText = `${plan.total_trips || (plan.routes ? plan.routes.length : 0)} Fletes`;
 
-            let fleetDesc = '6 Tráilers FTL + 7 Tortons';
-            let badgeText = `PLAN 1 (${plan.total_trips} EMBARQUES)`;
-            if (currentPlanId === 'plan2') {
-                fleetDesc = '6 Tráilers FTL + 7 Tortons + 1 Camioneta 7t';
-                badgeText = `PLAN 2 (${plan.total_trips} EMBARQUES)`;
-            } else if (currentPlanId === 'plan3') {
-                fleetDesc = '6 Tráilers FTL + 6 Tortons + 3 Camionetas (4t/7t)';
-                badgeText = `PLAN 3 (${plan.total_trips} EMBARQUES)`;
-            }
+            const tCount = plan.routes ? plan.routes.filter(r => r.type === 'Tracto').length : 0;
+            const torCount = plan.routes ? plan.routes.filter(r => r.type === 'Torton').length : 0;
+            const camCount = plan.routes ? plan.routes.filter(r => r.type.includes('Camioneta')).length : 0;
+            let fleetDesc = `${tCount} Tráilers + ${torCount} Tortons` + (camCount > 0 ? ` + ${camCount} Camionetas` : '');
+            let badgeText = `${currentPlanId.toUpperCase()} (${plan.total_trips || (plan.routes ? plan.routes.length : 0)} EMBARQUES)`;
             
             const fleetDescElem = document.getElementById('cockpit-fleet-desc');
             if (fleetDescElem) fleetDescElem.innerText = fleetDesc;
@@ -6863,8 +6884,10 @@ body.theme-dark .route-util-track {
             }
 
             plan.routes.forEach((r, rIdx) => {
-                const maxCap = r.type === 'Tracto' ? 30000 : (r.type === 'Torton' ? 18000 : (r.type === 'Camioneta 7t' ? 7000 : 4000));
-                const util = Math.min(100, Math.round((r.load / maxCap) * 100));
+                const maxCap = getVehicleMaxCapacity(r.type);
+                const isOverload = r.load > maxCap;
+                const util = Math.round((r.load / maxCap) * 100);
+                const barWidth = Math.min(100, util);
                 const drawerId = `drawer_${rIdx}`;
 
                 // Check for outlier stops in this route
@@ -6953,11 +6976,11 @@ body.theme-dark .route-util-track {
 
                         <div class="liquid-capacity-container">
                             <div style="display:flex; justify-content:space-between; font-size:11.5px; font-weight:700;">
-                                <span>Carga: ${(r.load/1000).toFixed(2)}t / ${(maxCap/1000).toFixed(0)}t</span>
-                                <span style="color:var(--primary); font-weight:800;">${util}% FTL</span>
+                                <span style="${isOverload ? 'color:#ef4444;' : ''}">Carga: ${(r.load/1000).toFixed(2)}t / ${(maxCap/1000).toFixed(0)}t</span>
+                                <span style="color:${isOverload ? '#ef4444' : 'var(--primary)'}; font-weight:800;">${util}% FTL${isOverload ? ' ⚠️' : ''}</span>
                             </div>
                             <div class="liquid-capacity-bar">
-                                <div class="liquid-capacity-fill" style="width:${util}%;"></div>
+                                <div class="liquid-capacity-fill" style="width:${barWidth}%; background:${isOverload ? '#ef4444' : 'var(--primary)'};"></div>
                             </div>
                         </div>
 
@@ -7323,7 +7346,7 @@ body.theme-dark .route-util-track {
                 ["ID Embarque", "Vehículo Asignado", "Tipo Unidad", "Corredor Logístico", "Modalidad", "Salida CEDI Orizaba", "Retorno CEDI Estimado", "Carga Total (t)", "Ocupación (%)", "Num Paradas", "Num Pedidos", "Costo Flete Est (MXN)"]
             ];
             plan.routes.forEach(r => {
-                const maxCap = r.type === 'Tracto' ? 30000 : (r.type === 'Torton' ? 18000 : (r.type === 'Camioneta 7t' ? 7000 : 4000));
+                const maxCap = getVehicleMaxCapacity(r.type);
                 const util = ((r.load / maxCap) * 100).toFixed(1) + '%';
                 resumenData.push([
                     r.emb_id,
@@ -8316,13 +8339,140 @@ function handleExcelUpload(files) {
                 return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             }
 
+            function partitionCorridorTrips(rawTrips, planType, depot) {
+                const partitioned = [];
+
+                rawTrips.forEach(t => {
+                    if (!t.jobs || t.jobs.length === 0) return;
+                    const totalW = t.jobs.reduce((a, b) => a + b.demand, 0);
+
+                    // Group jobs by unique location
+                    const locMap = {};
+                    t.jobs.forEach(j => {
+                        const k = j.lat.toFixed(4) + '_' + j.lng.toFixed(4);
+                        if (!locMap[k]) locMap[k] = [];
+                        locMap[k].push(j);
+                    });
+
+                    // Sequence locations by nearest neighbor from depot
+                    const unvisited = Object.keys(locMap);
+                    let curLat = depot.lat, curLng = depot.lng;
+                    const locSeq = [];
+                    while (unvisited.length > 0) {
+                        let bestI = 0;
+                        let minD = distKm(curLat, curLng, locMap[unvisited[0]][0].lat, locMap[unvisited[0]][0].lng);
+                        for (let i = 1; i < unvisited.length; i++) {
+                            const d = distKm(curLat, curLng, locMap[unvisited[i]][0].lat, locMap[unvisited[i]][0].lng);
+                            if (d < minD) { minD = d; bestI = i; }
+                        }
+                        const sel = unvisited.splice(bestI, 1)[0];
+                        locSeq.push({ locKey: sel, jobs: locMap[sel], weight: locMap[sel].reduce((a, b) => a + b.demand, 0) });
+                        curLat = locMap[sel][0].lat; curLng = locMap[sel][0].lng;
+                    }
+
+                    const subTrips = [];
+                    let curJobs = [];
+                    let curLoad = 0;
+
+                    function closeVehicle(vType) {
+                        if (curJobs.length === 0) return;
+                        // Auto-upgrade if single job exceeds Torton capacity
+                        const singleJobMax = Math.max(...curJobs.map(j => j.demand));
+                        if (singleJobMax > 16000) {
+                            vType = 'Tracto';
+                        }
+                        const vCap = VEHICLE_CAPACITIES[vType] || 16000;
+                        const fCost = vType === 'Tracto' ? 10000 : (vType === 'Torton' ? 6000 : (vType === 'Camioneta 7t' ? 3500 : 2500));
+                        const dCost = vType === 'Tracto' ? 15 : (vType === 'Torton' ? 10 : (vType === 'Camioneta 7t' ? 7 : 5));
+                        const spd = vType === 'Tracto' ? 65 : (vType === 'Torton' ? (t.speed_kmh || 55) : 55);
+
+                        subTrips.push({
+                            modalidad: vType === 'Tracto' ? 'FTL Directo (Tractocamión)' : t.modalidad,
+                            corridor: t.corridor,
+                            baseCorridor: t.corridor,
+                            color: t.color,
+                            speed_kmh: spd,
+                            vehicle_type: vType,
+                            fixed_cost: fCost,
+                            dist_cost_per_km: dCost,
+                            jobs: curJobs,
+                            departure_str: t.departure_str
+                        });
+                        curJobs = [];
+                        curLoad = 0;
+                    }
+
+                    // Determine baseline vehicle type
+                    let targetType = t.vehicle_type;
+                    if (planType === 1) {
+                        if (totalW >= 20000 || t.vehicle_type === 'Tracto') targetType = 'Tracto';
+                        else if (totalW <= 7000) targetType = 'Camioneta 7t';
+                        else targetType = 'Torton';
+                    } else if (planType === 2) {
+                        if (t.vehicle_type === 'Tracto' && totalW >= 24000) targetType = 'Tracto';
+                        else if (totalW <= 7000) targetType = 'Camioneta 7t';
+                        else targetType = 'Torton';
+                    } else {
+                        // Plan 3
+                        if (totalW <= 4000) targetType = 'Camioneta 3.5t';
+                        else if (totalW <= 7500) targetType = 'Camioneta 7t';
+                        else targetType = 'Torton';
+                    }
+
+                    locSeq.forEach(loc => {
+                        loc.jobs.forEach(j => {
+                            // If this individual job exceeds 16t, it MUST be a Tracto
+                            const jobReqTracto = j.demand > 16000;
+                            const activeCap = jobReqTracto ? VEHICLE_CAPACITIES['Tracto'] : (VEHICLE_CAPACITIES[targetType] || 16000);
+
+                            if (jobReqTracto) {
+                                if (curLoad > 0) closeVehicle(targetType);
+                                curJobs.push(j);
+                                curLoad += j.demand;
+                                closeVehicle('Tracto');
+                                return;
+                            }
+
+                            if (curLoad + j.demand <= activeCap) {
+                                curJobs.push(j);
+                                curLoad += j.demand;
+                            } else {
+                                if (curLoad > 0) closeVehicle(targetType);
+                                curJobs.push(j);
+                                curLoad += j.demand;
+                            }
+                        });
+                    });
+
+                    if (curJobs.length > 0) {
+                        let remType = targetType;
+                        if (planType === 1 && curLoad <= 16000 && targetType === 'Tracto' && subTrips.length > 0) {
+                            remType = curLoad <= 7000 ? 'Camioneta 7t' : 'Torton';
+                        } else if (planType === 2 && curLoad <= 7000) {
+                            remType = 'Camioneta 7t';
+                        }
+                        closeVehicle(remType);
+                    }
+
+                    if (subTrips.length > 1) {
+                        subTrips.forEach((st, idx) => {
+                            st.corridor = st.baseCorridor + ' (U-' + (idx + 1) + ')';
+                        });
+                    }
+
+                    partitioned.push(...subTrips);
+                });
+
+                return partitioned;
+            }
+
             const newPlans = {};
-            [ { id: "plan1", num: 1, title: "Plan 1: Máxima Consolidación (6 Tráilers + 7 Tortons)" },
+            [ { id: "plan1", num: 1, title: "Plan 1: Máxima Consolidación (FTL Pesado NOM-012)" },
               { id: "plan2", num: 2, title: "Plan 2: Flota Balanceada (Mix Tráiler, Torton y Camionetas)" },
               { id: "plan3", num: 3, title: "Plan 3: Nivel de Servicio & Citas (Rutas Capilares y Citas 7:00 AM)" }
             ].forEach(p => {
                 const raw_trips = generatePlanStructureJS(p.num);
-                const active_trips = raw_trips.filter(t => t.jobs && t.jobs.length > 0);
+                const active_trips = partitionCorridorTrips(raw_trips, p.num, depot);
                 const formatted = [];
 
                 active_trips.forEach((t, tripIdx) => {
@@ -8449,8 +8599,13 @@ function handleExcelUpload(files) {
                     });
                 });
 
+                const tractoCount = formatted.filter(r => r.type === 'Tracto').length;
+                const tortonCount = formatted.filter(r => r.type === 'Torton').length;
+                const camCount = formatted.filter(r => r.type.includes('Camioneta')).length;
+                const fleetBreakdown = `${tractoCount} Tráilers + ${tortonCount} Tortons` + (camCount > 0 ? ` + ${camCount} Camionetas` : '');
+
                 newPlans[p.id] = {
-                    title: p.title,
+                    title: `${p.title.split('(')[0].trim()} (${fleetBreakdown})`,
                     routes: formatted,
                     total_cost: formatted.reduce((a, b) => a + b.cost, 0),
                     total_weight: formatted.reduce((a, b) => a + b.load, 0),
