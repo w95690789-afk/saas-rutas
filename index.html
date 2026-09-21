@@ -3820,23 +3820,23 @@ body.theme-dark .route-util-track {
                         <button class="plan-pill-btn active" id="pill-plan1" onclick="changePlan('plan1')" style="flex:1; min-width:280px;">
                             <div style="font-size:13px; font-weight:800; color:var(--primary); display:flex; justify-content:space-between;">
                                 <span>🚛 PLAN 1: Máxima Consolidación</span>
-                                <span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 8px; border-radius:4px; font-size:11px;">13 Fletes</span>
+                                <span id="cockpit-pill-badge-plan1" style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 8px; border-radius:4px; font-size:11px;">0 Fletes</span>
                             </div>
-                            <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">6 Tráilers FTL + 7 Tortons &bull; <strong>$282,838 MXN</strong></div>
+                            <div id="cockpit-pill-sub-plan1" style="font-size:11px; color:#cbd5e1; margin-top:4px;">En espera de pedidos &bull; <strong>$0 MXN</strong></div>
                         </button>
                         <button class="plan-pill-btn" id="pill-plan2" onclick="changePlan('plan2')" style="flex:1; min-width:280px;">
                             <div style="font-size:13px; font-weight:800; color:var(--emerald); display:flex; justify-content:space-between;">
                                 <span>⚖️ PLAN 2: Flota Balanceada</span>
-                                <span style="background:var(--emerald-bg); color:var(--emerald-text); border:1px solid var(--emerald-border); padding:2px 8px; border-radius:4px; font-size:11px;">14 Fletes</span>
+                                <span id="cockpit-pill-badge-plan2" style="background:var(--emerald-bg); color:var(--emerald-text); border:1px solid var(--emerald-border); padding:2px 8px; border-radius:4px; font-size:11px;">0 Fletes</span>
                             </div>
-                            <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">6 Tráilers + 7 Tortons + 1 Camioneta &bull; <strong>$289,680 MXN</strong></div>
+                            <div id="cockpit-pill-sub-plan2" style="font-size:11px; color:#cbd5e1; margin-top:4px;">En espera de pedidos &bull; <strong>$0 MXN</strong></div>
                         </button>
                         <button class="plan-pill-btn" id="pill-plan3" onclick="changePlan('plan3')" style="flex:1; min-width:280px;">
                             <div style="font-size:13px; font-weight:800; color:var(--amber); display:flex; justify-content:space-between;">
                                 <span>⚡ PLAN 3: Nivel de Servicio & Citas</span>
-                                <span style="background:var(--amber-bg); color:var(--amber-text); border:1px solid var(--amber-border); padding:2px 8px; border-radius:4px; font-size:11px;">15 Fletes</span>
+                                <span id="cockpit-pill-badge-plan3" style="background:var(--amber-bg); color:var(--amber-text); border:1px solid var(--amber-border); padding:2px 8px; border-radius:4px; font-size:11px;">0 Fletes</span>
                             </div>
-                            <div style="font-size:11px; color:#cbd5e1; margin-top:4px;">6 Tráilers + 6 Tortons + 3 Camionetas &bull; <strong>$289,758 MXN</strong></div>
+                            <div id="cockpit-pill-sub-plan3" style="font-size:11px; color:#cbd5e1; margin-top:4px;">En espera de pedidos &bull; <strong>$0 MXN</strong></div>
                         </button>
                     </div>
 
@@ -6615,6 +6615,21 @@ body.theme-dark .route-util-track {
             const container = document.getElementById('cockpit-rows');
             if (!container) return;
             container.innerHTML = '';
+
+            // Update cockpit pill buttons for all 3 plans
+            ['plan1', 'plan2', 'plan3'].forEach(pid => {
+                const pData = plans[pid];
+                const bBadge = document.getElementById(`cockpit-pill-badge-${pid}`);
+                const bSub = document.getElementById(`cockpit-pill-sub-${pid}`);
+                if (pData && pData.routes && pData.routes.length > 0) {
+                    if (bBadge) bBadge.innerText = `${pData.routes.length} Fletes`;
+                    let desc = pid === 'plan1' ? 'Máxima Consolidación' : (pid === 'plan2' ? 'Flota Balanceada' : 'Reparto Rápido');
+                    if (bSub) bSub.innerHTML = `${desc} &bull; <strong>$${(pData.total_cost || 0).toLocaleString()} MXN</strong>`;
+                } else {
+                    if (bBadge) bBadge.innerText = `0 Fletes`;
+                    if (bSub) bSub.innerHTML = `En espera de pedidos &bull; <strong>$0 MXN</strong>`;
+                }
+            });
 
             if (!plan || !plan.routes || plan.routes.length === 0) {
                 const weightEl = document.getElementById('cockpit-weight');
