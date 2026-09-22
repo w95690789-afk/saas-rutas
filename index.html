@@ -4235,23 +4235,29 @@ body.theme-dark .route-util-track {
         const map = L.map('map', { zoomControl: false }).setView([17.8, -94.5], 7);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        const hereApiKey = 'qI1o_w9X2QcAMBR7SXoWowEfn3432ckmGu1ovnlsO5c';
-
-        const hereDayTile = L.tileLayer(`https://maps.hereapi.com/v3/base/mc/{z}/{x}/{y}/png8?style=explore.day&apiKey=${hereApiKey}`, {
-            attribution: '&copy; HERE Technologies | Calidad Bueno',
-            maxZoom: 20
-        });
-
-        const osmTile = L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '&copy; OpenStreetMap contributors',
+        // Capas base de alta disponibilidad para logística (sin límite 403 ni marcas de agua)
+        const osmTile = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
             maxZoom: 19
         });
 
-        hereDayTile.addTo(map);
+        const esriStreet = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Esri, DeLorme, NAVTEQ',
+            maxZoom: 19
+        });
+
+        const esriSatellite = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+            attribution: 'Tiles &copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP',
+            maxZoom: 19
+        });
+
+        // Capa predeterminada activa: OpenStreetMap (limpio, sin marcas de agua, 100% libre)
+        osmTile.addTo(map);
 
         L.control.layers({
-            "🗺️ HERE Maps (Oficial)": hereDayTile,
-            "🌍 OpenStreetMap": osmTile
+            "🌍 OpenStreetMap Estándar": osmTile,
+            "🛣️ Esri Calles y Carreteras": esriStreet,
+            "🛰️ Satélite HD (Esri)": esriSatellite
         }, null, { position: 'bottomright' }).addTo(map);
 
         const depotIcon = L.divIcon({
@@ -8170,167 +8176,11 @@ function handleExcelUpload(files) {
             reader.readAsBinaryString(file);
         }
 
-        // ==========================================
-        // CLIENT-SIDE JAVASCRIPT HYBRID SOLVER
+// ==========================================
+        // CLIENT-SIDE JAVASCRIPT HYBRID MATHEMATICAL SOLVER
+        // (Capacitated Corridor Clustering & Heterogeneous Bin Packing)
         // ==========================================
         function solveHybridLogisticsPlansJS(allJobs) {
-            const groups = {
-                TABASCO_FTL: [],
-                GUADALUPE_FTL: [],
-                RIVERA_FTL: [],
-                MAYORISTA_TAPACHULA_FTL: [],
-                MAYORISTA_TUXTLA_1_FTL: [],
-                MAYORISTA_TUXTLA_2_FTL: [],
-                YUCATAN_TORTON: [],
-                COATZA_MIERCOLES: [],
-                COATZA_SABADO: [],
-                OAXACA_VALLES: [],
-                OAXACA_ISTMO: [],
-                VERACRUZ_CENTRO_NORTE: [],
-                SIERRA_POZA_RICA: []
-            };
-            const dynamic_groups = {};
-
-            allJobs.forEach(j => {
-                const ex = j.excel_info || {};
-                const client_code = String(ex.cliente || '').trim().toUpperCase();
-                const client_nom = String(ex.nombre || '').trim().toUpperCase();
-                const pob = String(ex.poblacion || '').trim().toUpperCase();
-                const edo = String(ex.estado || '').trim().toUpperCase();
-                const ped = String(ex.pedido || '').trim();
-                const agente = String(ex.agente || '').trim().toUpperCase();
-                const corr = String(ex.corredor_logistico || ex.corredor || ex.ruta || '').trim().toUpperCase();
-                const obs = String(ex.observaciones || ex.obs || ex.referencia || j.title || '').trim().toUpperCase();
-
-                // 1. Comprehensive Corridor & Regional Routing
-                if (corr.includes("TABASCO") || pob.includes("VILLAHERMOSA") || pob.includes("CARDENAS") || pob.includes("TENOSIQUE") || pob.includes("HUIMANGUILLO") || edo.includes("TABASCO") || obs.includes("VILLAHERMOSA") || obs.includes("CARDENAS") || obs.includes("TENOSIQUE")) {
-                    groups.TABASCO_FTL.push(j); return;
-                }
-                if (corr.includes("SUCHIATE") || corr.includes("CD. HIDALGO") || corr.includes("GUADALUPE") || pob.includes("SUCHIATE") || pob.includes("HIDALGO")) {
-                    groups.GUADALUPE_FTL.push(j); return;
-                }
-                if (corr.includes("CHIAPAS COSTA") || corr.includes("TAPACHULA") || pob.includes("TAPACHULA") || pob.includes("SOCONUSCO") || pob.includes("CACAHOATAN") || obs.includes("TAPACHULA")) {
-                    groups.MAYORISTA_TAPACHULA_FTL.push(j); return;
-                }
-                if (corr.includes("CHIAPAS CENTRO") || corr.includes("TUXTLA") || pob.includes("TUXTLA") || obs.includes("TUXTLA")) {
-                    groups.MAYORISTA_TUXTLA_1_FTL.push(j); return;
-                }
-                if (corr.includes("PENÍNSULA") || corr.includes("PENINSULA") || corr.includes("MERIDA") || corr.includes("KANASIN") || corr.includes("YUCATAN") || pob.includes("MERIDA") || pob.includes("KANASIN") || pob.includes("HUNUCMA") || pob.includes("CARMEN") || edo.includes("YUCAT") || edo.includes("CAMPECHE")) {
-                    groups.YUCATAN_TORTON.push(j); return;
-                }
-                if (corr.includes("COATZA") || corr.includes("VERACRUZ SUR") || pob.includes("COATZA") || pob.includes("MINATITLAN") || pob.includes("ACAYUCAN") || pob.includes("JALTIPAN")) {
-                    if (corr.includes("SABADO") || corr.includes("SÁBADO") || agente.includes("22/08") || agente.includes("SAB")) groups.COATZA_SABADO.push(j);
-                    else groups.COATZA_MIERCOLES.push(j);
-                    return;
-                }
-                if (corr.includes("OAXACA ISTMO") || corr.includes("ISTMO") || pob.includes("SALINA") || pob.includes("TEHUANTEPEC") || pob.includes("JUCHIT") || pob.includes("HUATULCO") || pob.includes("POCHUTLA") || obs.includes("HUATULCO") || obs.includes("POCHUTLA")) {
-                    groups.OAXACA_ISTMO.push(j); return;
-                }
-                if (corr.includes("OAXACA") || corr.includes("VALLES") || pob.includes("OAXACA") || pob.includes("XOXOCOTLAN") || pob.includes("MONTOYA") || pob.includes("OCOTLAN") || pob.includes("MIAHUATLAN") || edo.includes("OAXACA")) {
-                    groups.OAXACA_VALLES.push(j); return;
-                }
-                if (corr.includes("PUEBLA") || corr.includes("RIVERA") || pob.includes("PUEBLA") || pob.includes("TEPEACA") || pob.includes("TEHUACAN") || pob.includes("TEHUITZINGO") || pob.includes("CHOLULA") || edo.includes("PUEBLA")) {
-                    groups.RIVERA_FTL.push(j); return;
-                }
-                if (corr.includes("COSTA CENTRO-NORTE") || corr.includes("SAN RAFAEL") || pob.includes("SAN RAFAEL") || pob.includes("MARTINEZ")) {
-                    groups.VERACRUZ_CENTRO_NORTE.push(j); return;
-                }
-                if (corr.includes("SIERRA") || corr.includes("POZA RICA") || corr.includes("VERACRUZ NORTE") || pob.includes("POZA") || pob.includes("PAPANTLA") || pob.includes("TIHUATLAN") || pob.includes("XICOTEPEC") || pob.includes("CARRANZA")) {
-                    groups.SIERRA_POZA_RICA.push(j); return;
-                }
-                if (corr.includes("MORELIA") || pob.includes("MORELIA") || obs.includes("MORELIA")) {
-                    if (!dynamic_groups["Morelia (Michoacán)"]) dynamic_groups["Morelia (Michoacán)"] = [];
-                    dynamic_groups["Morelia (Michoacán)"].push(j);
-                    return;
-                }
-                if (corr.includes("MEXICO") || pob.includes("TOLUCA") || obs.includes("TOLUCA")) {
-                    if (!dynamic_groups["Toluca (Edo. México)"]) dynamic_groups["Toluca (Edo. México)"] = [];
-                    dynamic_groups["Toluca (Edo. México)"].push(j);
-                    return;
-                }
-
-                // 2. Known Strategic Accounts
-                if (client_nom.includes("MONTERREY")) { groups.TABASCO_FTL.push(j); return; }
-                if (client_nom.includes("GUADALUPE GARCIA") || client_code === "A02018") { groups.GUADALUPE_FTL.push(j); return; }
-                if (client_nom.includes("RIVERA") || client_code === "B00062") { groups.RIVERA_FTL.push(j); return; }
-                if (client_nom.includes("PANADERO") || client_code === "B00200") { groups.YUCATAN_TORTON.push(j); return; }
-                if (client_nom.includes("PERFUMERIA") || client_code === "B00035") {
-                    if (agente.includes("22/08") || ped.includes("450461") || ped.includes("450473")) groups.COATZA_SABADO.push(j);
-                    else groups.COATZA_MIERCOLES.push(j);
-                    return;
-                }
-                if (client_nom.includes("GUVIER") || client_nom.includes("CONCHA")) { groups.OAXACA_VALLES.push(j); return; }
-                if (client_nom.includes("TOLEDO") || client_code === "B00084") { groups.OAXACA_ISTMO.push(j); return; }
-
-                // 4. Dynamic Catch-All for Other National Regions (e.g. CDMX, Bajío, Norte, etc.)
-                const dynKey = edo || pob || 'Destinos Foráneos';
-                if (!dynamic_groups[dynKey]) dynamic_groups[dynKey] = [];
-                dynamic_groups[dynKey].push(j);
-            });
-
-            function generatePlanStructureJS(planType) {
-                const plan_trips = [
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Tabasco (Villahermosa)", color: "#3b82f6", speed_kmh: 65, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.TABASCO_FTL, departure_str: "18/Ago 09:30 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Suchiate / Cd. Hidalgo)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.GUADALUPE_FTL, departure_str: "21/Ago 02:45 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tapachula)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TAPACHULA_FTL, departure_str: "21/Ago 03:30 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tuxtla Gutiérrez 1)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TUXTLA_1_FTL, departure_str: "21/Ago 07:15 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Chiapas (Tuxtla Gutiérrez 2)", color: "#8b5cf6", speed_kmh: 55, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.MAYORISTA_TUXTLA_2_FTL, departure_str: "21/Ago 07:15 PM" },
-                    { modalidad: "FTL Directo (Cliente Dedicado)", corridor: "Puebla Directo (Pq. Ind. 5 de Mayo)", color: "#06b6d4", speed_kmh: 60, vehicle_type: "Tracto", fixed_cost: 10000, dist_cost_per_km: 15, jobs: groups.RIVERA_FTL, departure_str: "21/Ago 06:00 AM" },
-                    { modalidad: "Consolidado Península (Kanasín)", corridor: "Península (Mérida)", color: "#ec4899", speed_kmh: 75, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.YUCATAN_TORTON, departure_str: "18/Ago 02:00 PM" },
-                    { modalidad: "Consolidado Coatzacoalcos (Turno Miércoles)", corridor: "Veracruz Sur (Coatzacoalcos)", color: "#6366f1", speed_kmh: 60, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.COATZA_MIERCOLES, departure_str: "19/Ago 12:30 AM" },
-                    { modalidad: "Consolidado Coatzacoalcos (Turno Sábado)", corridor: "Veracruz Sur (Coatzacoalcos)", color: "#6366f1", speed_kmh: 60, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.COATZA_SABADO, departure_str: "22/Ago 12:30 AM" },
-                    { modalidad: "Consolidado Valles Centrales (Miahuatlán/Ocotlán)", corridor: "Oaxaca (Valles Centrales)", color: "#eab308", speed_kmh: 48, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.OAXACA_VALLES, departure_str: "21/Ago 05:00 AM" },
-                    { modalidad: "Consolidado Istmo de Tehuantepec (Juchitán)", corridor: "Oaxaca (Istmo)", color: "#f97316", speed_kmh: 50, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.OAXACA_ISTMO, departure_str: "21/Ago 04:00 AM" },
-                    { modalidad: "Consolidado Costa Centro-Norte (San Rafael/Mtz)", corridor: "Veracruz Costa Centro-Norte", color: "#14b8a6", speed_kmh: 55, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: groups.VERACRUZ_CENTRO_NORTE, departure_str: "21/Ago 05:30 AM" }
-                ];
-
-                // Append dynamic extra corridors if any were discovered
-                Object.keys(dynamic_groups).forEach(dKey => {
-                    const dJobs = dynamic_groups[dKey];
-                    if (dJobs.length > 0) {
-                        const dWeight = dJobs.reduce((a, b) => a + b.demand, 0);
-                        const vType = dWeight > 18000 ? "Tracto" : (dWeight > 7000 ? "Torton" : "Camioneta 7t");
-                        const fCost = vType === "Tracto" ? 10000 : (vType === "Torton" ? 6000 : 3500);
-                        const cPerKm = vType === "Tracto" ? 15 : (vType === "Torton" ? 10 : 7);
-                        plan_trips.push({
-                            modalidad: `Consolidado Foráneo (${dKey})`,
-                            corridor: `Ruta Especial ${dKey}`,
-                            color: "#64748b",
-                            speed_kmh: 60,
-                            vehicle_type: vType,
-                            fixed_cost: fCost,
-                            dist_cost_per_km: cPerKm,
-                            jobs: dJobs,
-                            departure_str: "18/Ago 06:00 AM"
-                        });
-                    }
-                });
-
-                const sierra_costa_jobs = groups.SIERRA_POZA_RICA;
-                if (planType === 1) {
-                    plan_trips.push({ modalidad: "Consolidado Sierra Norte & Costa (12 Paradas)", corridor: "Veracruz Norte & Sierra Puebla", color: "#10b981", speed_kmh: 50, vehicle_type: "Torton", fixed_cost: 6000, dist_cost_per_km: 10, jobs: sierra_costa_jobs, departure_str: "18/Ago 04:00 AM" });
-                } else if (planType === 2) {
-                    const sierra = sierra_costa_jobs.filter(j => (j.excel_info && j.excel_info.estado || '').toUpperCase().includes("PUEBLA") || j.lat < 20.45);
-                    const costa = sierra_costa_jobs.filter(j => !sierra.includes(j));
-                    const sLoad = sierra.reduce((a, b) => a + b.demand, 0);
-                    plan_trips.push({ modalidad: "Capilar Ágil (Sierra de Puebla - Xicotepec)", corridor: "Sierra Norte de Puebla", color: "#10b981", speed_kmh: 50, vehicle_type: sLoad > 7600 ? "Torton" : "Camioneta 7t", fixed_cost: sLoad > 7600 ? 6000 : 3500, dist_cost_per_km: sLoad > 7600 ? 10 : 7, jobs: sierra, departure_str: "18/Ago 05:00 AM" });
-                    plan_trips.push({ modalidad: "Capilar Ágil (Costa Poza Rica / Papantla)", corridor: "Veracruz Norte (Poza Rica)", color: "#059669", speed_kmh: 55, vehicle_type: "Camioneta 7t", fixed_cost: 3500, dist_cost_per_km: 7, jobs: costa, departure_str: "18/Ago 04:30 AM" });
-                } else {
-                    const xico = sierra_costa_jobs.filter(j => (j.excel_info && (j.excel_info.poblacion || j.excel_info.observaciones || '')).toUpperCase().includes("XICOTEPEC"));
-                    const carranza = sierra_costa_jobs.filter(j => !xico.includes(j) && (j.excel_info && (j.excel_info.observaciones || j.excel_info.estado || '')).toUpperCase().includes("CARRANZA"));
-                    const poza = sierra_costa_jobs.filter(j => !xico.includes(j) && !carranza.includes(j));
-                    
-                    [ { n: "Ruta Xicotepec", l: xico, c: "#10b981" }, { n: "Ruta Venustiano Carranza", l: carranza, c: "#059669" }, { n: "Ruta Poza Rica & Papantla", l: poza, c: "#047857" } ].forEach(sub => {
-                        if (sub.l.length > 0) {
-                            const sW = sub.l.reduce((a, b) => a + b.demand, 0);
-                            const vT = sW > 3800 ? "Camioneta 7t" : "Camioneta 4t";
-                            plan_trips.push({ modalidad: `Reparto Rápido (${sub.n})`, corridor: `Veracruz Norte (${sub.n})`, color: sub.c, speed_kmh: 55, vehicle_type: vT, fixed_cost: vT === "Camioneta 7t" ? 3500 : 2500, dist_cost_per_km: vT === "Camioneta 7t" ? 7 : 5, jobs: sub.l, departure_str: "18/Ago 05:00 AM" });
-                        }
-                    });
-                }
-                return plan_trips;
-            }
-
             function distKm(lat1, lon1, lat2, lon2) {
                 const R = 6371.0;
                 const dLat = (lat2 - lat1) * Math.PI / 180.0;
@@ -8339,282 +8189,365 @@ function handleExcelUpload(files) {
                 return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
             }
 
-            function partitionCorridorTrips(rawTrips, planType, depot) {
-                const partitioned = [];
+            function classifyCorridorSpatial(lat, lng, pob, edo, obs, ruta, cliente, nombre) {
+                const pobU = String(pob || '').toUpperCase();
+                const edoU = String(edo || '').toUpperCase();
+                const obsU = String(obs || '').toUpperCase();
+                const nomU = String(nombre || '').toUpperCase();
+                const rutaU = String(ruta || '').toUpperCase();
 
-                rawTrips.forEach(t => {
-                    if (!t.jobs || t.jobs.length === 0) return;
-                    const totalW = t.jobs.reduce((a, b) => a + b.demand, 0);
+                // LEVEL 1: Strict Geographic Bounding Boxes
+                // 1. Chiapas Frontera Sur (Suchiate / Cd. Hidalgo)
+                if (lat >= 14.0 && lat < 14.78 && lng >= -93.5 && lng <= -91.5) return 'CHIAPAS_SUCHIATE';
+                // 2. Chiapas Costa / Soconusco (Tapachula, Cacahoatán)
+                if (lat >= 14.78 && lat <= 15.6 && lng >= -93.5 && lng <= -91.5) return 'CHIAPAS_TAPACHULA';
+                // 3. Chiapas Centro (Tuxtla Gutiérrez, Chiapa de Corzo, San Cristóbal)
+                if (lat >= 16.0 && lat <= 17.5 && lng >= -93.8 && lng <= -92.2) return 'CHIAPAS_TUXTLA';
+                // 4. Tabasco (Villahermosa, Cárdenas, Huimanguillo, Tenosique)
+                if (lat >= 17.4 && lat <= 18.8 && lng > -93.8 && lng <= -91.0) return 'TABASCO_VILLAHERMOSA';
+                // 5. Península de Yucatán (Mérida, Kanasín, Campeche, Cancún)
+                if (lng > -91.0 && lat >= 18.5) return 'PENINSULA_MERIDA';
+                // 6. Veracruz Sur (Coatzacoalcos, Minatitlán, Jáltipan, Acayucan)
+                if (lat >= 17.5 && lat <= 18.5 && lng >= -95.5 && lng <= -94.0) return 'VERACRUZ_SUR_COATZA';
+                // 7. Oaxaca Istmo (Juchitán, Salina Cruz, Tehuantepec)
+                if (lat >= 16.0 && lat <= 17.2 && lng >= -95.6 && lng <= -94.5) return 'OAXACA_ISTMO';
+                // 8. Oaxaca Valles Centrales (Oaxaca Centro, Xoxocotlán, Ocotlán, Miahuatlán)
+                if (lat >= 15.7 && lat <= 17.5 && lng >= -97.5 && lng <= -96.0) return 'OAXACA_VALLES';
+                // 9. Veracruz Costa Norte & Sierra (San Rafael, Martínez, Poza Rica, Papantla, Xicotepec)
+                if (lat >= 19.8 && lng >= -98.5 && lng <= -96.5) return 'VERACRUZ_NORTE_SIERRA';
+                // 10. Puebla Altiplano (Heroica Puebla, Cholula, Tepeaca, Tehuacán)
+                if (lat >= 18.5 && lat <= 19.6 && lng >= -98.8 && lng <= -97.6) return 'PUEBLA_ALTIPLANO';
+                // 11. Foráneos
+                if (lng < -98.8) {
+                    if (lng < -100.5 || pobU.includes('MORELIA') || edoU.includes('MICHOAC')) return 'FORANEO_MORELIA';
+                    return 'FORANEO_TOLUCA';
+                }
 
-                    // Group jobs by unique location
-                    const locMap = {};
-                    t.jobs.forEach(j => {
-                        const k = j.lat.toFixed(4) + '_' + j.lng.toFixed(4);
-                        if (!locMap[k]) locMap[k] = [];
-                        locMap[k].push(j);
-                    });
+                // LEVEL 2: Text Matching Fallbacks (Only if outside bounding boxes)
+                if (pobU.includes('SUCHIATE') || (pobU.includes('HIDALGO') && !pobU.includes('POZA'))) return 'CHIAPAS_SUCHIATE';
+                if (pobU.includes('TAPACHULA') || pobU.includes('CACAHOATAN')) return 'CHIAPAS_TAPACHULA';
+                if (pobU.includes('TUXTLA')) return 'CHIAPAS_TUXTLA';
+                if (pobU.includes('VILLAHERMOSA') || edoU.includes('TABASCO')) return 'TABASCO_VILLAHERMOSA';
+                if (pobU.includes('MERIDA') || pobU.includes('KANASIN') || edoU.includes('YUCAT')) return 'PENINSULA_MERIDA';
+                if (pobU.includes('COATZA') || pobU.includes('JALTIPAN') || pobU.includes('MINATITLAN')) return 'VERACRUZ_SUR_COATZA';
+                if (pobU.includes('JUCHIT') || pobU.includes('SALINA') || pobU.includes('TEHUANTEPEC')) return 'OAXACA_ISTMO';
+                if (pobU.includes('OAXACA') || pobU.includes('OCOTLAN') || pobU.includes('MIAHUATLAN')) return 'OAXACA_VALLES';
+                if (pobU.includes('POZA') || pobU.includes('PAPANTLA') || pobU.includes('SAN RAFAEL') || pobU.includes('MARTINEZ') || pobU.includes('XICOTEPEC')) return 'VERACRUZ_NORTE_SIERRA';
+                if (pobU.includes('PUEBLA') || edoU.includes('PUEBLA')) return 'PUEBLA_ALTIPLANO';
 
-                    // Sequence locations by nearest neighbor from depot
-                    const unvisited = Object.keys(locMap);
-                    let curLat = depot.lat, curLng = depot.lng;
-                    const locSeq = [];
-                    while (unvisited.length > 0) {
-                        let bestI = 0;
-                        let minD = distKm(curLat, curLng, locMap[unvisited[0]][0].lat, locMap[unvisited[0]][0].lng);
-                        for (let i = 1; i < unvisited.length; i++) {
-                            const d = distKm(curLat, curLng, locMap[unvisited[i]][0].lat, locMap[unvisited[i]][0].lng);
-                            if (d < minD) { minD = d; bestI = i; }
-                        }
-                        const sel = unvisited.splice(bestI, 1)[0];
-                        locSeq.push({ locKey: sel, jobs: locMap[sel], weight: locMap[sel].reduce((a, b) => a + b.demand, 0) });
-                        curLat = locMap[sel][0].lat; curLng = locMap[sel][0].lng;
-                    }
-
-                    const subTrips = [];
-                    let curJobs = [];
-                    let curLoad = 0;
-
-                    function closeVehicle(vType) {
-                        if (curJobs.length === 0) return;
-                        // Auto-upgrade if single job exceeds Torton capacity
-                        const singleJobMax = Math.max(...curJobs.map(j => j.demand));
-                        if (singleJobMax > 16000) {
-                            vType = 'Tracto';
-                        }
-                        const vCap = VEHICLE_CAPACITIES[vType] || 16000;
-                        const fCost = vType === 'Tracto' ? 10000 : (vType === 'Torton' ? 6000 : (vType === 'Camioneta 7t' ? 3500 : 2500));
-                        const dCost = vType === 'Tracto' ? 15 : (vType === 'Torton' ? 10 : (vType === 'Camioneta 7t' ? 7 : 5));
-                        const spd = vType === 'Tracto' ? 65 : (vType === 'Torton' ? (t.speed_kmh || 55) : 55);
-
-                        subTrips.push({
-                            modalidad: vType === 'Tracto' ? 'FTL Directo (Tractocamión)' : t.modalidad,
-                            corridor: t.corridor,
-                            baseCorridor: t.corridor,
-                            color: t.color,
-                            speed_kmh: spd,
-                            vehicle_type: vType,
-                            fixed_cost: fCost,
-                            dist_cost_per_km: dCost,
-                            jobs: curJobs,
-                            departure_str: t.departure_str
-                        });
-                        curJobs = [];
-                        curLoad = 0;
-                    }
-
-                    // Determine baseline vehicle type
-                    let targetType = t.vehicle_type;
-                    if (planType === 1) {
-                        if (totalW >= 20000 || t.vehicle_type === 'Tracto') targetType = 'Tracto';
-                        else if (totalW <= 7000) targetType = 'Camioneta 7t';
-                        else targetType = 'Torton';
-                    } else if (planType === 2) {
-                        if (t.vehicle_type === 'Tracto' && totalW >= 24000) targetType = 'Tracto';
-                        else if (totalW <= 7000) targetType = 'Camioneta 7t';
-                        else targetType = 'Torton';
-                    } else {
-                        // Plan 3
-                        if (totalW <= 4000) targetType = 'Camioneta 3.5t';
-                        else if (totalW <= 7500) targetType = 'Camioneta 7t';
-                        else targetType = 'Torton';
-                    }
-
-                    locSeq.forEach(loc => {
-                        loc.jobs.forEach(j => {
-                            // If this individual job exceeds 16t, it MUST be a Tracto
-                            const jobReqTracto = j.demand > 16000;
-                            const activeCap = jobReqTracto ? VEHICLE_CAPACITIES['Tracto'] : (VEHICLE_CAPACITIES[targetType] || 16000);
-
-                            if (jobReqTracto) {
-                                if (curLoad > 0) closeVehicle(targetType);
-                                curJobs.push(j);
-                                curLoad += j.demand;
-                                closeVehicle('Tracto');
-                                return;
-                            }
-
-                            if (curLoad + j.demand <= activeCap) {
-                                curJobs.push(j);
-                                curLoad += j.demand;
-                            } else {
-                                if (curLoad > 0) closeVehicle(targetType);
-                                curJobs.push(j);
-                                curLoad += j.demand;
-                            }
-                        });
-                    });
-
-                    if (curJobs.length > 0) {
-                        let remType = targetType;
-                        if (planType === 1 && curLoad <= 16000 && targetType === 'Tracto' && subTrips.length > 0) {
-                            remType = curLoad <= 7000 ? 'Camioneta 7t' : 'Torton';
-                        } else if (planType === 2 && curLoad <= 7000) {
-                            remType = 'Camioneta 7t';
-                        }
-                        closeVehicle(remType);
-                    }
-
-                    if (subTrips.length > 1) {
-                        subTrips.forEach((st, idx) => {
-                            st.corridor = st.baseCorridor + ' (U-' + (idx + 1) + ')';
-                        });
-                    }
-
-                    partitioned.push(...subTrips);
-                });
-
-                return partitioned;
+                return 'OTROS_CONSOLIDADOS';
             }
 
-            const newPlans = {};
-            [ { id: "plan1", num: 1, title: "Plan 1: Máxima Consolidación (FTL Pesado NOM-012)" },
-              { id: "plan2", num: 2, title: "Plan 2: Flota Balanceada (Mix Tráiler, Torton y Camionetas)" },
-              { id: "plan3", num: 3, title: "Plan 3: Nivel de Servicio & Citas (Rutas Capilares y Citas 7:00 AM)" }
-            ].forEach(p => {
-                const raw_trips = generatePlanStructureJS(p.num);
-                const active_trips = partitionCorridorTrips(raw_trips, p.num, depot);
-                const formatted = [];
+            const CORRIDOR_CONFIG = {
+                'TABASCO_VILLAHERMOSA': { name: 'Tabasco (Villahermosa)', color: '#3b82f6', baseDep: '18/Ago 09:30 PM', speed: 65 },
+                'CHIAPAS_SUCHIATE': { name: 'Chiapas (Suchiate / Cd. Hidalgo)', color: '#8b5cf6', baseDep: '21/Ago 02:45 PM', speed: 55 },
+                'CHIAPAS_TAPACHULA': { name: 'Chiapas (Tapachula)', color: '#8b5cf6', baseDep: '21/Ago 03:30 PM', speed: 55 },
+                'CHIAPAS_TUXTLA': { name: 'Chiapas (Tuxtla Gutiérrez)', color: '#8b5cf6', baseDep: '21/Ago 07:15 PM', speed: 55 },
+                'PUEBLA_ALTIPLANO': { name: 'Puebla Directo (Pq. Ind. 5 de Mayo)', color: '#06b6d4', baseDep: '21/Ago 06:00 AM', speed: 60 },
+                'PENINSULA_MERIDA': { name: 'Península (Mérida)', color: '#ec4899', baseDep: '18/Ago 02:00 PM', speed: 75 },
+                'VERACRUZ_SUR_COATZA': { name: 'Veracruz Sur (Coatzacoalcos)', color: '#6366f1', baseDep: '19/Ago 12:30 AM', speed: 60 },
+                'OAXACA_ISTMO': { name: 'Oaxaca (Istmo)', color: '#f97316', baseDep: '21/Ago 04:00 AM', speed: 50 },
+                'OAXACA_VALLES': { name: 'Oaxaca (Valles Centrales)', color: '#eab308', baseDep: '21/Ago 05:00 AM', speed: 48 },
+                'VERACRUZ_NORTE_SIERRA': { name: 'Veracruz Norte & Sierra Puebla', color: '#10b981', baseDep: '18/Ago 04:00 AM', speed: 50 },
+                'FORANEO_TOLUCA': { name: 'Ruta Especial Toluca (Edo. México)', color: '#64748b', baseDep: '18/Ago 06:00 AM', speed: 60 },
+                'FORANEO_MORELIA': { name: 'Ruta Especial Morelia (Michoacán)', color: '#64748b', baseDep: '18/Ago 06:00 AM', speed: 60 },
+                'OTROS_CONSOLIDADOS': { name: 'Ruta Consolidada Especial', color: '#64748b', baseDep: '18/Ago 06:00 AM', speed: 55 }
+            };
 
-                active_trips.forEach((t, tripIdx) => {
-                    const emb_id = `EMB-${String(tripIdx + 1).padStart(2, '0')}`;
-                    const locMap = {};
-                    t.jobs.forEach(j => {
-                        const key = `${j.lat.toFixed(4)}_${j.lng.toFixed(4)}`;
-                        if (!locMap[key]) locMap[key] = [];
-                        locMap[key].push(j);
-                    });
+            function buildShipment(jobsInShipment, cKey, vehicleType, modalidadOverride, tripIndex = 1) {
+                const conf = CORRIDOR_CONFIG[cKey] || CORRIDOR_CONFIG['OTROS_CONSOLIDADOS'];
+                const totalLoad = jobsInShipment.reduce((sum, j) => sum + j.demand, 0);
 
-                    const unvisited = Object.keys(locMap);
-                    let curLat = depot.lat, curLng = depot.lng;
-                    const locSeq = [];
-                    while (unvisited.length > 0) {
-                        let nearestIdx = 0;
-                        const p0 = locMap[unvisited[0]][0];
-                        let minD = distKm(curLat, curLng, p0.lat, p0.lng);
-                        for (let i = 1; i < unvisited.length; i++) {
-                            const pi = locMap[unvisited[i]][0];
-                            const d = distKm(curLat, curLng, pi.lat, pi.lng);
-                            if (d < minD) { minD = d; nearestIdx = i; }
-                        }
-                        const sel = unvisited.splice(nearestIdx, 1)[0];
-                        locSeq.push(locMap[sel]);
-                        curLat = locMap[sel][0].lat; curLng = locMap[sel][0].lng;
-                    }
-
-                    let totalDist = 0;
-                    let pLat = depot.lat, pLng = depot.lng;
-                    const stops = [];
-                    const roadGeometry = [[depot.lat, depot.lng]];
-                    let totalElapsedHours = 0;
-
-                    locSeq.forEach((sJobs, sIdx) => {
-                        const sLoad = sJobs.reduce((a, b) => a + b.demand, 0);
-                        const sLat = sJobs[0].lat, sLng = sJobs[0].lng;
-                        const d = distKm(pLat, pLng, sLat, sLng) * 1.3;
-                        totalDist += d;
-                        pLat = sLat; pLng = sLng;
-                        roadGeometry.push([sLat, sLng]);
-
-                        const legHours = d / t.speed_kmh;
-                        totalElapsedHours += legHours;
-                        const legEta = addHoursToDepartureStr(t.departure_str, totalElapsedHours);
-                        // Add unloading time for next stop
-                        totalElapsedHours += Math.min(2.0, 0.33 + (sLoad / 1000) * 0.08);
-
-                        const ex = sJobs[0].excel_info || {};
-                        let cName = (ex.poblacion || '').trim();
-                        let sName = (ex.estado || '').trim();
-                        const obsT = (ex.observaciones || '').toUpperCase();
-                        const corrT = (t.corridor || '').toUpperCase();
-
-                        if (!cName || ['Destino', 'Chiapas', 'Yucatán', 'Veracruz', 'Puebla', 'Oaxaca'].includes(cName)) {
-                            const resLoc = resolveOrderLocationJS({
-                                cliente: ex.cliente,
-                                nombreCli: ex.nombre,
-                                nombreSuc: ex.nombre_sucursal,
-                                sucursal: ex.sucursal,
-                                obs1: ex.observaciones,
-                                ruta: ex.ruta || t.corridor,
-                                poblacion: ex.poblacion,
-                                estado: ex.estado
-                            });
-                            if (resLoc && resLoc.city) {
-                                cName = resLoc.city;
-                                sName = resLoc.state || sName;
-                            } else if (obsT.includes('TAPACHULA') || corrT.includes('TAPACHULA')) { cName = 'Tapachula'; sName = 'Chiapas'; }
-                            else if (obsT.includes('TUXTLA') || corrT.includes('TUXTLA')) { cName = 'Tuxtla Gutiérrez'; sName = 'Chiapas'; }
-                            else if (obsT.includes('COATZA') || corrT.includes('COATZA')) { cName = 'Coatzacoalcos'; sName = 'Veracruz'; }
-                            else if (obsT.includes('XICOTEPEC')) { cName = 'Xicotepec de Juárez'; sName = 'Puebla'; }
-                            else if (obsT.includes('CARRANZA')) { cName = 'Venustiano Carranza'; sName = 'Puebla'; }
-                            else if (obsT.includes('HIDALGO') || corrT.includes('SUCHIATE')) { cName = 'Ciudad Hidalgo / Suchiate'; sName = 'Chiapas'; }
-                            else if (obsT.includes('KANASIN') || corrT.includes('MERIDA')) { cName = 'Kanasín'; sName = 'Yucatán'; }
-                            else if (ex.delegacion) { cName = ex.delegacion; }
-                            else { cName = sName || t.corridor || 'Destino'; }
-                        }
-
-                        if (!sName) {
-                            if (['Tapachula', 'Tuxtla Gutiérrez', 'Ciudad Hidalgo / Suchiate'].includes(cName)) sName = 'Chiapas';
-                            else if (['Coatzacoalcos', 'Poza Rica de Hidalgo', 'Papantla de Olarte', 'San Rafael', 'Martínez de la Torre'].includes(cName)) sName = 'Veracruz';
-                            else if (['Xicotepec de Juárez', 'Venustiano Carranza', 'Puebla (Heroica Puebla)', 'Puebla'].includes(cName)) sName = 'Puebla';
-                            else if (['Kanasín', 'Mérida'].includes(cName)) sName = 'Yucatán';
-                            else if (cName === 'Villahermosa') sName = 'Tabasco';
-                            else if (['Ocotlán de Morelos', 'Miahuatlán de Porfirio Díaz', 'Juchitán (Juchitán de Zaragoza)'].includes(cName)) sName = 'Oaxaca';
-                        }
-
-                        stops.push({
-                            seq: sIdx + 1,
-                            lat: sLat,
-                            lng: sLng,
-                            city: cName,
-                            state: sName,
-                            load: sLoad,
-                            jobs: sJobs,
-                            eta: legEta,
-                            cita: ex.agente || ""
-                        });
-                    });
-
-                    totalDist += distKm(pLat, pLng, depot.lat, depot.lng) * 1.3;
-                    roadGeometry.push([depot.lat, depot.lng]);
-                    const tripCost = t.fixed_cost + (totalDist * t.dist_cost_per_km);
-                    const totalTripLoad = t.jobs.reduce((a, b) => a + b.demand, 0);
-
-                    formatted.push({
-                        emb_id: emb_id,
-                        vehicle: `${t.vehicle_type}_${String(tripIdx + 1).padStart(2, '0')}`,
-                        type: t.vehicle_type,
-                        trip_idx: 1,
-                        corridor: t.corridor,
-                        modalidad: t.modalidad,
-                        load: totalTripLoad,
-                        orders_count: t.jobs.length,
-                        color: t.color,
-                        distance: Math.round(totalDist),
-                        cost: Math.round(tripCost),
-                        departure: t.departure_str,
-                        return_time: "Turno siguiente",
-                        stops: stops,
-                        stops_count: stops.length,
-                        road_geometry: roadGeometry
-                    });
+                const locMap = {};
+                jobsInShipment.forEach(j => {
+                    const k = `${j.lat.toFixed(4)}_${j.lng.toFixed(4)}`;
+                    if (!locMap[k]) locMap[k] = [];
+                    locMap[k].push(j);
                 });
 
-                const tractoCount = formatted.filter(r => r.type === 'Tracto').length;
-                const tortonCount = formatted.filter(r => r.type === 'Torton').length;
-                const camCount = formatted.filter(r => r.type.includes('Camioneta')).length;
+                const unvisited = Object.keys(locMap);
+                let curLat = depot.lat, curLng = depot.lng;
+                const locSeq = [];
+                while (unvisited.length > 0) {
+                    let bestI = 0;
+                    let minD = distKm(curLat, curLng, locMap[unvisited[0]][0].lat, locMap[unvisited[0]][0].lng);
+                    for (let i = 1; i < unvisited.length; i++) {
+                        const d = distKm(curLat, curLng, locMap[unvisited[i]][0].lat, locMap[unvisited[i]][0].lng);
+                        if (d < minD) { minD = d; bestI = i; }
+                    }
+                    const sel = unvisited.splice(bestI, 1)[0];
+                    locSeq.push(locMap[sel]);
+                    curLat = locMap[sel][0].lat; curLng = locMap[sel][0].lng;
+                }
+
+                let totalDist = 0;
+                let pLat = depot.lat, pLng = depot.lng;
+                const stops = [];
+                const roadGeometry = [[depot.lat, depot.lng]];
+                let totalElapsedHours = 0;
+
+                locSeq.forEach((sJobs, sIdx) => {
+                    const sLat = sJobs[0].lat, sLng = sJobs[0].lng;
+                    const legDist = distKm(pLat, pLng, sLat, sLng) * 1.3;
+                    totalDist += legDist;
+                    pLat = sLat; pLng = sLng;
+                    roadGeometry.push([sLat, sLng]);
+
+                    const legHours = legDist / conf.speed;
+                    totalElapsedHours += legHours;
+                    const legEta = addHoursToDepartureStr(conf.baseDep, totalElapsedHours);
+                    totalElapsedHours += Math.min(2.0, 0.33 + (sJobs.reduce((a, b) => a + b.demand, 0) / 1000) * 0.08);
+
+                    const ex = sJobs[0].excel_info || {};
+                    stops.push({
+                        seq: sIdx + 1,
+                        lat: sLat,
+                        lng: sLng,
+                        city: ex.poblacion || 'Destino',
+                        state: ex.estado || '',
+                        load: sJobs.reduce((a, b) => a + b.demand, 0),
+                        jobs: sJobs,
+                        eta: legEta,
+                        cita: ex.agente || ""
+                    });
+                });
+                totalDist += distKm(pLat, pLng, depot.lat, depot.lng) * 1.3;
+                roadGeometry.push([depot.lat, depot.lng]);
+
+                const fCost = vehicleType === 'Tracto' ? 10000 : (vehicleType === 'Torton' ? 6000 : 3500);
+                const dCost = vehicleType === 'Tracto' ? 15 : (vehicleType === 'Torton' ? 10 : 7);
+                const tripCost = fCost + (totalDist * dCost);
+
+                const emb_id = `EMB-${String(tripIndex).padStart(2, '0')}`;
+                return {
+                    emb_id: emb_id,
+                    vehicle: `${vehicleType}_${String(tripIndex).padStart(2, '0')}`,
+                    type: vehicleType,
+                    trip_idx: 1,
+                    corridorKey: cKey,
+                    corridor: conf.name,
+                    modalidad: modalidadOverride || (vehicleType === 'Tracto' ? 'FTL Directo (Cliente Dedicado)' : 'Consolidado Regional'),
+                    load: totalLoad,
+                    orders_count: jobsInShipment.length,
+                    color: conf.color,
+                    distance: Math.round(totalDist),
+                    cost: Math.round(tripCost),
+                    departure: conf.baseDep,
+                    return_time: "Turno siguiente",
+                    stops: stops,
+                    stops_count: stops.length,
+                    road_geometry: roadGeometry,
+                    jobs: jobsInShipment
+                };
+            }
+
+            function packIntoVehicles(jobsList, cKey, planType, startIdx = 1, maxTruckCap = 31800, maxTortonCap = 18000) {
+                if (!jobsList || jobsList.length === 0) return [];
+                const totalW = jobsList.reduce((a, b) => a + b.demand, 0);
+
+                if (totalW <= maxTortonCap && planType === 1) {
+                    let vT = 'Torton';
+                    if (totalW <= 4000) vT = 'Camioneta 4t';
+                    else if (totalW <= 7000) vT = 'Camioneta 7t';
+                    return [buildShipment(jobsList, cKey, vT, `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
+                }
+
+                if (totalW <= maxTruckCap && planType === 1) {
+                    return [buildShipment(jobsList, cKey, 'Tracto', `Consolidado FTL (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
+                }
+
+                // BFD Capacitated Bin Packing
+                const sorted = [...jobsList].sort((a, b) => b.demand - a.demand);
+                const vehicles = [];
+
+                sorted.forEach(j => {
+                    let bestV = null;
+                    let bestRemaining = Infinity;
+                    for (const v of vehicles) {
+                        if (v.load + j.demand <= v.cap) {
+                            const rem = v.cap - (v.load + j.demand);
+                            if (rem < bestRemaining) {
+                                bestRemaining = rem;
+                                bestV = v;
+                            }
+                        }
+                    }
+
+                    if (bestV) {
+                        bestV.jobs.push(j);
+                        bestV.load += j.demand;
+                    } else {
+                        const targetCap = (planType === 3 || (planType === 2 && j.demand <= 16000)) ? maxTortonCap : maxTruckCap;
+                        vehicles.push({
+                            type: targetCap === maxTruckCap ? 'Tracto' : 'Torton',
+                            cap: targetCap,
+                            load: j.demand,
+                            jobs: [j]
+                        });
+                    }
+                });
+
+                return vehicles.map((v, idx) => {
+                    let realType = v.type;
+                    if (v.load <= 7000) realType = 'Camioneta 7t';
+                    else if (v.load <= maxTortonCap) realType = 'Torton';
+                    return buildShipment(v.jobs, cKey, realType, realType === 'Tracto' ? `FTL Directo (${CORRIDOR_CONFIG[cKey].name})` : `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx + idx);
+                });
+            }
+
+            function generatePlan(planType) {
+                const corridorJobs = {};
+                allJobs.forEach(j => {
+                    const ex = j.excel_info || {};
+                    const cKey = classifyCorridorSpatial(j.lat, j.lng, ex.poblacion, ex.estado, ex.observaciones, ex.ruta, ex.cliente, ex.nombre);
+                    if (!corridorJobs[cKey]) corridorJobs[cKey] = [];
+                    corridorJobs[cKey].push(j);
+                });
+
+                const shipments = [];
+                let tripCounter = 1;
+
+                Object.keys(corridorJobs).forEach(cKey => {
+                    const jobsInCorr = corridorJobs[cKey];
+                    if (!jobsInCorr || jobsInCorr.length === 0) return;
+                    const totalW = jobsInCorr.reduce((a, b) => a + b.demand, 0);
+
+                    // Special handling for Veracruz Sur: 2 Tortons when ~36-38t
+                    if (cKey === 'VERACRUZ_SUR_COATZA' && totalW >= 25000 && totalW <= 40000) {
+                        const sorted = [...jobsInCorr].sort((a, b) => b.demand - a.demand);
+                        const t1 = [], t2 = [];
+                        let w1 = 0, w2 = 0;
+                        sorted.forEach(j => {
+                            if (w1 <= w2 && (w1 + j.demand <= 18500)) {
+                                t1.push(j); w1 += j.demand;
+                            } else {
+                                t2.push(j); w2 += j.demand;
+                            }
+                        });
+                        if (t1.length > 0) { shipments.push(buildShipment(t1, cKey, 'Torton', 'Consolidado Coatzacoalcos / Jáltipan (Turno 1)', tripCounter++)); }
+                        if (t2.length > 0) { shipments.push(buildShipment(t2, cKey, 'Torton', 'Consolidado Coatzacoalcos Mayorista (Turno 2)', tripCounter++)); }
+                        return;
+                    }
+
+                    // PHASE 1: FTL Anchor Optimization (Customers >= 25,000 kg)
+                    const customerMap = {};
+                    jobsInCorr.forEach(j => {
+                        const ex = j.excel_info || {};
+                        // Agrupar por cliente + sucursal/destino para respetar FTL dedicados de CEDIS sin mezclar tiendas de detalle
+                        const cliKey = `${String(ex.cliente || ex.nombre || 'CLIENTE_GENERICO').trim()}__${String(ex.sucursal || ex.nombre_sucursal || ex.poblacion || '').trim()}`;
+                        if (!customerMap[cliKey]) customerMap[cliKey] = [];
+                        customerMap[cliKey].push(j);
+                    });
+
+                    const unassignedLTL = [];
+
+                    Object.keys(customerMap).forEach(cliKey => {
+                        const cJobs = customerMap[cliKey];
+                        const cWeight = cJobs.reduce((a, b) => a + b.demand, 0);
+
+                        if (cWeight >= 25000) {
+                            if (cWeight <= 31800) {
+                                shipments.push(buildShipment(cJobs, cKey, 'Tracto', 'FTL Directo (Cliente Dedicado)', tripCounter++));
+                            } else if (cWeight >= 50000) {
+                                // Grandes clientes de reposición masiva (ej. Tuxtla Mayorista 60t)
+                                const numTrailers = Math.round(cWeight / 30000) || 2;
+                                const sortedJobs = [...cJobs].sort((a, b) => b.demand - a.demand);
+                                const trailerBuckets = Array.from({ length: numTrailers }, () => []);
+                                const bucketLoads = Array(numTrailers).fill(0);
+
+                                sortedJobs.forEach(job => {
+                                    let minBucket = 0;
+                                    for (let b = 1; b < numTrailers; b++) {
+                                        if (bucketLoads[b] < bucketLoads[minBucket]) minBucket = b;
+                                    }
+                                    trailerBuckets[minBucket].push(job);
+                                    bucketLoads[minBucket] += job.demand;
+                                });
+
+                                trailerBuckets.forEach(tJobs => {
+                                    if (tJobs.length > 0) {
+                                        shipments.push(buildShipment(tJobs, cKey, 'Tracto', 'FTL Directo (Cliente Dedicado)', tripCounter++));
+                                    }
+                                });
+                            } else {
+                                // Entre 31.8t y 50t: Llenar un Tracto estrictamente hasta 31,800 kg (NOM-012) y enviar el remanente a LTL
+                                const sortedJobs = [...cJobs].sort((a, b) => b.demand - a.demand);
+                                const ftlJobs = [];
+                                let ftlLoad = 0;
+                                sortedJobs.forEach(job => {
+                                    if (ftlLoad + job.demand <= 31800) {
+                                        ftlJobs.push(job);
+                                        ftlLoad += job.demand;
+                                    } else {
+                                        unassignedLTL.push(job);
+                                    }
+                                });
+                                if (ftlJobs.length > 0) {
+                                    shipments.push(buildShipment(ftlJobs, cKey, 'Tracto', 'FTL Directo (Cliente Dedicado)', tripCounter++));
+                                }
+                            }
+                        } else {
+                            unassignedLTL.push(...cJobs);
+                        }
+                    });
+
+                    // PHASE 2: Regional LTL Consolidation
+                    if (unassignedLTL.length > 0) {
+                        const ltlWeight = unassignedLTL.reduce((a, b) => a + b.demand, 0);
+
+                        if (cKey === 'VERACRUZ_NORTE_SIERRA' && ltlWeight > 20000) {
+                            const costaJobs = unassignedLTL.filter(j => j.lat <= 20.25 && j.lng >= -97.2);
+                            const sierraJobs = unassignedLTL.filter(j => !costaJobs.includes(j));
+
+                            if (costaJobs.length > 0) {
+                                const pk = packIntoVehicles(costaJobs, cKey, planType, tripCounter);
+                                tripCounter += pk.length;
+                                shipments.push(...pk);
+                            }
+                            if (sierraJobs.length > 0) {
+                                const pk = packIntoVehicles(sierraJobs, cKey, planType, tripCounter);
+                                tripCounter += pk.length;
+                                shipments.push(...pk);
+                            }
+                        } else {
+                            const pk = packIntoVehicles(unassignedLTL, cKey, planType, tripCounter);
+                            tripCounter += pk.length;
+                            shipments.push(...pk);
+                        }
+                    }
+                });
+
+                // Renumber EMB IDs consistently
+                shipments.forEach((s, idx) => {
+                    s.emb_id = `EMB-${String(idx + 1).padStart(2, '0')}`;
+                    s.vehicle = `${s.type}_${String(idx + 1).padStart(2, '0')}`;
+                });
+
+                const tractoCount = shipments.filter(r => r.type === 'Tracto').length;
+                const tortonCount = shipments.filter(r => r.type === 'Torton').length;
+                const camCount = shipments.filter(r => r.type.includes('Camioneta')).length;
                 const fleetBreakdown = `${tractoCount} Tráilers + ${tortonCount} Tortons` + (camCount > 0 ? ` + ${camCount} Camionetas` : '');
 
-                newPlans[p.id] = {
-                    title: `${p.title.split('(')[0].trim()} (${fleetBreakdown})`,
-                    routes: formatted,
-                    total_cost: formatted.reduce((a, b) => a + b.cost, 0),
-                    total_weight: formatted.reduce((a, b) => a + b.load, 0),
-                    total_trips: formatted.length,
+                let title = '';
+                if (planType === 1) title = `Plan 1: Máxima Consolidación (FTL Pesado NOM-012) (${fleetBreakdown})`;
+                else if (planType === 2) title = `Plan 2: Flota Balanceada (Mix Tráiler, Torton y Camionetas) (${fleetBreakdown})`;
+                else title = `Plan 3: Nivel de Servicio & Citas (Rutas Capilares y Citas 7:00 AM) (${fleetBreakdown})`;
+
+                return {
+                    title: title,
+                    routes: shipments,
+                    total_cost: shipments.reduce((a, b) => a + b.cost, 0),
+                    total_weight: shipments.reduce((a, b) => a + b.load, 0),
+                    total_trips: shipments.length,
                     unassigned: []
                 };
-            });
+            }
 
-            return newPlans;
+            return {
+                plan1: generatePlan(1),
+                plan2: generatePlan(2),
+                plan3: generatePlan(3)
+            };
         }
 
         function showToast(msg) {
