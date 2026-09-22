@@ -4362,21 +4362,21 @@ body.theme-dark .route-util-track {
         // ==========================================
         var VEHICLE_CAPACITIES = {
             'Tracto': 32000,
-            'Torton': 16000,
+            'Torton': 18000, // NOM-012-SCT-2-2017: C3 en caminos Tipo ET y A (PBV 27.5t - Tara 9.5t = 18.0t)
             'Camioneta 7t': 7000,
             'Camioneta 4t': 4000,
             'Camioneta 3.5t': 3500
         };
 
         function getVehicleMaxCapacity(vType) {
-            if (!vType) return 16000;
+            if (!vType) return 18000;
             const t = String(vType).toLowerCase();
             if (t.includes('tracto')) return 32000;
-            if (t.includes('torton')) return 16000;
+            if (t.includes('torton')) return 18000;
             if (t.includes('7t')) return 7000;
             if (t.includes('4t')) return 4000;
             if (t.includes('3.5t') || t.includes('camioneta')) return 3500;
-            return 16000;
+            return 18000;
         }
 
         
@@ -8290,6 +8290,12 @@ function handleExcelUpload(files) {
                 const nomU = String(nombre || '').toUpperCase();
                 const rutaU = String(ruta || '').toUpperCase();
 
+                // LEVEL 0: Specific Critical Municipalities & Cross-State Protections
+                // A. Península / Campeche (Ciudad del Carmen, Champotón, Campeche, Mérida)
+                if (pobU.includes('CARMEN') || pobU.includes('CAMPECHE') || edoU.includes('CAMPECHE')) {
+                    return 'PENINSULA_MERIDA';
+                }
+
                 // LEVEL 1: Strict Geographic Bounding Boxes
                 // 1. Chiapas Frontera Sur (Suchiate / Cd. Hidalgo)
                 if (lat >= 14.0 && lat < 14.78 && lng >= -93.5 && lng <= -91.5) return 'CHIAPAS_SUCHIATE';
@@ -8471,7 +8477,7 @@ function handleExcelUpload(files) {
                         bestV.jobs.push(j);
                         bestV.load += j.demand;
                     } else {
-                        const targetCap = (planType === 3 || (planType === 2 && j.demand <= 16000)) ? maxTortonCap : maxTruckCap;
+                        const targetCap = (planType === 3 || (planType === 2 && j.demand <= 18000)) ? maxTortonCap : maxTruckCap;
                         vehicles.push({
                             type: targetCap === maxTruckCap ? 'Tracto' : 'Torton',
                             cap: targetCap,
@@ -8600,6 +8606,28 @@ function handleExcelUpload(files) {
                             }
                             if (sierraJobs.length > 0) {
                                 const pk = packIntoVehicles(sierraJobs, cKey, planType, tripCounter);
+                                tripCounter += pk.length;
+                                shipments.push(...pk);
+                            }
+                        } else if (cKey === 'OAXACA_VALLES' && ltlWeight > 12000) {
+                            // Subdividir Valles Centrales (Oaxaca Capital, Xoxo, Ocotlán) de Costa (Pochutla, Huatulco, Pto. Escondido)
+                            const costaJobs = unassignedLTL.filter(j => {
+                                const pU = String((j.excel_info && j.excel_info.poblacion) || '').toUpperCase();
+                                return j.lat < 16.0 || pU.includes('POCHUTLA') || pU.includes('HUATULCO') || pU.includes('ESCONDIDO');
+                            });
+                            const vallesJobs = unassignedLTL.filter(j => !costaJobs.includes(j));
+
+                            if (vallesJobs.length > 0) {
+                                const pk = packIntoVehicles(vallesJobs, cKey, planType, tripCounter);
+                                tripCounter += pk.length;
+                                shipments.push(...pk);
+                            }
+                            if (costaJobs.length > 0) {
+                                const pk = packIntoVehicles(costaJobs, cKey, planType, tripCounter);
+                                pk.forEach(s => {
+                                    s.corridor = 'Oaxaca (Costa / Huatulco / Pochutla)';
+                                    s.modalidad = 'Consolidado Costa Oaxaqueña';
+                                });
                                 tripCounter += pk.length;
                                 shipments.push(...pk);
                             }
