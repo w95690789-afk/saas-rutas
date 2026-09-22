@@ -3631,6 +3631,30 @@ body.theme-dark .route-util-track {
             display: inline-block;
             white-space: nowrap;
         }
+        .badge-window-wait {
+            background: rgba(245, 158, 11, 0.12);
+            color: #d97706;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .badge-reassigned {
+            background: rgba(99, 102, 241, 0.12);
+            color: #4f46e5;
+            border: 1px solid rgba(99, 102, 241, 0.3);
+            padding: 2px 7px;
+            border-radius: 5px;
+            font-weight: 700;
+            font-size: 10px;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
         body.theme-dark .badge-window-ok {
             background: rgba(16, 185, 129, 0.2);
             color: #34d399;
@@ -3645,6 +3669,16 @@ body.theme-dark .route-util-track {
             background: rgba(6, 182, 212, 0.2);
             color: #38bdf8;
             border-color: rgba(6, 182, 212, 0.4);
+        }
+        body.theme-dark .badge-window-wait {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+            border-color: rgba(245, 158, 11, 0.4);
+        }
+        body.theme-dark .badge-reassigned {
+            background: rgba(99, 102, 241, 0.25);
+            color: #a5b4fc;
+            border-color: rgba(99, 102, 241, 0.45);
         }
 
     </style>
@@ -4340,6 +4374,9 @@ body.theme-dark .route-util-track {
             "plan2": { "title": "Plan 2: Balance Flota & Servicio", "routes": [], "total_weight": 0, "total_trips": 0, "total_cost": 0, "unassigned": [] },
             "plan3": { "title": "Plan 3: Reparto Capilar Rápido", "routes": [], "total_weight": 0, "total_trips": 0, "total_cost": 0, "unassigned": [] }
         };
+
+        var buildShipment = null;
+        var manualReassignmentsHistory = [];
 
         // Paleta de Alta Distinción Cromática (24 Colores Contrastantes con Rojos, Verdes, Negros, Naranjas, etc.)
         const DISTINCT_ROUTE_PALETTE = [
@@ -5820,16 +5857,23 @@ body.theme-dark .route-util-track {
         }
 
         function restoreOriginalPlan() {
-            if (!originalPlansBackup) return;
+            if (!originalPlansBackup && typeof window !== 'undefined' && window.originalPlansBackup) {
+                originalPlansBackup = window.originalPlansBackup;
+            }
+            if (!originalPlansBackup) {
+                if (typeof showToast === 'function') showToast("⚠️ No hay copia del plan original guardada.");
+                return;
+            }
+            window.manualReassignmentsHistory = [];
             plans = JSON.parse(JSON.stringify(originalPlansBackup));
             deferredOrders = [];
             isReoptimizedActive = false;
             const banner = document.getElementById('reopt-status-banner');
             if (banner) banner.style.display = 'none';
-            updateDeferredBadge();
+            if (typeof updateDeferredBadge === 'function') updateDeferredBadge();
             changePlan(currentPlanId);
             const totalCount = (masterOrdersPool && masterOrdersPool.length > 0) ? masterOrdersPool.length : (plans.plan1 ? plans.plan1.routes.reduce((acc, r) => acc + (r.orders_count || 0), 0) : 76);
-            showToast(`↩️ Plan de distribución restaurado al estado original con los ${totalCount} pedidos completos.`);
+            if (typeof showToast === 'function') showToast(`↩️ Plan de distribución restaurado al cálculo original con los ${totalCount} pedidos.`);
         }
     
         function initMasterOrdersPool() {
@@ -6197,23 +6241,50 @@ body.theme-dark .route-util-track {
             const selectEl = document.getElementById('reassign-target-select');
             if (selectEl) {
                 selectEl.innerHTML = '';
-                // List other routes in active plan
                 const otherRoutes = plan.routes.filter(r => r.emb_id !== fromEmbId);
-                otherRoutes.forEach(r => {
-                    const maxCap = getVehicleMaxCapacity(r.type);
-                    const remaining = maxCap - r.load;
-                    const willFit = (r.load + targetJob.demand) <= maxCap;
-                    const opt = document.createElement('option');
-                    opt.value = r.emb_id;
-                    opt.textContent = `[${r.emb_id}] ${r.type.toUpperCase()} • ${r.corridor} • Carga: ${(r.load/1000).toFixed(1)}t / ${(maxCap/1000).toFixed(0)}t (Disp: ${(remaining/1000).toFixed(1)}t) ${willFit ? '✅' : '⚠️ SOBRECARGA'}`;
-                    selectEl.appendChild(opt);
-                });
+                
+                // Group by same corridor vs different corridor
+                const sameCorridor = otherRoutes.filter(r => r.corridorKey === fromRoute.corridorKey || r.corridor === fromRoute.corridor);
+                const diffCorridor = otherRoutes.filter(r => r.corridorKey !== fromRoute.corridorKey && r.corridor !== fromRoute.corridor);
+
+                if (sameCorridor.length > 0) {
+                    const grpSame = document.createElement('optgroup');
+                    grpSame.label = `📍 MISMO CORREDOR (${fromRoute.corridor.toUpperCase()})`;
+                    sameCorridor.forEach(r => {
+                        const maxCap = getVehicleMaxCapacity(r.type);
+                        const remaining = maxCap - r.load;
+                        const willFit = (r.load + targetJob.demand) <= maxCap;
+                        const opt = document.createElement('option');
+                        opt.value = r.emb_id;
+                        opt.textContent = `[${r.emb_id}] ${r.type.toUpperCase()} • Carga: ${(r.load/1000).toFixed(1)}t / ${(maxCap/1000).toFixed(0)}t (Libre: ${(remaining/1000).toFixed(1)}t) ${willFit ? '✅ Entra' : '⚠️ SOBRECARGA'}`;
+                        grpSame.appendChild(opt);
+                    });
+                    selectEl.appendChild(grpSame);
+                }
+
+                if (diffCorridor.length > 0) {
+                    const grpDiff = document.createElement('optgroup');
+                    grpDiff.label = `🌐 OTROS CORREDORES REGIONALES`;
+                    diffCorridor.forEach(r => {
+                        const maxCap = getVehicleMaxCapacity(r.type);
+                        const remaining = maxCap - r.load;
+                        const willFit = (r.load + targetJob.demand) <= maxCap;
+                        const opt = document.createElement('option');
+                        opt.value = r.emb_id;
+                        opt.textContent = `[${r.emb_id}] ${r.type.toUpperCase()} • ${r.corridor} • ${(r.load/1000).toFixed(1)}t / ${(maxCap/1000).toFixed(0)}t (Libre: ${(remaining/1000).toFixed(1)}t) ${willFit ? '✅' : '⚠️'}`;
+                        grpDiff.appendChild(opt);
+                    });
+                    selectEl.appendChild(grpDiff);
+                }
 
                 // Option to create dedicated unit
+                const grpNew = document.createElement('optgroup');
+                grpNew.label = `⚡ FLOTA ADICIONAL DEDICADA`;
                 const optNew = document.createElement('option');
                 optNew.value = 'NEW_UNIT';
                 optNew.textContent = `➕ Crear Nueva Unidad Dedicada (${targetJob.demand <= 4000 ? 'Camioneta 4t' : (targetJob.demand <= 7000 ? 'Camioneta 7t' : 'Torton 18t')})`;
-                selectEl.appendChild(optNew);
+                grpNew.appendChild(optNew);
+                selectEl.appendChild(grpNew);
             }
 
             onReassignTargetChange();
@@ -6241,6 +6312,7 @@ body.theme-dark .route-util-track {
             const targetVal = selectEl.value;
             const plan = plans[currentPlanId];
             const orderDemand = currentReassignTarget.job.demand;
+            const fromRoute = currentReassignTarget.route;
 
             if (targetVal === 'NEW_UNIT') {
                 const vType = orderDemand <= 4000 ? 'Camioneta 4t' : (orderDemand <= 7000 ? 'Camioneta 7t' : 'Torton');
@@ -6266,6 +6338,13 @@ body.theme-dark .route-util-track {
             const isOverload = newLoad > maxCap;
             const newUtil = Math.round((newLoad / maxCap) * 100);
             const remainingAfter = maxCap - newLoad;
+            const isDiffCorridor = candidate.corridorKey !== fromRoute.corridorKey && candidate.corridor !== fromRoute.corridor;
+
+            const diffCorridorNotice = isDiffCorridor ? `
+                <div style="margin-top:8px; padding:6px 10px; background:rgba(245, 158, 11, 0.12); border:1px solid rgba(245, 158, 11, 0.35); border-radius:6px; font-size:11px; color:#b45309; line-height:1.35;">
+                    ⚠️ <strong>Aviso de Corredor:</strong> La unidad destino viaja hacia <strong>${candidate.corridor}</strong> (diferente a <strong>${fromRoute.corridor}</strong>). El pedido será incorporado en esa ruta.
+                </div>
+            ` : '';
 
             if (!isOverload) {
                 feedbackEl.style.background = 'rgba(16, 185, 129, 0.08)';
@@ -6275,8 +6354,9 @@ body.theme-dark .route-util-track {
                         <span>🟢 Capacidad Legal NOM-012 Autorizada (${newUtil}% FTL)</span>
                     </div>
                     <div style="font-size:11.5px; color:var(--text-main); margin-top:4px; line-height:1.4;">
-                        La unidad <strong>${candidate.emb_id} (${candidate.type})</strong> pasará de ${(candidate.load/1000).toFixed(2)}t a <strong>${(newLoad/1000).toFixed(2)}t</strong>. Quedan <strong>+${(remainingAfter/1000).toFixed(2)}t libres</strong> de margen respecto al límite reglamentario de ${(maxCap/1000).toFixed(0)}t.
+                        La unidad <strong>${candidate.emb_id} (${candidate.type})</strong> pasará de ${(candidate.load/1000).toFixed(2)}t a <strong>${(newLoad/1000).toFixed(2)}t</strong>. Quedan <strong>+${(remainingAfter/1000).toFixed(2)}t libres</strong> respecto al tope legal de ${(maxCap/1000).toFixed(0)}t.
                     </div>
+                    ${diffCorridorNotice}
                 `;
                 if (confirmBtn) confirmBtn.disabled = false;
             } else {
@@ -6290,6 +6370,7 @@ body.theme-dark .route-util-track {
                     <div style="font-size:11.5px; color:var(--text-main); margin-top:4px; line-height:1.4;">
                         La unidad <strong>${candidate.emb_id}</strong> alcanzaría <strong>${(newLoad/1000).toFixed(2)}t</strong>, superando el tope legal de ${(maxCap/1000).toFixed(0)}t por <strong>+${(excess/1000).toFixed(2)}t (+${Math.round(excess).toLocaleString()} kg)</strong>.
                     </div>
+                    ${diffCorridorNotice}
                 `;
                 if (confirmBtn) confirmBtn.disabled = false;
             }
@@ -6307,23 +6388,33 @@ body.theme-dark .route-util-track {
             const fromRoute = plan.routes.find(r => r.emb_id === target.fromEmbId);
             if (!fromRoute) return;
 
+            // Mark job with audit tags
+            target.job.isReassigned = true;
+            target.job.reassignedFrom = target.fromEmbId;
+            if (target.job.excel_info) {
+                target.job.excel_info.reassigned_from = target.fromEmbId;
+            }
+
             // Remove order from fromRoute
             fromRoute.jobs = fromRoute.jobs.filter(j => {
                 const pId = (j.excel_info && j.excel_info.pedido) ? j.excel_info.pedido : j.id;
                 return pId !== target.orderId && j.id !== target.orderId;
             });
 
+            const routeBuilder = (typeof buildShipment === 'function' && buildShipment) ? buildShipment : window.buildShipment;
+            let destEmbId = targetVal;
             if (targetVal === 'NEW_UNIT') {
                 const vType = target.job.demand <= 4000 ? 'Camioneta 4t' : (target.job.demand <= 7000 ? 'Camioneta 7t' : 'Torton');
                 const nextTripIdx = plan.routes.length + 1;
-                const newRoute = buildShipment([target.job], fromRoute.corridorKey, vType, `Envío Dedicado Especial (${fromRoute.corridor})`, nextTripIdx);
+                const newRoute = routeBuilder([target.job], fromRoute.corridorKey, vType, `Envío Dedicado Especial (${fromRoute.corridor})`, nextTripIdx);
+                destEmbId = newRoute.emb_id;
                 plan.routes.push(newRoute);
             } else {
                 const toRoute = plan.routes.find(r => r.emb_id === targetVal);
                 if (!toRoute) return;
                 toRoute.jobs.push(target.job);
                 // Rebuild toRoute
-                const rebuiltTo = buildShipment(toRoute.jobs, toRoute.corridorKey, toRoute.type, toRoute.modalidad, toRoute.trip_idx || 1);
+                const rebuiltTo = routeBuilder(toRoute.jobs, toRoute.corridorKey, toRoute.type, toRoute.modalidad, toRoute.trip_idx || 1);
                 rebuiltTo.emb_id = toRoute.emb_id;
                 rebuiltTo.vehicle = toRoute.vehicle;
                 rebuiltTo.color = toRoute.color;
@@ -6335,13 +6426,28 @@ body.theme-dark .route-util-track {
             if (fromRoute.jobs.length === 0) {
                 plan.routes = plan.routes.filter(r => r.emb_id !== target.fromEmbId);
             } else {
-                const rebuiltFrom = buildShipment(fromRoute.jobs, fromRoute.corridorKey, fromRoute.type, fromRoute.modalidad, fromRoute.trip_idx || 1);
+                const rebuiltFrom = routeBuilder(fromRoute.jobs, fromRoute.corridorKey, fromRoute.type, fromRoute.modalidad, fromRoute.trip_idx || 1);
                 rebuiltFrom.emb_id = fromRoute.emb_id;
                 rebuiltFrom.vehicle = fromRoute.vehicle;
                 rebuiltFrom.color = fromRoute.color;
                 const fromIdx = plan.routes.findIndex(r => r.emb_id === target.fromEmbId);
                 if (fromIdx !== -1) plan.routes[fromIdx] = rebuiltFrom;
             }
+
+            // Record in audit log
+            if (!window.manualReassignmentsHistory) window.manualReassignmentsHistory = [];
+            const ex = target.job.excel_info || {};
+            window.manualReassignmentsHistory.push({
+                orderId: target.orderId,
+                cliente: ex.nombre || ex.cliente || 'Cliente',
+                poblacion: (target.stop && target.stop.city) || ex.poblacion || '',
+                estado: (target.stop && target.stop.state) || ex.estado || '',
+                demand: target.job.demand,
+                fromEmb: target.fromEmbId,
+                toEmb: destEmbId,
+                corridor: fromRoute.corridor,
+                timestamp: new Date().toLocaleTimeString()
+            });
 
             // Update plan KPIs
             plan.total_weight = plan.routes.reduce((acc, r) => acc + r.load, 0);
@@ -6356,22 +6462,8 @@ body.theme-dark .route-util-track {
             renderMapRoutes();
             updateControlKpis();
 
-            const destLabel = targetVal === 'NEW_UNIT' ? 'una Nueva Unidad Dedicada' : targetVal;
-            showToast(`✅ Pedido #${target.orderId} (${Math.round(target.job.demand).toLocaleString()} kg) reasignado a ${destLabel}. Cargas actualizadas.`);
-        }
-
-        function restoreOriginalPlan() {
-            if (!originalPlansBackup) {
-                showToast("⚠️ No hay copia del plan original guardada.");
-                return;
-            }
-            plans = JSON.parse(JSON.stringify(originalPlansBackup));
-            activeRoutes = plans[currentPlanId].routes;
-            renderCockpitView();
-            renderSidebar();
-            renderMapRoutes();
-            updateControlKpis();
-            showToast("↺ Plan restaurado al cálculo matemático original.");
+            const destLabel = targetVal === 'NEW_UNIT' ? `Nueva Unidad (${destEmbId})` : targetVal;
+            showToast(`✅ Pedido #${target.orderId} (${Math.round(target.job.demand).toLocaleString()} kg) reasignado a ${destLabel}. Cargas y rutas actualizadas.`);
         }
 
         // Reinstate a deferred order back into the plan
@@ -6759,19 +6851,91 @@ body.theme-dark .route-util-track {
             return `${resDay}/${resMonth} ${String(resHours).padStart(2, '0')}:${resMins} ${resAmPm}`;
         }
 
-        function parseCitaTime(citaText) {
+        function snapDateTimeTo15Min(dt) {
+            if (!dt || isNaN(dt.getTime())) return new Date(2026, 7, 18, 6, 0);
+            const res = new Date(dt.getTime());
+            const mins = res.getMinutes();
+            const rem = mins % 15;
+            if (rem < 8) {
+                res.setMinutes(mins - rem, 0, 0);
+            } else {
+                res.setMinutes(mins + (15 - rem), 0, 0);
+            }
+            return res;
+        }
+
+        function parseCitaTime(citaText, defaultDate = null) {
             if (!citaText || typeof citaText !== 'string') return null;
-            const match = citaText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)/i);
-            if (match) {
-                const day = parseInt(match[1]);
-                const month = parseInt(match[2]) - 1;
-                const year = parseInt(match[3]);
-                let hours = parseInt(match[4]);
-                const mins = parseInt(match[5]);
-                const ampm = match[6].toUpperCase();
-                if (ampm === 'PM' && hours < 12) hours += 12;
-                if (ampm === 'AM' && hours === 12) hours = 0;
-                return new Date(year, month, day, hours, mins);
+            const txt = citaText.trim().toUpperCase();
+            const baseDt = (defaultDate instanceof Date && !isNaN(defaultDate.getTime())) ? defaultDate : new Date(2026, 7, 18);
+            const months = { 'ENE': 0, 'FEB': 1, 'MAR': 2, 'ABR': 3, 'MAY': 4, 'JUN': 5, 'JUL': 6, 'AGO': 7, 'SEP': 8, 'OCT': 9, 'NOV': 10, 'DIC': 11,
+                             'JAN': 0, 'APR': 3, 'AUG': 7, 'DEC': 11 };
+
+            // 1. Format: DD/MM/YYYY or DD/MM with time (e.g. 19/08/2026 7:00 AM or 18/08 1100 AM)
+            const mFull = txt.match(/(\d{1,2})[\/\-](\d{1,2})(?:[\/\-](\d{2,4}))?\s*(?:A\s*LAS\s*)?(\d{1,2})(?::(\d{2})|(\d{2}))?\s*(AM|PM|HRS)?/i);
+            if (mFull) {
+                const day = parseInt(mFull[1]);
+                const month = parseInt(mFull[2]) - 1;
+                let year = mFull[3] ? parseInt(mFull[3]) : baseDt.getFullYear();
+                if (year < 100) year += 2000;
+                let hour = parseInt(mFull[4]);
+                const mins = parseInt(mFull[5] || mFull[6] || '0');
+                const ampm = (mFull[7] || '').toUpperCase();
+                if (ampm === 'PM' && hour < 12) hour += 12;
+                if (ampm === 'AM' && hour === 12) hour = 0;
+                const d = new Date(year, month, day, hour, mins);
+                if (!isNaN(d.getTime())) return d;
+            }
+
+            // 2. Format: with month name (e.g. 19 DE AGOSTO 7:00 AM)
+            const mNamed = txt.match(/(\d{1,2})\s*(?:DE\s+)?([A-Z]{3,4})[A-Z]*\s*(?:DE\s+(\d{4}))?\s*(?:A\s*LAS\s*)?(\d{1,2})(?::(\d{2})|(\d{2}))?\s*(AM|PM|HRS)?/i);
+            if (mNamed) {
+                const day = parseInt(mNamed[1]);
+                const mKey = mNamed[2].substring(0, 3).toUpperCase();
+                const month = months[mKey] !== undefined ? months[mKey] : baseDt.getMonth();
+                const year = mNamed[3] ? parseInt(mNamed[3]) : baseDt.getFullYear();
+                let hour = parseInt(mNamed[4]);
+                const mins = parseInt(mNamed[5] || mNamed[6] || '0');
+                const ampm = (mNamed[7] || '').toUpperCase();
+                if (ampm === 'PM' && hour < 12) hour += 12;
+                if (ampm === 'AM' && hour === 12) hour = 0;
+                const d = new Date(year, month, day, hour, mins);
+                if (!isNaN(d.getTime())) return d;
+            }
+
+            // 3. Time only (e.g. CITA 8:00 AM, CITA 08:30, ENTREGA 11:00 HRS)
+            if (txt.includes('CITA') || txt.includes('ENTREGA') || txt.includes('RECIBE') || txt.includes('AM') || txt.includes('PM') || txt.includes('HRS')) {
+                const mTime = txt.match(/(?:CITA|ENTREGA|RECIBE)?\s*(\d{1,2})(?::(\d{2})|(\d{2}))?\s*(AM|PM|HRS)/i);
+                if (mTime) {
+                    let hour = parseInt(mTime[1]);
+                    const mins = parseInt(mTime[2] || mTime[3] || '0');
+                    const ampm = (mTime[4] || '').toUpperCase();
+                    if (ampm === 'PM' && hour < 12) hour += 12;
+                    if (ampm === 'AM' && hour === 12) hour = 0;
+                    const d = new Date(baseDt.getFullYear(), baseDt.getMonth(), baseDt.getDate(), hour, mins);
+                    if (!isNaN(d.getTime())) return d;
+                }
+            }
+
+            return null;
+        }
+
+        function extractJobCitaDate(job, defaultRouteDate) {
+            if (!job || !job.excel_info) return null;
+            const ex = job.excel_info;
+            const candidates = [
+                ex.agente,
+                ex.observaciones,
+                (ex.fecha_cita ? `${ex.fecha_cita} ${ex.hora_cita || ''}` : null),
+                ex.hora_cita,
+                ex.instrucciones,
+                ex.referencia
+            ];
+            for (const c of candidates) {
+                if (c && typeof c === 'string') {
+                    const parsed = parseCitaTime(c, defaultRouteDate);
+                    if (parsed) return parsed;
+                }
             }
             return null;
         }
@@ -7438,7 +7602,15 @@ body.theme-dark .route-util-track {
                                     ` : ''}
                                 </td>
                                 <td><span style="background:var(--primary-bg); color:var(--primary-text); border:1px solid var(--primary-border); padding:2px 6px; border-radius:9999px; font-weight:700; font-size:10px;">Parada ${s.seq}</span></td>
-                                <td><strong>${ex.nombre || 'Cliente'}</strong><br><span style="color:#94a3b8; font-size:10px;">Cód: ${ex.cliente || ''}</span></td>
+                                <td>
+                                    <strong>${ex.nombre || 'Cliente'}</strong><br>
+                                    <span style="color:#94a3b8; font-size:10px;">Cód: ${ex.cliente || ''}</span>
+                                    ${(j.isReassigned || (ex && ex.reassigned_from)) ? `
+                                        <div style="margin-top:3px;">
+                                            <span class="badge-reassigned" title="Reasignado manualmente desde ${j.reassignedFrom || ex.reassigned_from}">⇄ Reasig. de ${j.reassignedFrom || ex.reassigned_from}</span>
+                                        </div>
+                                    ` : ''}
+                                </td>
                                 <td>${formatFullAddress(ex, s)}</td>
                                 <td><strong style="color:var(--text-main);">${Math.round(j.demand).toLocaleString()} kg</strong></td>
                                 <td>
@@ -7892,6 +8064,10 @@ body.theme-dark .route-util-track {
                 r.stops.forEach(s => {
                     s.jobs.forEach(j => {
                         const ex = j.excel_info || {};
+                        let obsText = ex.observaciones || '';
+                        if (j.isReassigned || (ex && ex.reassigned_from)) {
+                            obsText = `[REASIGNADO DE ${j.reassignedFrom || ex.reassigned_from}] ` + obsText;
+                        }
                         detalleData.push([
                             r.emb_id,
                             r.type,
@@ -7907,7 +8083,7 @@ body.theme-dark .route-util-track {
                             Math.round(j.demand),
                             Number((r.load / 1000).toFixed(2)),
                             ex.agente || s.cita || 'Sin cita',
-                            ex.observaciones || ''
+                            obsText
                         ]);
                     });
                 });
@@ -7950,6 +8126,29 @@ body.theme-dark .route-util-track {
                 });
                 const wsDeferred = XLSX.utils.aoa_to_sheet(deferredData);
                 XLSX.utils.book_append_sheet(wb, wsDeferred, "PEDIDOS_DIFERIDOS");
+            }
+
+            // 5. Sheet REASIGNACIONES_DESPACHO (Bitácora de Toque del Despachador)
+            if (window.manualReassignmentsHistory && window.manualReassignmentsHistory.length > 0) {
+                const reassignData = [
+                    ["ID Pedido", "Cliente", "Población", "Estado", "Demanda (kg)", "Toneladas (t)", "Embarque Origen", "Embarque Destino", "Corredor Logístico", "Hora Ajuste"]
+                ];
+                window.manualReassignmentsHistory.forEach(h => {
+                    reassignData.push([
+                        h.orderId,
+                        h.cliente,
+                        h.poblacion,
+                        h.estado,
+                        Math.round(h.demand),
+                        Number((h.demand / 1000).toFixed(2)),
+                        h.fromEmb,
+                        h.toEmb,
+                        h.corridor,
+                        h.timestamp
+                    ]);
+                });
+                const wsReassign = XLSX.utils.aoa_to_sheet(reassignData);
+                XLSX.utils.book_append_sheet(wb, wsReassign, "REASIGNACIONES_DESPACHO");
             }
 
             const fileName = `Plan_Logistico_CalidadBueno_${currentPlanId.toUpperCase()}.xlsx`;
@@ -8695,6 +8894,7 @@ function handleExcelUpload(files) {
             const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
             return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
         }
+        if (typeof window !== 'undefined') window.distKm = distKm;
 
         // ==========================================
         // CLIENT-SIDE JAVASCRIPT HYBRID MATHEMATICAL SOLVER
@@ -8760,10 +8960,10 @@ function handleExcelUpload(files) {
                 'TABASCO_VILLAHERMOSA': { name: 'Tabasco (Villahermosa)', color: '#3b82f6', baseDep: '18/Ago 09:30 PM', speed: 65 },
                 'CHIAPAS_SUCHIATE': { name: 'Chiapas (Suchiate / Cd. Hidalgo)', color: '#8b5cf6', baseDep: '21/Ago 02:45 PM', speed: 55 },
                 'CHIAPAS_TAPACHULA': { name: 'Chiapas (Tapachula)', color: '#8b5cf6', baseDep: '21/Ago 03:30 PM', speed: 55 },
-                'CHIAPAS_TUXTLA': { name: 'Chiapas (Tuxtla Gutiérrez)', color: '#8b5cf6', baseDep: '21/Ago 07:15 PM', speed: 55 },
+                'CHIAPAS_TUXTLA': { name: 'Chiapas (Tuxtla Gutiérrez)', color: '#8b5cf6', baseDep: '21/Ago 08:00 PM', speed: 55 },
                 'PUEBLA_ALTIPLANO': { name: 'Puebla Directo (Pq. Ind. 5 de Mayo)', color: '#06b6d4', baseDep: '21/Ago 06:00 AM', speed: 60 },
-                'PENINSULA_MERIDA': { name: 'Península (Mérida)', color: '#ec4899', baseDep: '18/Ago 09:30 PM', speed: 70 },
-                'VERACRUZ_SUR_COATZA': { name: 'Veracruz Sur (Coatzacoalcos)', color: '#6366f1', baseDep: '19/Ago 12:30 AM', speed: 60 },
+                'PENINSULA_MERIDA': { name: 'Península (Mérida)', color: '#ec4899', baseDep: '18/Ago 09:00 PM', speed: 70 },
+                'VERACRUZ_SUR_COATZA': { name: 'Veracruz Sur (Coatzacoalcos)', color: '#6366f1', baseDep: '19/Ago 04:00 AM', speed: 60 },
                 'OAXACA_ISTMO': { name: 'Oaxaca (Istmo)', color: '#f97316', baseDep: '21/Ago 04:00 AM', speed: 50 },
                 'OAXACA_VALLES': { name: 'Oaxaca (Valles Centrales)', color: '#eab308', baseDep: '21/Ago 05:00 AM', speed: 48 },
                 'VERACRUZ_NORTE_SIERRA': { name: 'Veracruz Norte & Sierra Puebla', color: '#10b981', baseDep: '18/Ago 04:00 AM', speed: 50 },
@@ -8773,9 +8973,11 @@ function handleExcelUpload(files) {
             };
 
             window.CORRIDOR_CONFIG = CORRIDOR_CONFIG;
-            window.buildShipment = buildShipment;
+            buildShipment = buildShipmentInternal;
+            window.buildShipment = buildShipmentInternal;
 
-            function buildShipment(jobsInShipment, cKey, vehicleType, modalidadOverride, tripIndex = 1) {
+            function buildShipmentInternal(jobsInShipment, cKey, vehicleType, modalidadOverride, tripIndex = 1) {
+                const buildShipment = buildShipmentInternal;
                 const conf = CORRIDOR_CONFIG[cKey] || CORRIDOR_CONFIG['OTROS_CONSOLIDADOS'];
                 const totalLoad = jobsInShipment.reduce((sum, j) => sum + j.demand, 0);
 
@@ -8801,44 +9003,68 @@ function handleExcelUpload(files) {
                     curLat = locMap[sel][0].lat; curLng = locMap[sel][0].lng;
                 }
 
-                // DYNAMIC BACKWARD SCHEDULING (SALIDAS INVERSAS INTELIGENTES)
-                const firstStopLat = locSeq[0][0].lat;
-                const firstStopLng = locSeq[0][0].lng;
-                const firstLegDist = distKm(depot.lat, depot.lng, firstStopLat, firstStopLng) * 1.3;
-                const firstLegHours = firstLegDist / conf.speed;
+                // DYNAMIC BACKWARD SCHEDULING (SALIDAS INVERSAS INTELIGENTES MULTI-PARADA)
+                let cumDriveH = 0;
+                let legPrevLat = depot.lat, legPrevLng = depot.lng;
+                const stopArrivalOffsetsHours = [];
 
-                let routeDepartureStr = conf.baseDep;
-                let stop1Cita = null;
-                for (const j of locSeq[0]) {
-                    const cDate = parseCitaTime(j.excel_info && j.excel_info.agente);
-                    if (cDate) {
-                        stop1Cita = cDate;
-                        break;
+                locSeq.forEach((sJobs, idx) => {
+                    const sLat = sJobs[0].lat, sLng = sJobs[0].lng;
+                    const legDist = distKm(legPrevLat, legPrevLng, sLat, sLng) * 1.3;
+                    const legHours = legDist / conf.speed;
+                    cumDriveH += legHours;
+                    stopArrivalOffsetsHours.push(cumDriveH);
+
+                    const unloadH = Math.min(2.0, 0.33 + (sJobs.reduce((a, b) => a + b.demand, 0) / 1000) * 0.08);
+                    cumDriveH += unloadH;
+                    legPrevLat = sLat; legPrevLng = sLng;
+                });
+
+                const baseDepDate = parseDepartureDateTime(conf.baseDep);
+                let earliestRequiredDep = null;
+                let foundExplicitCita = false;
+
+                locSeq.forEach((sJobs, sIdx) => {
+                    for (const j of sJobs) {
+                        const cDate = extractJobCitaDate(j, baseDepDate);
+                        if (cDate) {
+                            foundExplicitCita = true;
+                            const targetArr = new Date(cDate.getTime() - 30 * 60 * 1000);
+                            const reqDep = new Date(targetArr.getTime() - Math.round(stopArrivalOffsetsHours[sIdx] * 3600 * 1000));
+                            if (!earliestRequiredDep || reqDep.getTime() < earliestRequiredDep.getTime()) {
+                                earliestRequiredDep = reqDep;
+                            }
+                        }
                     }
-                }
+                });
 
-                if (stop1Cita) {
-                    // Cita específica: salir con 30 min de margen antes de la cita
-                    const targetArrival = new Date(stop1Cita.getTime() - 30 * 60 * 1000);
-                    const optDep = new Date(targetArrival.getTime() - Math.round(firstLegHours * 3600 * 1000));
-                    routeDepartureStr = formatDateTimeToDepStr(optDep);
+                let finalDepDate;
+                if (foundExplicitCita && earliestRequiredDep) {
+                    finalDepDate = snapDateTimeTo15Min(earliestRequiredDep);
                 } else {
-                    // Sin cita: verificar si con baseDep llegaría de noche (< 06:30 o > 16:30)
-                    const baseDepDate = parseDepartureDateTime(conf.baseDep);
+                    const firstLegHours = stopArrivalOffsetsHours[0];
                     const testArrival = new Date(baseDepDate.getTime() + Math.round(firstLegHours * 3600 * 1000));
                     const arrHour = testArrival.getHours() + (testArrival.getMinutes() / 60);
 
-                    if (arrHour < 6.5 || arrHour > 16.5) {
-                        // Salida Inversa para entregar a las 07:30 AM en ventana matutina
+                    if (arrHour < 6.75 || arrHour > 16.5) {
                         const targetArrival = new Date(testArrival);
                         if (arrHour > 16.5) {
                             targetArrival.setDate(targetArrival.getDate() + 1);
                         }
                         targetArrival.setHours(7, 30, 0, 0);
                         const optDep = new Date(targetArrival.getTime() - Math.round(firstLegHours * 3600 * 1000));
-                        routeDepartureStr = formatDateTimeToDepStr(optDep);
+                        
+                        const depH = optDep.getHours() + (optDep.getMinutes() / 60);
+                        if (depH >= 1.0 && depH < 3.75) {
+                            optDep.setHours(4, 0, 0, 0);
+                        }
+                        finalDepDate = snapDateTimeTo15Min(optDep);
+                    } else {
+                        finalDepDate = baseDepDate;
                     }
                 }
+
+                const routeDepartureStr = formatDateTimeToDepStr(finalDepDate);
 
                 let curDate = parseDepartureDateTime(routeDepartureStr);
                 let totalDist = 0;
@@ -8858,15 +9084,41 @@ function handleExcelUpload(files) {
                     curDate = new Date(curDate.getTime() + Math.round(legHours * 3600 * 1000));
                     totalElapsedHours += legHours;
 
+                    const ex = sJobs[0].excel_info || {};
+                    let citaTxt = "";
+                    let stopCitaDate = null;
+                    for (const j of sJobs) {
+                        const candidateDate = extractJobCitaDate(j, baseDepDate);
+                        if (candidateDate) {
+                            stopCitaDate = candidateDate;
+                        }
+                        const candidateCita = (j.excel_info && (j.excel_info.agente || j.excel_info.observaciones || j.excel_info.hora_cita)) || "";
+                        if (candidateCita.toUpperCase().includes('CITA') || candidateCita.toUpperCase().includes('ENTREGA') || candidateCita.toUpperCase().includes('RECIBE')) {
+                            citaTxt = candidateCita;
+                            break;
+                        }
+                    }
+                    if (!citaTxt) citaTxt = ex.agente || "";
+
                     let hourOfDay = curDate.getHours() + (curDate.getMinutes() / 60);
                     let hadPernocta = false;
-                    if (sIdx > 0 && (hourOfDay > 17.5 || hourOfDay < 6.5)) {
-                        // Pernocta reglamentaria NOM-087 (Descanso chofer / Almacén cerrado)
+                    let hadEarlyWait = false;
+
+                    if (stopCitaDate) {
+                        // Con cita explícita: si llegó con anticipación, esperar a la hora de cita
+                        if (curDate.getTime() <= stopCitaDate.getTime()) {
+                            curDate = new Date(stopCitaDate.getTime());
+                        }
+                    } else {
+                        // Sin cita: aplicar horario comercial y pernocta
                         if (hourOfDay > 17.5) {
                             curDate.setDate(curDate.getDate() + 1);
+                            curDate.setHours(7, 30, 0, 0);
+                            hadPernocta = true;
+                        } else if (hourOfDay < 6.75) {
+                            curDate.setHours(7, 30, 0, 0);
+                            hadEarlyWait = true;
                         }
-                        curDate.setHours(7, 30, 0, 0);
-                        hadPernocta = true;
                     }
 
                     const legEta = formatDateTimeToDepStr(curDate);
@@ -8874,17 +9126,18 @@ function handleExcelUpload(files) {
                     curDate = new Date(curDate.getTime() + Math.round(unloadHours * 3600 * 1000));
                     totalElapsedHours += unloadHours;
 
-                    const ex = sJobs[0].excel_info || {};
-                    const citaTxt = ex.agente || "";
                     let windowBadge = '<span class="badge-window-ok" title="Horario de recibo comercial hábil">🟢 Ventana Hábil (07:00 - 16:30)</span>';
                     let windowStatus = 'OK_HABIL';
 
-                    if (hadPernocta) {
+                    if (stopCitaDate || (citaTxt && (citaTxt.toUpperCase().includes('CITA') || citaTxt.toUpperCase().includes('ENTREGA') || citaTxt.toUpperCase().includes('RECIBE')))) {
+                        windowBadge = `<span class="badge-window-cita" title="Cita programada confirmada: ${citaTxt}">⏱️ Cita Cumplida</span>`;
+                        windowStatus = 'CITA_PUNTUAL';
+                    } else if (hadPernocta) {
                         windowBadge = '<span class="badge-window-pernocta" title="Descanso de 8h NOM-087 y entrega a primera hora">🌙 Pernocta NOM-087 (07:30 AM)</span>';
                         windowStatus = 'PERNOCTA_NOM087';
-                    } else if (citaTxt.toUpperCase().includes('CITA')) {
-                        windowBadge = '<span class="badge-window-cita" title="Cita programada confirmada">⏱️ Cita Cumplida</span>';
-                        windowStatus = 'CITA_PUNTUAL';
+                    } else if (hadEarlyWait) {
+                        windowBadge = '<span class="badge-window-wait" title="Llegada temprana: espera en patio hasta apertura de almacén">⏳ Espera Apertura (07:30 AM)</span>';
+                        windowStatus = 'ESPERA_APERTURA';
                     }
 
                     stops.push({
