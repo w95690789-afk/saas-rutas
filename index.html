@@ -5656,6 +5656,13 @@ body.theme-dark .route-util-track {
 
         // Calculate Outlier Distance & Marginal Cost for any stop in a route
         function checkStopOutlier(route, stop) {
+            // Si la red ya fue re-optimizada, no generar alarmas encadenadas
+            if (typeof isReoptimizedActive !== 'undefined' && isReoptimizedActive) return null;
+            if (!route || !route.stops || route.stops.length <= 1) return null;
+
+            // Si la unidad ya fue intervenida o tiene pedidos diferidos, no volver a marcarla
+            if (typeof deferredOrders !== 'undefined' && deferredOrders.some(d => d.routeOrigin === route.emb_id)) return null;
+
             // Distance between coordinates (Haversine km)
             function getDist(lat1, lon1, lat2, lon2) {
                 const R = 6371;
@@ -5668,8 +5675,6 @@ body.theme-dark .route-util-track {
                 return R * c;
             }
 
-            if (!route.stops || route.stops.length <= 1) return null;
-
             // Compute minimum distance to any OTHER stop in this route
             let minDistToNeighbors = Infinity;
             route.stops.forEach(otherStop => {
@@ -5678,8 +5683,9 @@ body.theme-dark .route-util-track {
                 if (d < minDistToNeighbors) minDistToNeighbors = d;
             });
 
-            // If a stop is > 120km away from all other stops in the route, it is an outlier
-            if (minDistToNeighbors >= 120) {
+            // En geografía logística del sureste/centro, 130-220km entre ciudades es normal.
+            // Solo marcar como atípica si está a más de 300km reales de desvío fuera de la cuenca.
+            if (minDistToNeighbors >= 300) {
                 const kmDesvio = Math.round(minDistToNeighbors * 1.25); // Road winding factor
                 const costoMarginal = Math.round(kmDesvio * 18); // $18 MXN/km for Torton
                 const costoPorKg = (costoMarginal / (stop.load || 1500)).toFixed(2);
