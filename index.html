@@ -4222,6 +4222,87 @@ body.theme-dark .route-util-track {
             "plan2": { "title": "Plan 2: Balance Flota & Servicio", "routes": [], "total_weight": 0, "total_trips": 0, "total_cost": 0, "unassigned": [] },
             "plan3": { "title": "Plan 3: Reparto Capilar Rápido", "routes": [], "total_weight": 0, "total_trips": 0, "total_cost": 0, "unassigned": [] }
         };
+
+        // Paleta de Alta Distinción Cromática (24 Colores Contrastantes con Rojos, Verdes, Negros, Naranjas, etc.)
+        const DISTINCT_ROUTE_PALETTE = [
+            '#e11d48', // EMB-01: Carmesí vivo
+            '#2563eb', // EMB-02: Azul Eléctrico
+            '#16a34a', // EMB-03: Verde Esmeralda
+            '#ea580c', // EMB-04: Naranja Fuego
+            '#9333ea', // EMB-05: Púrpura Intenso
+            '#0891b2', // EMB-06: Cian / Turquesa
+            '#dc2626', // EMB-07: Rojo Escarlata
+            '#4f46e5', // EMB-08: Índigo Marino
+            '#059669', // EMB-09: Verde Jade
+            '#d97706', // EMB-10: Ámbar Dorado
+            '#c026d3', // EMB-11: Fucsia / Magenta
+            '#0284c7', // EMB-12: Azul Cielo
+            '#ca8a04', // EMB-13: Amarillo Mostaza
+            '#0d9488', // EMB-14: Verde Teal
+            '#b91c1c', // EMB-15: Rojo Ladrillo
+            '#1d4ed8', // EMB-16: Azul Cobalto
+            '#15803d', // EMB-17: Verde Pino
+            '#7c3aed', // EMB-18: Violeta
+            '#111827', // EMB-19: Negro Carbón
+            '#c2410c', // EMB-20: Óxido / Teja
+            '#6b21a8', // EMB-21: Uva Profunda
+            '#0369a1', // EMB-22: Azul Marino
+            '#475569', // EMB-23: Gris Pizarra
+            '#78350f'  // EMB-24: Café Oscuro
+        ];
+
+        function updateCustomRouteColor(embId, newColor) {
+            if (!embId || !newColor) return;
+            // 1. Guardar en memoria de planes
+            ['plan1', 'plan2', 'plan3'].forEach(pk => {
+                if (plans && plans[pk] && plans[pk].routes) {
+                    const r = plans[pk].routes.find(rt => rt.emb_id === embId);
+                    if (r) r.color = newColor;
+                }
+            });
+
+            // 2. Actualizar capa en routeLayers
+            if (typeof routeLayers !== 'undefined') {
+                const rl = routeLayers.find(l => l.emb_id === embId);
+                if (rl) rl.color = newColor;
+            }
+
+            // 3. Actualizar pines del mapa en tiempo real
+            document.querySelectorAll(`.pin-group-${embId}`).forEach(p => {
+                p.style.setProperty('--cluster-color', newColor);
+            });
+
+            // 4. Actualizar swatches circulares e inputs de color en DOM
+            document.querySelectorAll(`.pin-swatch-${embId}`).forEach(sw => {
+                sw.style.background = newColor;
+            });
+            document.querySelectorAll(`input[type="color"][data-emb="${embId}"]`).forEach(inp => {
+                inp.value = newColor;
+            });
+
+            // 5. Actualizar tarjetas del sidebar
+            document.querySelectorAll('.route-card').forEach(c => {
+                if (c.querySelector('.route-emb-code')?.innerText.trim() === embId) {
+                    c.style.setProperty('--route-color', newColor);
+                    const dot = c.querySelector('.route-corridor-dot');
+                    if (dot) dot.style.background = newColor;
+                    c.querySelectorAll('.timeline-dot').forEach(td => td.style.borderColor = newColor);
+                }
+            });
+
+            // 6. Actualizar tarjeta de consola de despacho
+            document.querySelectorAll('.embarque-row-card').forEach(c => {
+                const badge = c.querySelector('.emb-badge-id-pill');
+                if (badge && badge.innerText.trim() === embId) {
+                    badge.style.background = newColor;
+                    badge.style.boxShadow = `0 4px 12px ${newColor}40`;
+                }
+            });
+
+            if (typeof showToast === 'function') {
+                showToast(`🎨 Color de ${embId} actualizado`);
+            }
+        }
         const GEOLOOKUP = {"B00011": {"lat": 18.03823591, "lng": -92.90308396, "city": "Villahermosa", "state": "Tabasco"}, "ABARROTES MONTERREY_VILLAHERMOSA": {"lat": 18.03823591, "lng": -92.90308396, "city": "Villahermosa", "state": "Tabasco"}, "VILLAHERMOSA_TABASCO": {"lat": 18.03823591, "lng": -92.90308396, "city": "Villahermosa", "state": "Tabasco"}, "VILLAHERMOSA": {"lat": 18.03823591, "lng": -92.90308396, "city": "Villahermosa", "state": "Tabasco"}, "A04446": {"lat": 17.97400679, "lng": -94.70467592, "city": "Jáltipan de Morelos", "state": "Veracruz"}, "MIGUEL ANGEL DE LA CRUZ DOMINGUEZ (REM)_JÁLTIPAN DE MORELOS": {"lat": 17.97400679, "lng": -94.70467592, "city": "Jáltipan de Morelos", "state": "Veracruz"}, "JÁLTIPAN DE MORELOS_VERACRUZ": {"lat": 17.97400679, "lng": -94.70467592, "city": "Jáltipan de Morelos", "state": "Veracruz"}, "JÁLTIPAN DE MORELOS": {"lat": 17.97400679, "lng": -94.70467592, "city": "Jáltipan de Morelos", "state": "Veracruz"}, "B00035": {"lat": 18.14561211, "lng": -94.53643692, "city": "Coatzacoalcos", "state": "Veracruz"}, "DISTRIBUIDORA DE PERFUMERIA Y POPULARES_COATZACOALCOS": {"lat": 18.14561211, "lng": -94.53643692, "city": "Coatzacoalcos", "state": "Veracruz"}, "COATZACOALCOS_VERACRUZ": {"lat": 18.14887513, "lng": -94.41801598, "city": "Coatzacoalcos", "state": "Veracruz"}, "COATZACOALCOS": {"lat": 18.14887513, "lng": -94.41801598, "city": "Coatzacoalcos", "state": "Veracruz"}, "A02598": {"lat": 20.26515516, "lng": -97.96400377, "city": "Xicotepec", "state": "Puebla"}, "HU-GAR AUTOSERVICIOS_XICOTEPEC": {"lat": 20.26515516, "lng": -97.96400377, "city": "Xicotepec", "state": "Puebla"}, "XICOTEPEC_PUEBLA": {"lat": 20.27768033, "lng": -97.95740954, "city": "Xicotepec", "state": "Puebla"}, "XICOTEPEC": {"lat": 20.27768033, "lng": -97.95740954, "city": "Xicotepec", "state": "Puebla"}, "A03969": {"lat": 20.27768033, "lng": -97.95740954, "city": "Xicotepec", "state": "Puebla"}, "ECONOSUPER DEL CENTRO_XICOTEPEC": {"lat": 20.27768033, "lng": -97.95740954, "city": "Xicotepec", "state": "Puebla"}, "A03460": {"lat": 20.38618112, "lng": -97.88142397, "city": "Xicotepec de Juárez", "state": "Puebla"}, "A04062": {"lat": 20.46243508, "lng": -97.70347665, "city": "Venustiano Carranza", "state": "Puebla"}, "A03766": {"lat": 20.4619096, "lng": -97.70016685, "city": "Venustiano Carranza", "state": "Puebla"}, "A03195": {"lat": 20.46427299, "lng": -97.70084135, "city": "Venustiano Carranza", "state": "Puebla"}, "A01995": {"lat": 20.56817083, "lng": -97.43413052, "city": "Poza Rica de Hidalgo", "state": "Veracruz"}, "ALMACENES POZA RICA_POZA RICA DE HIDALGO": {"lat": 20.56817083, "lng": -97.43413052, "city": "Poza Rica de Hidalgo", "state": "Veracruz"}, "POZA RICA DE HIDALGO_VERACRUZ": {"lat": 20.56817083, "lng": -97.43413052, "city": "Poza Rica de Hidalgo", "state": "Veracruz"}, "POZA RICA DE HIDALGO": {"lat": 20.56817083, "lng": -97.43413052, "city": "Poza Rica de Hidalgo", "state": "Veracruz"}, "A03915": {"lat": 20.43819236, "lng": -97.3329184, "city": "Papantla de Olarte", "state": "Veracruz"}, "MARISA MARTINEZ HERNANDEZ_PAPANTLA DE OLARTE": {"lat": 20.43819236, "lng": -97.3329184, "city": "Papantla de Olarte", "state": "Veracruz"}, "PAPANTLA DE OLARTE_VERACRUZ": {"lat": 20.44549933, "lng": -97.31987186, "city": "Papantla de Olarte", "state": "Veracruz"}, "PAPANTLA DE OLARTE": {"lat": 20.44549933, "lng": -97.31987186, "city": "Papantla de Olarte", "state": "Veracruz"}, "A04243": {"lat": 20.44655784, "lng": -97.32147084, "city": "Papantla de Olarte", "state": "Veracruz"}, "ALEJANDRA RUIZ PEREZ AB. LA CHISPA (REM)_PAPANTLA DE OLARTE": {"lat": 20.44655784, "lng": -97.32147084, "city": "Papantla de Olarte", "state": "Veracruz"}, "A01819": {"lat": 20.44549933, "lng": -97.31987186, "city": "Papantla de Olarte", "state": "Veracruz"}, "GENERAL DE MUEBLES PAPANTLA_PAPANTLA DE OLARTE": {"lat": 20.44549933, "lng": -97.31987186, "city": "Papantla de Olarte", "state": "Veracruz"}, "A02018": {"lat": 14.68342891, "lng": -92.15038273, "city": "Ciudad Hidalgo / Suchiate", "state": "Chiapas"}, "A04935": {"lat": 18.14887513, "lng": -94.41801598, "city": "Coatzacoalcos", "state": "Veracruz"}, "MARTIN HUERTA PEREZ_COATZACOALCOS": {"lat": 18.14887513, "lng": -94.41801598, "city": "Coatzacoalcos", "state": "Veracruz"}, "A02542": {"lat": 16.728129, "lng": -93.16839, "city": "Chiapas", "state": ""}, "B00200": {"lat": 20.93547323, "lng": -89.55794087, "city": "Kanasín (Mérida)", "state": "Yucatán"}, "B00128": {"lat": 16.79345448, "lng": -96.67378187, "city": "Ocotlán de Morelos", "state": "Oaxaca"}, "COMERCIAL CONCHA_OCOTLÁN DE MORELOS": {"lat": 16.79345448, "lng": -96.67378187, "city": "Ocotlán de Morelos", "state": "Oaxaca"}, "OCOTLÁN DE MORELOS_OAXACA": {"lat": 16.79345448, "lng": -96.67378187, "city": "Ocotlán de Morelos", "state": "Oaxaca"}, "OCOTLÁN DE MORELOS": {"lat": 16.79345448, "lng": -96.67378187, "city": "Ocotlán de Morelos", "state": "Oaxaca"}, "B00062": {"lat": 19.08383867, "lng": -98.17984774, "city": "Puebla (Heroica Puebla)", "state": "Puebla"}, "PROVEEDORA DE ABARROTES RIVERA_PUEBLA (HEROICA PUEBLA)": {"lat": 19.08383867, "lng": -98.17984774, "city": "Puebla (Heroica Puebla)", "state": "Puebla"}, "PUEBLA (HEROICA PUEBLA)_PUEBLA": {"lat": 19.08383867, "lng": -98.17984774, "city": "Puebla (Heroica Puebla)", "state": "Puebla"}, "PUEBLA (HEROICA PUEBLA)": {"lat": 19.08383867, "lng": -98.17984774, "city": "Puebla (Heroica Puebla)", "state": "Puebla"}, "A04509": {"lat": 16.3202819, "lng": -96.58801226, "city": "Miahuatlán de Porfirio Díaz", "state": "Oaxaca"}, "COMERCIAL GUVIER_MIAHUATLÁN DE PORFIRIO DÍAZ": {"lat": 16.3202819, "lng": -96.58801226, "city": "Miahuatlán de Porfirio Díaz", "state": "Oaxaca"}, "MIAHUATLÁN DE PORFIRIO DÍAZ_OAXACA": {"lat": 16.3202819, "lng": -96.58801226, "city": "Miahuatlán de Porfirio Díaz", "state": "Oaxaca"}, "MIAHUATLÁN DE PORFIRIO DÍAZ": {"lat": 16.3202819, "lng": -96.58801226, "city": "Miahuatlán de Porfirio Díaz", "state": "Oaxaca"}, "B00084": {"lat": 16.44444725, "lng": -95.0180151, "city": "Juchitán (Juchitán de Zaragoza)", "state": "Oaxaca"}, "ANABEL TOLEDO ALTAMIRANO_JUCHITÁN (JUCHITÁN DE ZARAGOZA)": {"lat": 16.44444725, "lng": -95.0180151, "city": "Juchitán (Juchitán de Zaragoza)", "state": "Oaxaca"}, "JUCHITÁN (JUCHITÁN DE ZARAGOZA)_OAXACA": {"lat": 16.44444725, "lng": -95.0180151, "city": "Juchitán (Juchitán de Zaragoza)", "state": "Oaxaca"}, "JUCHITÁN (JUCHITÁN DE ZARAGOZA)": {"lat": 16.44444725, "lng": -95.0180151, "city": "Juchitán (Juchitán de Zaragoza)", "state": "Oaxaca"}, "A02234": {"lat": 20.188402, "lng": -96.868853, "city": "San Rafael", "state": "Veracruz"}, "OSCAR MEUNIER RAMAGNOLI_SAN RAFAEL": {"lat": 20.188402, "lng": -96.868853, "city": "San Rafael", "state": "Veracruz"}, "SAN RAFAEL_VERACRUZ": {"lat": 20.188402, "lng": -96.868853, "city": "San Rafael", "state": "Veracruz"}, "SAN RAFAEL": {"lat": 20.188402, "lng": -96.868853, "city": "San Rafael", "state": "Veracruz"}, "B00052": {"lat": 20.081604, "lng": -97.03107, "city": "Martínez de la Torre", "state": "Veracruz"}, "A02533": {"lat": 20.066535, "lng": -97.048419, "city": "Martínez de la Torre", "state": "Veracruz"}, "COMPAÑIA MAYORISTA DE ABARROTES_CHIAPAS": {"lat": 16.728129, "lng": -93.16839, "city": "Chiapas", "state": ""}, "CHIAPAS": {"lat": 16.728129, "lng": -93.16839, "city": "Chiapas", "state": ""}};
         
         var currentPlanId = 'plan1';
@@ -5589,6 +5670,7 @@ body.theme-dark .route-util-track {
                             orders_count: expressStops.reduce((a, s) => a + s.jobs.length, 0),
                             stops_count: expressStops.length,
                             departure: '21/Ago 07:00 AM',
+                            color: '#10b981',
                             distance: 350,
                             cost: 4200,
                             stops: expressStops,
@@ -5683,9 +5765,8 @@ body.theme-dark .route-util-track {
                 if (d < minDistToNeighbors) minDistToNeighbors = d;
             });
 
-            // En geografía logística del sureste/centro, 130-220km entre ciudades es normal.
-            // Solo marcar como atípica si está a más de 300km reales de desvío fuera de la cuenca.
-            if (minDistToNeighbors >= 300) {
+            // Umbral de validación para aviso al despachador (>= 125 km para detectar desvíos aislados de corredor)
+            if (minDistToNeighbors >= 125) {
                 const kmDesvio = Math.round(minDistToNeighbors * 1.25); // Road winding factor
                 const costoMarginal = Math.round(kmDesvio * 18); // $18 MXN/km for Torton
                 const costoPorKg = (costoMarginal / (stop.load || 1500)).toFixed(2);
@@ -6692,6 +6773,10 @@ body.theme-dark .route-util-track {
                                 <span class="route-emb-code">${rl.emb_id}</span>
                                 <span class="route-veh-name">(${rl.vehicle})</span>
                             </div>
+                            <label class="route-color-picker-label" title="Personalizar color de ${rl.emb_id}" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; cursor:pointer; margin-left:6px; position:relative;" aria-label="Cambiar color de ${rl.emb_id}">
+                                <span class="pin-swatch-${rl.emb_id}" style="width:14px; height:14px; border-radius:50%; background:${rl.color}; border:2px solid rgba(255,255,255,0.85); box-shadow:0 0 3px rgba(0,0,0,0.4); display:inline-block; vertical-align:middle; cursor:pointer;"></span>
+                                <input type="color" data-emb="${rl.emb_id}" value="${rl.color}" oninput="updateCustomRouteColor('${rl.emb_id}', this.value)" onchange="updateCustomRouteColor('${rl.emb_id}', this.value)" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; padding:0; border:none;">
+                            </label>
                         </div>
                         <span class="route-type-tag ${typeClass}">${typeLabel}</span>
                     </div>
@@ -6966,14 +7051,17 @@ body.theme-dark .route-util-track {
                 if (hasOutlierInRoute) {
                     card.style.borderColor = 'rgba(239, 68, 68, 0.4)';
                 }
-                card.className = 'embarque-row-card';
 
                 card.innerHTML = `
                     <div class="embarque-main-bar" onclick="toggleOrdersDrawer('${drawerId}')">
                         <div class="emb-card-top">
                             <div style="display:flex; align-items:center; gap:8px;">
-                                <span class="emb-badge-id-pill">${r.emb_id}</span>
+                                <span class="emb-badge-id-pill" style="background:${r.color}; box-shadow:0 4px 12px ${r.color}40;">${r.emb_id}</span>
                                 <span class="emb-type-pill">${r.vehicle} &bull; ${r.type.toUpperCase()}</span>
+                                <label class="route-color-picker-label" title="Personalizar color de ${r.emb_id}" onclick="event.stopPropagation();" style="display:inline-flex; align-items:center; cursor:pointer; position:relative;" aria-label="Cambiar color de ${r.emb_id}">
+                                    <span class="pin-swatch-${r.emb_id}" style="width:16px; height:16px; border-radius:50%; background:${r.color}; border:2px solid rgba(255,255,255,0.85); box-shadow:0 0 4px rgba(0,0,0,0.4); display:inline-block; vertical-align:middle; cursor:pointer;"></span>
+                                    <input type="color" data-emb="${r.emb_id}" value="${r.color}" oninput="updateCustomRouteColor('${r.emb_id}', this.value)" onchange="updateCustomRouteColor('${r.emb_id}', this.value)" style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer; padding:0; border:none;">
+                                </label>
                             </div>
                             ${hasOutlierInRoute ? `
                                 <button class="btn-defer-pill" onclick="event.stopPropagation(); promptDeferOrder('${outlierOrderId}', '${r.emb_id}')" title="Detectado desvío excesivo fuera del cluster">
@@ -8523,10 +8611,11 @@ function handleExcelUpload(files) {
                     }
                 });
 
-                // Renumber EMB IDs consistently
+                // Renumber EMB IDs consistently and assign high-contrast distinct colors
                 shipments.forEach((s, idx) => {
                     s.emb_id = `EMB-${String(idx + 1).padStart(2, '0')}`;
                     s.vehicle = `${s.type}_${String(idx + 1).padStart(2, '0')}`;
+                    s.color = DISTINCT_ROUTE_PALETTE[idx % DISTINCT_ROUTE_PALETTE.length];
                 });
 
                 const tractoCount = shipments.filter(r => r.type === 'Tracto').length;
