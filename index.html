@@ -3576,6 +3576,77 @@ body.theme-dark .route-util-track {
             color: #0f172a;
         }
 
+        /* REASSIGNMENT & WINDOW BADGES (EL TOQUE DEL DESPACHADOR & BACKWARD SCHEDULING) */
+        .btn-pill-reassign {
+            background: rgba(59, 130, 246, 0.12);
+            color: var(--primary);
+            border: 1px solid var(--primary-border);
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            white-space: nowrap;
+        }
+        .btn-pill-reassign:hover {
+            background: var(--primary);
+            color: #ffffff;
+            box-shadow: 0 2px 8px rgba(59, 130, 246, 0.35);
+            transform: translateY(-1px);
+        }
+        .badge-window-ok {
+            background: rgba(16, 185, 129, 0.12);
+            color: #059669;
+            border: 1px solid rgba(16, 185, 129, 0.3);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .badge-window-pernocta {
+            background: rgba(139, 92, 246, 0.12);
+            color: #7c3aed;
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        .badge-window-cita {
+            background: rgba(6, 182, 212, 0.12);
+            color: #0891b2;
+            border: 1px solid rgba(6, 182, 212, 0.3);
+            padding: 2px 8px;
+            border-radius: 9999px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            white-space: nowrap;
+        }
+        body.theme-dark .badge-window-ok {
+            background: rgba(16, 185, 129, 0.2);
+            color: #34d399;
+            border-color: rgba(16, 185, 129, 0.4);
+        }
+        body.theme-dark .badge-window-pernocta {
+            background: rgba(139, 92, 246, 0.2);
+            color: #a78bfa;
+            border-color: rgba(139, 92, 246, 0.4);
+        }
+        body.theme-dark .badge-window-cita {
+            background: rgba(6, 182, 212, 0.2);
+            color: #38bdf8;
+            border-color: rgba(6, 182, 212, 0.4);
+        }
+
     </style>
 
 </head>
@@ -4153,9 +4224,56 @@ body.theme-dark .route-util-track {
             </div>
         </div>
     </div>
-    
-    <!-- TOAST NOTIFICATION -->
-    
+
+    <!-- MODAL DE REASIGNACIÓN MANUAL RÁPIDA ENTRE CAMIONES (EL TOQUE DEL DESPACHADOR) -->
+    <div id="reassign-modal-backdrop" class="defer-modal-backdrop" style="display:none;" onclick="closeReassignModal(event)">
+        <div class="defer-modal-box" style="max-width:680px;" onclick="event.stopPropagation()">
+            <div class="defer-modal-header" style="border-bottom: 1.5px solid var(--primary-border);">
+                <div>
+                    <span class="wave-badge" style="background:rgba(59, 130, 246, 0.15); color:var(--primary); font-weight:800; font-size:10px; padding:2px 8px; border-radius:9999px;">CONTROL DE DESPACHO EN PATIO</span>
+                    <h2 style="font-size:16px; font-weight:800; color:var(--text-main); margin:4px 0 2px 0;">
+                        ⇄ Reasignar Pedido a Otra Unidad
+                    </h2>
+                    <div style="font-size:11px; color:var(--text-muted);">
+                        Transfiere este pedido directamente a otro camión con validación legal NOM-012 en tiempo real.
+                    </div>
+                </div>
+                <button class="btn-modal-close" style="padding:4px 10px; font-size:14px; border-radius:50%; width:30px; height:30px; display:flex; align-items:center; justify-content:center; cursor:pointer;" onclick="closeReassignModal()">✕</button>
+            </div>
+
+            <div class="defer-modal-body" id="reassign-modal-body" style="padding:16px 20px;">
+                <!-- Order card summary -->
+                <div id="reassign-order-summary-box" style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+                    <!-- Populated dynamically -->
+                </div>
+
+                <!-- Destination vehicle selector -->
+                <div style="margin-bottom:12px;">
+                    <label style="display:block; font-size:12px; font-weight:700; color:var(--text-main); margin-bottom:6px;">
+                        Selecciona el Embarque / Unidad de Destino:
+                    </label>
+                    <select id="reassign-target-select" onchange="onReassignTargetChange()" style="width:100%; padding:10px 12px; border-radius:8px; border:1.5px solid var(--border-color); background:var(--bg-card); color:var(--text-main); font-size:13px; font-weight:600; cursor:pointer;">
+                        <!-- Populated dynamically with active shipments -->
+                    </select>
+                </div>
+
+                <!-- Capacity Semaphore & Simulation Preview -->
+                <div id="reassign-capacity-feedback" style="border-radius:10px; padding:12px 14px; margin-bottom:14px;">
+                    <!-- Dynamic visual semaphore: Green/Yellow/Red with NOM-012 stats -->
+                </div>
+            </div>
+
+            <div class="defer-actions-row" style="padding:12px 20px; border-top:1px solid var(--border-color); display:flex; justify-content:flex-end; gap:10px;">
+                <button class="btn-modal-cancel" onclick="closeReassignModal()" style="padding:8px 16px; border-radius:8px; border:1px solid var(--border-color); background:transparent; color:var(--text-main); font-weight:600; cursor:pointer;">
+                    Cancelar
+                </button>
+                <button id="btn-confirm-reassign" onclick="confirmReassignOrder()" class="btn-modal-local" style="padding:8px 20px; border-radius:8px; background:var(--primary); color:#ffffff; font-weight:700; border:none; cursor:pointer; display:flex; align-items:center; gap:6px;">
+                    <span>Confirmar Traspaso ➔</span>
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- MODAL DE AUDITORÍA DE GEORREFERENCIACIÓN Y DISCREPANCIAS (>500M) -->
     <div id="geo-audit-modal-backdrop" class="defer-modal-backdrop" style="display:none;" onclick="closeGeoAuditModal(event)">
         <div class="defer-modal-box" style="max-width:920px;" onclick="event.stopPropagation()">
@@ -6010,6 +6128,252 @@ body.theme-dark .route-util-track {
             pendingDeferTarget = null;
         }
 
+        // ==========================================
+        // REASIGNACIÓN MANUAL ENTRE CAMIONES ("EL TOQUE DEL DESPACHADOR")
+        // ==========================================
+        let currentReassignTarget = null;
+
+        function openReassignModal(orderId, fromEmbId) {
+            const plan = plans[currentPlanId];
+            if (!plan || !plan.routes) return;
+
+            const fromRoute = plan.routes.find(r => r.emb_id === fromEmbId);
+            if (!fromRoute) return;
+
+            let targetJob = null;
+            let targetStop = null;
+            for (const s of fromRoute.stops) {
+                for (const j of s.jobs) {
+                    const pId = (j.excel_info && j.excel_info.pedido) ? j.excel_info.pedido : j.id;
+                    if (pId === orderId || j.id === orderId) {
+                        targetJob = j;
+                        targetStop = s;
+                        break;
+                    }
+                }
+                if (targetJob) break;
+            }
+
+            if (!targetJob) return;
+
+            currentReassignTarget = {
+                orderId: orderId,
+                fromEmbId: fromEmbId,
+                job: targetJob,
+                stop: targetStop,
+                route: fromRoute
+            };
+
+            const ex = targetJob.excel_info || {};
+            const summaryBox = document.getElementById('reassign-order-summary-box');
+            if (summaryBox) {
+                const maxCapFrom = getVehicleMaxCapacity(fromRoute.type);
+                summaryBox.innerHTML = `
+                    <div style="display:flex; justify-content:space-between; align-items:flex-start;">
+                        <div>
+                            <div style="font-size:14px; font-weight:800; color:var(--text-main);">
+                                Pedido <span style="color:var(--primary);">${orderId}</span> &bull; ${ex.nombre || 'Cliente'}
+                            </div>
+                            <div style="font-size:11.5px; color:var(--text-muted); margin-top:2px;">
+                                📍 ${targetStop.city || ''}, ${targetStop.state || ''} &bull; ${formatFullAddress(ex, targetStop)}
+                            </div>
+                        </div>
+                        <div style="text-align:right;">
+                            <div style="font-size:15px; font-weight:800; color:var(--text-main);">
+                                ${Math.round(targetJob.demand).toLocaleString()} kg
+                            </div>
+                            <div style="font-size:10.5px; color:var(--text-muted);">
+                                (${(targetJob.demand/1000).toFixed(2)} toneladas)
+                            </div>
+                        </div>
+                    </div>
+                    <div style="margin-top:10px; padding-top:8px; border-top:1px dashed var(--border-color); display:flex; justify-content:space-between; font-size:11.5px;">
+                        <span>Asignado actualmente a: <strong>${fromRoute.emb_id}</strong> (${fromRoute.type} &bull; ${fromRoute.corridor})</span>
+                        <span>Carga actual unidad: <strong>${(fromRoute.load/1000).toFixed(2)}t / ${(maxCapFrom/1000).toFixed(0)}t</strong></span>
+                    </div>
+                `;
+            }
+
+            const selectEl = document.getElementById('reassign-target-select');
+            if (selectEl) {
+                selectEl.innerHTML = '';
+                // List other routes in active plan
+                const otherRoutes = plan.routes.filter(r => r.emb_id !== fromEmbId);
+                otherRoutes.forEach(r => {
+                    const maxCap = getVehicleMaxCapacity(r.type);
+                    const remaining = maxCap - r.load;
+                    const willFit = (r.load + targetJob.demand) <= maxCap;
+                    const opt = document.createElement('option');
+                    opt.value = r.emb_id;
+                    opt.textContent = `[${r.emb_id}] ${r.type.toUpperCase()} • ${r.corridor} • Carga: ${(r.load/1000).toFixed(1)}t / ${(maxCap/1000).toFixed(0)}t (Disp: ${(remaining/1000).toFixed(1)}t) ${willFit ? '✅' : '⚠️ SOBRECARGA'}`;
+                    selectEl.appendChild(opt);
+                });
+
+                // Option to create dedicated unit
+                const optNew = document.createElement('option');
+                optNew.value = 'NEW_UNIT';
+                optNew.textContent = `➕ Crear Nueva Unidad Dedicada (${targetJob.demand <= 4000 ? 'Camioneta 4t' : (targetJob.demand <= 7000 ? 'Camioneta 7t' : 'Torton 18t')})`;
+                selectEl.appendChild(optNew);
+            }
+
+            onReassignTargetChange();
+
+            const backdrop = document.getElementById('reassign-modal-backdrop');
+            if (backdrop) backdrop.style.display = 'flex';
+        }
+
+        function closeReassignModal(event) {
+            if (event && event.target && event.target.id !== 'reassign-modal-backdrop') {
+                return;
+            }
+            const backdrop = document.getElementById('reassign-modal-backdrop');
+            if (backdrop) backdrop.style.display = 'none';
+            currentReassignTarget = null;
+        }
+
+        function onReassignTargetChange() {
+            if (!currentReassignTarget) return;
+            const selectEl = document.getElementById('reassign-target-select');
+            const feedbackEl = document.getElementById('reassign-capacity-feedback');
+            const confirmBtn = document.getElementById('btn-confirm-reassign');
+            if (!selectEl || !feedbackEl) return;
+
+            const targetVal = selectEl.value;
+            const plan = plans[currentPlanId];
+            const orderDemand = currentReassignTarget.job.demand;
+
+            if (targetVal === 'NEW_UNIT') {
+                const vType = orderDemand <= 4000 ? 'Camioneta 4t' : (orderDemand <= 7000 ? 'Camioneta 7t' : 'Torton');
+                feedbackEl.style.background = 'rgba(59, 130, 246, 0.08)';
+                feedbackEl.style.border = '1px solid rgba(59, 130, 246, 0.3)';
+                feedbackEl.innerHTML = `
+                    <div style="font-size:12.5px; font-weight:800; color:var(--primary); display:flex; align-items:center; gap:6px;">
+                        <span>🚛 Nueva Unidad Dedicada Programada:</span>
+                    </div>
+                    <div style="font-size:11.5px; color:var(--text-main); margin-top:4px; line-height:1.4;">
+                        Se generará un embarque adicional con un <strong>${vType}</strong> exclusivo para entregar directamente este pedido de ${(orderDemand/1000).toFixed(2)} toneladas sin saturar la flota existente.
+                    </div>
+                `;
+                if (confirmBtn) confirmBtn.disabled = false;
+                return;
+            }
+
+            const candidate = plan.routes.find(r => r.emb_id === targetVal);
+            if (!candidate) return;
+
+            const maxCap = getVehicleMaxCapacity(candidate.type);
+            const newLoad = candidate.load + orderDemand;
+            const isOverload = newLoad > maxCap;
+            const newUtil = Math.round((newLoad / maxCap) * 100);
+            const remainingAfter = maxCap - newLoad;
+
+            if (!isOverload) {
+                feedbackEl.style.background = 'rgba(16, 185, 129, 0.08)';
+                feedbackEl.style.border = '1px solid rgba(16, 185, 129, 0.3)';
+                feedbackEl.innerHTML = `
+                    <div style="font-size:12.5px; font-weight:800; color:#059669; display:flex; align-items:center; gap:6px;">
+                        <span>🟢 Capacidad Legal NOM-012 Autorizada (${newUtil}% FTL)</span>
+                    </div>
+                    <div style="font-size:11.5px; color:var(--text-main); margin-top:4px; line-height:1.4;">
+                        La unidad <strong>${candidate.emb_id} (${candidate.type})</strong> pasará de ${(candidate.load/1000).toFixed(2)}t a <strong>${(newLoad/1000).toFixed(2)}t</strong>. Quedan <strong>+${(remainingAfter/1000).toFixed(2)}t libres</strong> de margen respecto al límite reglamentario de ${(maxCap/1000).toFixed(0)}t.
+                    </div>
+                `;
+                if (confirmBtn) confirmBtn.disabled = false;
+            } else {
+                const excess = newLoad - maxCap;
+                feedbackEl.style.background = 'rgba(239, 68, 68, 0.08)';
+                feedbackEl.style.border = '1px solid rgba(239, 68, 68, 0.3)';
+                feedbackEl.innerHTML = `
+                    <div style="font-size:12.5px; font-weight:800; color:#dc2626; display:flex; align-items:center; gap:6px;">
+                        <span>🔴 Alerta de Sobrecarga NOM-012 (${newUtil}% FTL)</span>
+                    </div>
+                    <div style="font-size:11.5px; color:var(--text-main); margin-top:4px; line-height:1.4;">
+                        La unidad <strong>${candidate.emb_id}</strong> alcanzaría <strong>${(newLoad/1000).toFixed(2)}t</strong>, superando el tope legal de ${(maxCap/1000).toFixed(0)}t por <strong>+${(excess/1000).toFixed(2)}t (+${Math.round(excess).toLocaleString()} kg)</strong>.
+                    </div>
+                `;
+                if (confirmBtn) confirmBtn.disabled = false;
+            }
+        }
+
+        function confirmReassignOrder() {
+            if (!currentReassignTarget) return;
+            const selectEl = document.getElementById('reassign-target-select');
+            if (!selectEl) return;
+            const targetVal = selectEl.value;
+            const plan = plans[currentPlanId];
+            if (!plan || !plan.routes) return;
+
+            const target = currentReassignTarget;
+            const fromRoute = plan.routes.find(r => r.emb_id === target.fromEmbId);
+            if (!fromRoute) return;
+
+            // Remove order from fromRoute
+            fromRoute.jobs = fromRoute.jobs.filter(j => {
+                const pId = (j.excel_info && j.excel_info.pedido) ? j.excel_info.pedido : j.id;
+                return pId !== target.orderId && j.id !== target.orderId;
+            });
+
+            if (targetVal === 'NEW_UNIT') {
+                const vType = target.job.demand <= 4000 ? 'Camioneta 4t' : (target.job.demand <= 7000 ? 'Camioneta 7t' : 'Torton');
+                const nextTripIdx = plan.routes.length + 1;
+                const newRoute = buildShipment([target.job], fromRoute.corridorKey, vType, `Envío Dedicado Especial (${fromRoute.corridor})`, nextTripIdx);
+                plan.routes.push(newRoute);
+            } else {
+                const toRoute = plan.routes.find(r => r.emb_id === targetVal);
+                if (!toRoute) return;
+                toRoute.jobs.push(target.job);
+                // Rebuild toRoute
+                const rebuiltTo = buildShipment(toRoute.jobs, toRoute.corridorKey, toRoute.type, toRoute.modalidad, toRoute.trip_idx || 1);
+                rebuiltTo.emb_id = toRoute.emb_id;
+                rebuiltTo.vehicle = toRoute.vehicle;
+                rebuiltTo.color = toRoute.color;
+                const toIdx = plan.routes.findIndex(r => r.emb_id === targetVal);
+                if (toIdx !== -1) plan.routes[toIdx] = rebuiltTo;
+            }
+
+            // Rebuild or remove fromRoute
+            if (fromRoute.jobs.length === 0) {
+                plan.routes = plan.routes.filter(r => r.emb_id !== target.fromEmbId);
+            } else {
+                const rebuiltFrom = buildShipment(fromRoute.jobs, fromRoute.corridorKey, fromRoute.type, fromRoute.modalidad, fromRoute.trip_idx || 1);
+                rebuiltFrom.emb_id = fromRoute.emb_id;
+                rebuiltFrom.vehicle = fromRoute.vehicle;
+                rebuiltFrom.color = fromRoute.color;
+                const fromIdx = plan.routes.findIndex(r => r.emb_id === target.fromEmbId);
+                if (fromIdx !== -1) plan.routes[fromIdx] = rebuiltFrom;
+            }
+
+            // Update plan KPIs
+            plan.total_weight = plan.routes.reduce((acc, r) => acc + r.load, 0);
+            plan.total_cost = plan.routes.reduce((acc, r) => acc + r.cost, 0);
+            plan.total_trips = plan.routes.length;
+            plan.isManuallyModified = true;
+
+            activeRoutes = plan.routes;
+            closeReassignModal();
+            renderCockpitView();
+            renderSidebar();
+            renderMapRoutes();
+            updateControlKpis();
+
+            const destLabel = targetVal === 'NEW_UNIT' ? 'una Nueva Unidad Dedicada' : targetVal;
+            showToast(`✅ Pedido #${target.orderId} (${Math.round(target.job.demand).toLocaleString()} kg) reasignado a ${destLabel}. Cargas actualizadas.`);
+        }
+
+        function restoreOriginalPlan() {
+            if (!originalPlansBackup) {
+                showToast("⚠️ No hay copia del plan original guardada.");
+                return;
+            }
+            plans = JSON.parse(JSON.stringify(originalPlansBackup));
+            activeRoutes = plans[currentPlanId].routes;
+            renderCockpitView();
+            renderSidebar();
+            renderMapRoutes();
+            updateControlKpis();
+            showToast("↺ Plan restaurado al cálculo matemático original.");
+        }
+
         // Reinstate a deferred order back into the plan
         function reinstateDeferredOrder(orderId) {
             initMasterOrdersPool();
@@ -6361,34 +6725,63 @@ body.theme-dark .route-util-track {
             return parts.length > 0 ? parts.join(', ') : 'Destino programado';
         }
 
-        function addHoursToDepartureStr(depStr, hoursToAdd) {
-            if (!depStr) return `${Math.round(hoursToAdd)} hrs de viaje`;
+        function parseDepartureDateTime(depStr) {
+            if (!depStr) return new Date(2026, 7, 18, 6, 0);
             const months = { "Ene": 0, "Feb": 1, "Mar": 2, "Abr": 3, "May": 4, "Jun": 5, "Jul": 6, "Ago": 7, "Sep": 8, "Oct": 9, "Nov": 10, "Dic": 11,
                              "Jan": 0, "Apr": 3, "Aug": 7, "Dec": 11 };
             try {
                 const parts = depStr.trim().split(' ');
                 const dateParts = parts[0].split('/');
-                const day = parseInt(dateParts[0]);
-                const mStr = dateParts[1];
+                const day = parseInt(dateParts[0]) || 18;
+                const mStr = dateParts[1] || 'Ago';
                 const month = months[mStr] !== undefined ? months[mStr] : 7;
-                const timeParts = parts[1].split(':');
-                let hours = parseInt(timeParts[0]);
-                const minutes = parseInt(timeParts[1]);
-                const ampm = parts[2].toUpperCase();
+                const timeParts = (parts[1] || '06:00').split(':');
+                let hours = parseInt(timeParts[0]) || 6;
+                const minutes = parseInt(timeParts[1]) || 0;
+                const ampm = (parts[2] || 'AM').toUpperCase();
                 if (ampm === 'PM' && hours < 12) hours += 12;
                 if (ampm === 'AM' && hours === 12) hours = 0;
-                
-                const dt = new Date(2026, month, day, hours, minutes);
+                return new Date(2026, month, day, hours, minutes);
+            } catch(e) {
+                return new Date(2026, 7, 18, 6, 0);
+            }
+        }
+
+        function formatDateTimeToDepStr(dt) {
+            if (!dt || isNaN(dt.getTime())) return "18/Ago 06:00 AM";
+            const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
+            const resDay = dt.getDate();
+            const resMonth = monthNames[dt.getMonth()];
+            let resHours = dt.getHours();
+            const resMins = String(dt.getMinutes()).padStart(2, '0');
+            const resAmPm = resHours >= 12 ? 'PM' : 'AM';
+            resHours = resHours % 12 || 12;
+            return `${resDay}/${resMonth} ${String(resHours).padStart(2, '0')}:${resMins} ${resAmPm}`;
+        }
+
+        function parseCitaTime(citaText) {
+            if (!citaText || typeof citaText !== 'string') return null;
+            const match = citaText.match(/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2})\s*(AM|PM)/i);
+            if (match) {
+                const day = parseInt(match[1]);
+                const month = parseInt(match[2]) - 1;
+                const year = parseInt(match[3]);
+                let hours = parseInt(match[4]);
+                const mins = parseInt(match[5]);
+                const ampm = match[6].toUpperCase();
+                if (ampm === 'PM' && hours < 12) hours += 12;
+                if (ampm === 'AM' && hours === 12) hours = 0;
+                return new Date(year, month, day, hours, mins);
+            }
+            return null;
+        }
+
+        function addHoursToDepartureStr(depStr, hoursToAdd) {
+            if (!depStr) return `${Math.round(hoursToAdd)} hrs de viaje`;
+            try {
+                const dt = parseDepartureDateTime(depStr);
                 dt.setTime(dt.getTime() + Math.round(hoursToAdd * 3600 * 1000));
-                
-                const resDay = dt.getDate();
-                const monthNames = ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"];
-                const resMonth = monthNames[dt.getMonth()];
-                let resHours = dt.getHours();
-                const resMins = String(dt.getMinutes()).padStart(2, '0');
-                const resAmPm = resHours >= 12 ? 'PM' : 'AM';
-                resHours = resHours % 12 || 12;
-                return `${resDay}/${resMonth} ${String(resHours).padStart(2, '0')}:${resMins} ${resAmPm}`;
+                return formatDateTimeToDepStr(dt);
             } catch(e) {
                 return `${Math.round(hoursToAdd)} hrs de viaje`;
             }
@@ -6980,6 +7373,21 @@ body.theme-dark .route-util-track {
                 activePlanBadge.style.border = '1px solid ' + (currentPlanId === 'plan1' ? 'var(--primary-border)' : (currentPlanId === 'plan2' ? 'var(--emerald-border)' : 'var(--amber-border)'));
             }
 
+            if (plan.isManuallyModified) {
+                const manualBanner = document.createElement('div');
+                manualBanner.style.cssText = 'background:rgba(59,130,246,0.08); border:1.5px solid rgba(59,130,246,0.3); border-radius:10px; padding:10px 16px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px;';
+                manualBanner.innerHTML = `
+                    <div style="display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--text-main);">
+                        <span style="font-size:16px;">🔧</span>
+                        <span><strong>AJUSTE MANUAL DE DESPACHO ACTIVO:</strong> Has reasignado pedidos entre unidades. Los cálculos de peso, FTL y ruteo se han actualizado en vivo.</span>
+                    </div>
+                    <button onclick="restoreOriginalPlan()" style="background:var(--primary); color:#ffffff; border:none; padding:6px 14px; border-radius:8px; font-size:11.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 6px rgba(59,130,246,0.3);">
+                        <span>↺ Restaurar Plan Automático</span>
+                    </button>
+                `;
+                container.appendChild(manualBanner);
+            }
+
             plan.routes.forEach((r, rIdx) => {
                 const maxCap = getVehicleMaxCapacity(r.type);
                 const isOverload = r.load > maxCap;
@@ -7035,11 +7443,19 @@ body.theme-dark .route-util-track {
                                 <td><strong style="color:var(--text-main);">${Math.round(j.demand).toLocaleString()} kg</strong></td>
                                 <td>
                                     <span style="color:var(--primary); font-weight:700;">${s.eta}</span>
+                                </td>
+                                <td>
+                                    ${s.windowBadge || '<span class="badge-window-ok">🟢 Ventana Hábil (07:00 - 16:30)</span>'}
                                     ${hasCita ? '<div style="color:var(--emerald); font-size:10px; font-weight:700; margin-top:2px;">✓ A tiempo para cita</div>' : ''}
                                 </td>
                                 <td>
                                     <span style="color:var(--amber); font-weight:600;">${citaText}</span>
                                     ${stopOutlier ? `<div style="margin-top:4px;"><button class="btn-defer-pill" onclick="promptDeferOrder('${pId}', '${r.emb_id}')">⏸️ Diferir Pedido</button></div>` : ''}
+                                </td>
+                                <td style="text-align:center;">
+                                    <button class="btn-pill-reassign" onclick="event.stopPropagation(); openReassignModal('${pId}', '${r.emb_id}')" title="Reasignar pedido ${pId} a otra unidad">
+                                        <span>⇄ Mover</span>
+                                    </button>
                                 </td>
                             </tr>
                         `;
@@ -7112,7 +7528,9 @@ body.theme-dark .route-util-track {
                                     <th>Dirección de Entrega</th>
                                     <th>Kilos</th>
                                     <th>ETA Llegada</th>
+                                    <th>Ventana Recibo</th>
                                     <th>Cita / Instrucciones Agente</th>
+                                    <th style="text-align:center;">Acción Despacho</th>
                                 </tr>
                             </thead>
                             <tbody>
@@ -8270,19 +8688,19 @@ function handleExcelUpload(files) {
             reader.readAsBinaryString(file);
         }
 
-// ==========================================
+        function distKm(lat1, lon1, lat2, lon2) {
+            const R = 6371.0;
+            const dLat = (lat2 - lat1) * Math.PI / 180.0;
+            const dLon = (lon2 - lon1) * Math.PI / 180.0;
+            const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
+            return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        }
+
+        // ==========================================
         // CLIENT-SIDE JAVASCRIPT HYBRID MATHEMATICAL SOLVER
         // (Capacitated Corridor Clustering & Heterogeneous Bin Packing)
         // ==========================================
         function solveHybridLogisticsPlansJS(allJobs) {
-            function distKm(lat1, lon1, lat2, lon2) {
-                const R = 6371.0;
-                const dLat = (lat2 - lat1) * Math.PI / 180.0;
-                const dLon = (lon2 - lon1) * Math.PI / 180.0;
-                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLon / 2) * Math.sin(dLon / 2);
-                return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-            }
-
             function classifyCorridorSpatial(lat, lng, pob, edo, obs, ruta, cliente, nombre) {
                 const pobU = String(pob || '').toUpperCase();
                 const edoU = String(edo || '').toUpperCase();
@@ -8344,7 +8762,7 @@ function handleExcelUpload(files) {
                 'CHIAPAS_TAPACHULA': { name: 'Chiapas (Tapachula)', color: '#8b5cf6', baseDep: '21/Ago 03:30 PM', speed: 55 },
                 'CHIAPAS_TUXTLA': { name: 'Chiapas (Tuxtla Gutiérrez)', color: '#8b5cf6', baseDep: '21/Ago 07:15 PM', speed: 55 },
                 'PUEBLA_ALTIPLANO': { name: 'Puebla Directo (Pq. Ind. 5 de Mayo)', color: '#06b6d4', baseDep: '21/Ago 06:00 AM', speed: 60 },
-                'PENINSULA_MERIDA': { name: 'Península (Mérida)', color: '#ec4899', baseDep: '18/Ago 02:00 PM', speed: 75 },
+                'PENINSULA_MERIDA': { name: 'Península (Mérida)', color: '#ec4899', baseDep: '18/Ago 09:30 PM', speed: 70 },
                 'VERACRUZ_SUR_COATZA': { name: 'Veracruz Sur (Coatzacoalcos)', color: '#6366f1', baseDep: '19/Ago 12:30 AM', speed: 60 },
                 'OAXACA_ISTMO': { name: 'Oaxaca (Istmo)', color: '#f97316', baseDep: '21/Ago 04:00 AM', speed: 50 },
                 'OAXACA_VALLES': { name: 'Oaxaca (Valles Centrales)', color: '#eab308', baseDep: '21/Ago 05:00 AM', speed: 48 },
@@ -8353,6 +8771,9 @@ function handleExcelUpload(files) {
                 'FORANEO_MORELIA': { name: 'Ruta Especial Morelia (Michoacán)', color: '#64748b', baseDep: '18/Ago 06:00 AM', speed: 60 },
                 'OTROS_CONSOLIDADOS': { name: 'Ruta Consolidada Especial', color: '#64748b', baseDep: '18/Ago 06:00 AM', speed: 55 }
             };
+
+            window.CORRIDOR_CONFIG = CORRIDOR_CONFIG;
+            window.buildShipment = buildShipment;
 
             function buildShipment(jobsInShipment, cKey, vehicleType, modalidadOverride, tripIndex = 1) {
                 const conf = CORRIDOR_CONFIG[cKey] || CORRIDOR_CONFIG['OTROS_CONSOLIDADOS'];
@@ -8380,6 +8801,46 @@ function handleExcelUpload(files) {
                     curLat = locMap[sel][0].lat; curLng = locMap[sel][0].lng;
                 }
 
+                // DYNAMIC BACKWARD SCHEDULING (SALIDAS INVERSAS INTELIGENTES)
+                const firstStopLat = locSeq[0][0].lat;
+                const firstStopLng = locSeq[0][0].lng;
+                const firstLegDist = distKm(depot.lat, depot.lng, firstStopLat, firstStopLng) * 1.3;
+                const firstLegHours = firstLegDist / conf.speed;
+
+                let routeDepartureStr = conf.baseDep;
+                let stop1Cita = null;
+                for (const j of locSeq[0]) {
+                    const cDate = parseCitaTime(j.excel_info && j.excel_info.agente);
+                    if (cDate) {
+                        stop1Cita = cDate;
+                        break;
+                    }
+                }
+
+                if (stop1Cita) {
+                    // Cita específica: salir con 30 min de margen antes de la cita
+                    const targetArrival = new Date(stop1Cita.getTime() - 30 * 60 * 1000);
+                    const optDep = new Date(targetArrival.getTime() - Math.round(firstLegHours * 3600 * 1000));
+                    routeDepartureStr = formatDateTimeToDepStr(optDep);
+                } else {
+                    // Sin cita: verificar si con baseDep llegaría de noche (< 06:30 o > 16:30)
+                    const baseDepDate = parseDepartureDateTime(conf.baseDep);
+                    const testArrival = new Date(baseDepDate.getTime() + Math.round(firstLegHours * 3600 * 1000));
+                    const arrHour = testArrival.getHours() + (testArrival.getMinutes() / 60);
+
+                    if (arrHour < 6.5 || arrHour > 16.5) {
+                        // Salida Inversa para entregar a las 07:30 AM en ventana matutina
+                        const targetArrival = new Date(testArrival);
+                        if (arrHour > 16.5) {
+                            targetArrival.setDate(targetArrival.getDate() + 1);
+                        }
+                        targetArrival.setHours(7, 30, 0, 0);
+                        const optDep = new Date(targetArrival.getTime() - Math.round(firstLegHours * 3600 * 1000));
+                        routeDepartureStr = formatDateTimeToDepStr(optDep);
+                    }
+                }
+
+                let curDate = parseDepartureDateTime(routeDepartureStr);
                 let totalDist = 0;
                 let pLat = depot.lat, pLng = depot.lng;
                 const stops = [];
@@ -8394,11 +8855,38 @@ function handleExcelUpload(files) {
                     roadGeometry.push([sLat, sLng]);
 
                     const legHours = legDist / conf.speed;
+                    curDate = new Date(curDate.getTime() + Math.round(legHours * 3600 * 1000));
                     totalElapsedHours += legHours;
-                    const legEta = addHoursToDepartureStr(conf.baseDep, totalElapsedHours);
-                    totalElapsedHours += Math.min(2.0, 0.33 + (sJobs.reduce((a, b) => a + b.demand, 0) / 1000) * 0.08);
+
+                    let hourOfDay = curDate.getHours() + (curDate.getMinutes() / 60);
+                    let hadPernocta = false;
+                    if (sIdx > 0 && (hourOfDay > 17.5 || hourOfDay < 6.5)) {
+                        // Pernocta reglamentaria NOM-087 (Descanso chofer / Almacén cerrado)
+                        if (hourOfDay > 17.5) {
+                            curDate.setDate(curDate.getDate() + 1);
+                        }
+                        curDate.setHours(7, 30, 0, 0);
+                        hadPernocta = true;
+                    }
+
+                    const legEta = formatDateTimeToDepStr(curDate);
+                    const unloadHours = Math.min(2.0, 0.33 + (sJobs.reduce((a, b) => a + b.demand, 0) / 1000) * 0.08);
+                    curDate = new Date(curDate.getTime() + Math.round(unloadHours * 3600 * 1000));
+                    totalElapsedHours += unloadHours;
 
                     const ex = sJobs[0].excel_info || {};
+                    const citaTxt = ex.agente || "";
+                    let windowBadge = '<span class="badge-window-ok" title="Horario de recibo comercial hábil">🟢 Ventana Hábil (07:00 - 16:30)</span>';
+                    let windowStatus = 'OK_HABIL';
+
+                    if (hadPernocta) {
+                        windowBadge = '<span class="badge-window-pernocta" title="Descanso de 8h NOM-087 y entrega a primera hora">🌙 Pernocta NOM-087 (07:30 AM)</span>';
+                        windowStatus = 'PERNOCTA_NOM087';
+                    } else if (citaTxt.toUpperCase().includes('CITA')) {
+                        windowBadge = '<span class="badge-window-cita" title="Cita programada confirmada">⏱️ Cita Cumplida</span>';
+                        windowStatus = 'CITA_PUNTUAL';
+                    }
+
                     stops.push({
                         seq: sIdx + 1,
                         lat: sLat,
@@ -8408,11 +8896,18 @@ function handleExcelUpload(files) {
                         load: sJobs.reduce((a, b) => a + b.demand, 0),
                         jobs: sJobs,
                         eta: legEta,
-                        cita: ex.agente || ""
+                        cita: citaTxt,
+                        windowStatus: windowStatus,
+                        windowBadge: windowBadge
                     });
                 });
-                totalDist += distKm(pLat, pLng, depot.lat, depot.lng) * 1.3;
+
+                const returnDist = distKm(pLat, pLng, depot.lat, depot.lng) * 1.3;
+                totalDist += returnDist;
                 roadGeometry.push([depot.lat, depot.lng]);
+                const returnHours = returnDist / conf.speed;
+                const returnDate = new Date(curDate.getTime() + Math.round(returnHours * 3600 * 1000));
+                const returnTimeStr = formatDateTimeToDepStr(returnDate);
 
                 const fCost = vehicleType === 'Tracto' ? 10000 : (vehicleType === 'Torton' ? 6000 : 3500);
                 const dCost = vehicleType === 'Tracto' ? 15 : (vehicleType === 'Torton' ? 10 : 7);
@@ -8432,8 +8927,8 @@ function handleExcelUpload(files) {
                     color: conf.color,
                     distance: Math.round(totalDist),
                     cost: Math.round(tripCost),
-                    departure: conf.baseDep,
-                    return_time: "Turno siguiente",
+                    departure: routeDepartureStr,
+                    return_time: returnTimeStr,
                     stops: stops,
                     stops_count: stops.length,
                     road_geometry: roadGeometry,
