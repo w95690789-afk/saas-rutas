@@ -3777,7 +3777,7 @@ body.theme-dark .route-util-track {
         <div class="reopt-banner-left">
             <span class="reopt-badge-pill">🟢 RED RE-OPTIMIZADA ACTIVA</span>
             <span id="reopt-banner-msg">
-                <strong>56 Pedidos Activos</strong> &bull; 1 Pedido en Backorder (Jáltipan, 1.5t) &bull; <strong>Ahorro Neto: -$8,748 MXN (-486 km)</strong> &bull; EMB-13 optimizado a 12 paradas.
+                <strong>56 Pedidos Activos</strong> &bull; 1 Pedido en Backorder (Jáltipan, 1.5t) &bull; <strong>Ahorro Neto: +$8,748 MXN (-486 km)</strong> &bull; EMB-13 optimizado a 12 paradas.
             </span>
         </div>
         <div class="reopt-banner-actions">
@@ -5239,6 +5239,23 @@ body.theme-dark .route-util-track {
                     }
                 }
             } else {
+                // Si el usuario viene de evaluar un pedido en pendingDeferTarget, integrarlo de inmediato a la simulación
+                if (pendingDeferTarget && !deferredOrders.some(d => d.orderId === pendingDeferTarget.orderId)) {
+                    const reasonSelect = document.getElementById('defer-reason-select');
+                    const reason = reasonSelect ? reasonSelect.value : "Dispersión geográfica excesiva";
+                    deferredOrders.push({
+                        orderId: pendingDeferTarget.orderId,
+                        job: pendingDeferTarget.job,
+                        routeOrigin: pendingDeferTarget.embId,
+                        corridorOrigin: pendingDeferTarget.route ? pendingDeferTarget.route.corridor : '',
+                        reason: reason,
+                        kmSaved: pendingDeferTarget.outlier ? pendingDeferTarget.outlier.kmDesvio : 250,
+                        costSaved: pendingDeferTarget.outlier ? pendingDeferTarget.outlier.costoMarginal : 4500,
+                        deferredAt: new Date().toLocaleTimeString()
+                    });
+                    updateDeferredBadge();
+                }
+
                 const totalOrders = (masterOrdersPool && masterOrdersPool.length > 0)
                     ? masterOrdersPool.length
                     : (plans.plan1 ? plans.plan1.routes.reduce((acc, r) => acc + (r.orders_count || 0), 0) + deferredOrders.length : 76);
@@ -5290,8 +5307,8 @@ body.theme-dark .route-util-track {
             const defCount = deferredOrders.length;
             const activeCount = Math.max(0, totalOrders - defCount);
             const totalDefWeightKg = deferredOrders.reduce((sum, d) => sum + (d.job?.demand || 0), 0);
-            const totalKmSaved = deferredOrders.reduce((sum, d) => sum + (d.kmSaved || 250), 0) || 450;
-            const totalCostSaved = deferredOrders.reduce((sum, d) => sum + (d.costSaved || 4500), 0) || 8100;
+            const totalKmSaved = defCount > 0 ? deferredOrders.reduce((sum, d) => sum + (d.kmSaved || 250), 0) : 0;
+            const totalCostSaved = defCount > 0 ? deferredOrders.reduce((sum, d) => sum + (d.costSaved || 4500), 0) : 0;
             const totalHoursSaved = (totalKmSaved / 65).toFixed(1);
 
             // 2. Update KPI values and labels
@@ -5309,32 +5326,36 @@ body.theme-dark .route-util-track {
                 if (modalTitle) modalTitle.innerHTML = `🚀 Simulador & Re-Optimización de Red (${activeCount} Pedidos Activos)`;
                 if (kpiOrdersVal) { kpiOrdersVal.innerText = `${activeCount} de ${totalOrders}`; kpiOrdersVal.style.color = 'var(--primary)'; }
                 if (kpiOrdersLbl) kpiOrdersLbl.innerText = `Pedidos Activos (+${defCount} Backorder)`;
-                if (kpiCostVal) { kpiCostVal.innerText = `-$${totalCostSaved.toLocaleString()} MXN`; kpiCostVal.style.color = '#10b981'; }
+                if (kpiCostVal) { kpiCostVal.innerText = `+$${totalCostSaved.toLocaleString()} MXN`; kpiCostVal.style.color = '#10b981'; }
                 if (kpiCostLbl) kpiCostLbl.innerText = 'Ahorro Neto en Flete';
                 if (kpiKmVal) { kpiKmVal.innerText = `-${totalKmSaved} km`; kpiKmVal.style.color = '#10b981'; }
                 if (kpiKmLbl) kpiKmLbl.innerText = 'Kilómetros Recortados';
                 if (kpiTimeVal) { kpiTimeVal.innerText = `-${totalHoursSaved} hrs`; kpiTimeVal.style.color = '#f59e0b'; }
                 if (kpiTimeLbl) kpiTimeLbl.innerText = 'Tiempo de Chofer Ahorrado';
             } else if (selectedReoptStrategy === 'strategy2') {
+                const strat2Savings = Math.round(totalCostSaved * 0.45);
                 if (modalTitle) modalTitle.innerHTML = `🚀 Simulador & Re-Optimización de Red (${totalOrders} Pedidos - 100% Hoy)`;
                 if (kpiOrdersVal) { kpiOrdersVal.innerText = `${totalOrders} de ${totalOrders}`; kpiOrdersVal.style.color = '#10b981'; }
                 if (kpiOrdersLbl) kpiOrdersLbl.innerText = '100% Entregados Hoy (0 Backorder)';
-                if (kpiCostVal) { kpiCostVal.innerText = `+$${Math.round(totalCostSaved * 0.88).toLocaleString()} MXN`; kpiCostVal.style.color = '#10b981'; }
-                if (kpiCostLbl) kpiCostLbl.innerText = 'Ahorro Neto Global Red';
-                if (kpiKmVal) { kpiKmVal.innerText = `-${Math.round(totalKmSaved * 0.88)} km`; kpiKmVal.style.color = '#10b981'; }
+                if (kpiCostVal) { kpiCostVal.innerText = `+$${strat2Savings.toLocaleString()} MXN`; kpiCostVal.style.color = '#10b981'; }
+                if (kpiCostLbl) kpiCostLbl.innerText = 'Ahorro Neto en Flota Vecina';
+                if (kpiKmVal) { kpiKmVal.innerText = `-${Math.round(totalKmSaved * 0.45)} km`; kpiKmVal.style.color = '#10b981'; }
                 if (kpiKmLbl) kpiKmLbl.innerText = 'Desvío Optimizado en Flota';
-                if (kpiTimeVal) { kpiTimeVal.innerText = `-${(totalKmSaved * 0.88 / 65).toFixed(1)} hrs`; kpiTimeVal.style.color = '#10b981'; }
+                if (kpiTimeVal) { kpiTimeVal.innerText = `-${(totalKmSaved * 0.45 / 65).toFixed(1)} hrs`; kpiTimeVal.style.color = '#10b981'; }
                 if (kpiTimeLbl) kpiTimeLbl.innerText = 'Tiempo Chofer Optimizado';
             } else if (selectedReoptStrategy === 'strategy3') {
+                const expressVehicle = totalDefWeightKg <= 3500 ? 'Camioneta 3.5t' : (totalDefWeightKg <= 7000 ? 'Camioneta 7t' : 'Torton Dedicado');
+                const expressCost = totalDefWeightKg <= 3500 ? 3800 : (totalDefWeightKg <= 7000 ? 5200 : 8500);
+                const netSavingsExpress = Math.max(0, totalCostSaved - expressCost);
                 if (modalTitle) modalTitle.innerHTML = `🚀 Simulador & Re-Optimización de Red (${totalOrders} Pedidos - Unidad Express)`;
                 if (kpiOrdersVal) { kpiOrdersVal.innerText = `${totalOrders} de ${totalOrders}`; kpiOrdersVal.style.color = '#10b981'; }
-                if (kpiOrdersLbl) kpiOrdersLbl.innerText = '100% Entregados Hoy (+1 Express)';
-                if (kpiCostVal) { kpiCostVal.innerText = `+$${Math.max(1000, totalCostSaved - 4200).toLocaleString()} MXN`; kpiCostVal.style.color = '#10b981'; }
-                if (kpiCostLbl) kpiCostLbl.innerText = 'Ahorro Neto (-$4,200 Camioneta)';
+                if (kpiOrdersLbl) kpiOrdersLbl.innerText = `100% Hoy (${expressVehicle} Dedicada)`;
+                if (kpiCostVal) { kpiCostVal.innerText = `+$${netSavingsExpress.toLocaleString()} MXN`; kpiCostVal.style.color = '#10b981'; }
+                if (kpiCostLbl) kpiCostLbl.innerText = `Ahorro Neto (Deduciendo ${expressVehicle})`;
                 if (kpiKmVal) { kpiKmVal.innerText = `-${totalKmSaved} km`; kpiKmVal.style.color = '#10b981'; }
-                if (kpiKmLbl) kpiKmLbl.innerText = 'Troncal compacta + Directo';
-                if (kpiTimeVal) { kpiTimeVal.innerText = '11:30 AM'; kpiTimeVal.style.color = '#3b82f6'; }
-                if (kpiTimeLbl) kpiTimeLbl.innerText = 'Llegada Puntual Express';
+                if (kpiKmLbl) kpiKmLbl.innerText = 'Troncal Pesada Compactada';
+                if (kpiTimeVal) { kpiTimeVal.innerText = `-${totalHoursSaved} hrs`; kpiTimeVal.style.color = '#3b82f6'; }
+                if (kpiTimeLbl) kpiTimeLbl.innerText = 'Tiempo Ahorrado Chofer Pesado';
             }
 
             // 3. Update comparison table rows
@@ -5464,8 +5485,8 @@ body.theme-dark .route-util-track {
             const activeCount = Math.max(0, totalOrders - defCount);
             const totalDefWeightKg = deferredOrders.reduce((sum, d) => sum + (d.job?.demand || 0), 0);
             const totalDefWeightT = (totalDefWeightKg / 1000).toFixed(2);
-            const totalKmSaved = deferredOrders.reduce((sum, d) => sum + (d.kmSaved || 250), 0) || 450;
-            const totalCostSaved = deferredOrders.reduce((sum, d) => sum + (d.costSaved || 4500), 0) || 8100;
+            const totalKmSaved = defCount > 0 ? deferredOrders.reduce((sum, d) => sum + (d.kmSaved || 250), 0) : 0;
+            const totalCostSaved = defCount > 0 ? deferredOrders.reduce((sum, d) => sum + (d.costSaved || 4500), 0) : 0;
             const totalHoursSaved = (totalKmSaved / 65).toFixed(1);
 
             const defRoutesList = [...new Set(deferredOrders.map(d => d.routeOrigin || 'Ruta'))].join(', ') || 'Rutas Auditadas';
@@ -5473,6 +5494,11 @@ body.theme-dark .route-util-track {
                 const ex = d.job?.excel_info || {};
                 return `${d.orderId} (${ex.poblacion || 'Destino'}, ${( (d.job?.demand || 0)/1000 ).toFixed(2)}t)`;
             }).join(', ') || 'Paradas Atípicas';
+
+            const expressVehicle = totalDefWeightKg <= 3500 ? 'Camioneta 3.5t' : (totalDefWeightKg <= 7000 ? 'Camioneta 7t' : 'Torton Dedicado');
+            const expressCost = totalDefWeightKg <= 3500 ? 3800 : (totalDefWeightKg <= 7000 ? 5200 : 8500);
+            const netSavingsExpress = Math.max(0, totalCostSaved - expressCost);
+            const strat2Savings = Math.round(totalCostSaved * 0.45);
 
             // Generate audit bullets dynamically from real routes
             let auditBullets = '';
@@ -5509,7 +5535,7 @@ body.theme-dark .route-util-track {
                         <span class="reopt-kpi-lbl" id="reopt-kpi-orders-lbl">Pedidos Activos (+${defCount} Backorder)</span>
                     </div>
                     <div class="reopt-kpi-box">
-                        <span class="reopt-kpi-val" id="reopt-kpi-cost-val" style="color:#10b981;">-$${totalCostSaved.toLocaleString()} MXN</span>
+                        <span class="reopt-kpi-val" id="reopt-kpi-cost-val" style="color:#10b981;">+$${totalCostSaved.toLocaleString()} MXN</span>
                         <span class="reopt-kpi-lbl" id="reopt-kpi-cost-lbl">Ahorro Neto en Flete</span>
                     </div>
                     <div class="reopt-kpi-box">
@@ -5556,9 +5582,9 @@ body.theme-dark .route-util-track {
                                 Se excluyen los ${defCount} pedidos diferidos (${totalDefWeightT}t) y se retienen para el siguiente viaje consolidado en flete natural sin desvío. Las rutas ${defRoutesList} quedan compactadas.
                             </div>
                             <div class="strategy-kpi-chips">
-                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Ahorro Neto: -$${totalCostSaved.toLocaleString()} MXN</span>
-                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Recorte: -${totalKmSaved} km</span>
-                                <span class="strategy-chip">Activos: ${activeCount} pedidos hoy</span>
+                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Ahorro Neto en Flete: +$${totalCostSaved.toLocaleString()} MXN</span>
+                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Recorte de Ruta: -${totalKmSaved} km</span>
+                                <span class="strategy-chip">Activos: ${activeCount} pedidos hoy (${defCount} en backorder)</span>
                             </div>
                         </div>
 
@@ -5574,8 +5600,8 @@ body.theme-dark .route-util-track {
                                 Se reubican los ${defCount} pedidos en unidades de la flota que cuentan con capacidad libre (&lt;18t/31t) en la misma dirección de tránsito. Se entregan los ${totalOrders} pedidos hoy sin diferir ninguno.
                             </div>
                             <div class="strategy-kpi-chips">
-                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Ahorro Neto Global: +$${Math.round(totalCostSaved * 0.88).toLocaleString()} MXN</span>
-                                <span class="strategy-chip">Entrega: ${totalOrders} de ${totalOrders} hoy</span>
+                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Ahorro Neto Global: +$${strat2Savings.toLocaleString()} MXN</span>
+                                <span class="strategy-chip">Entrega: ${totalOrders} de ${totalOrders} hoy (100%)</span>
                                 <span class="strategy-chip">Capacidad segura &lt; 18t</span>
                             </div>
                         </div>
@@ -5584,16 +5610,16 @@ body.theme-dark .route-util-track {
                         <div class="strategy-card ${selectedReoptStrategy === 'strategy3' ? 'selected' : ''}" id="card-strategy3" onclick="selectReoptStrategy('strategy3')">
                             <div class="strategy-header">
                                 <div class="strategy-title">
-                                    <span>⚡ Estrategia 3: Despacho Directo Express (Camioneta 3.5t)</span>
+                                    <span>⚡ Estrategia 3: Despacho Directo Express (${expressVehicle})</span>
                                 </div>
-                                <span style="font-size:10px; font-weight:700; color:var(--text-muted);">UNIDAD LIGERA</span>
+                                <span style="font-size:10px; font-weight:700; color:var(--text-muted);">UNIDAD DEDICADA</span>
                             </div>
                             <div class="strategy-desc">
-                                Se genera una ruta dedicada con unidad ligera para los ${defCount} pedidos (${totalDefWeightT}t) saliendo para entrega puntual el mismo día sin retrasar ni desviar los camiones pesados.
+                                Se genera una ruta dedicada con ${expressVehicle} para los ${defCount} pedidos (${totalDefWeightT}t) saliendo para entrega puntual el mismo día sin retrasar ni desviar los camiones pesados.
                             </div>
                             <div class="strategy-kpi-chips">
-                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Ahorro Neto: +$${Math.max(1000, totalCostSaved - 4200).toLocaleString()} MXN</span>
-                                <span class="strategy-chip">Costo Unidad Express: $4,200 MXN</span>
+                                <span class="strategy-chip" style="color:#10b981; border-color:#a7f3d0; background:#ecfdf5;">Ahorro Neto: +$${netSavingsExpress.toLocaleString()} MXN</span>
+                                <span class="strategy-chip">Costo ${expressVehicle}: $${expressCost.toLocaleString()} MXN</span>
                                 <span class="strategy-chip">Entrega prioritaria el mismo día</span>
                             </div>
                         </div>
@@ -5721,7 +5747,7 @@ body.theme-dark .route-util-track {
                 const activeCount = Math.max(0, totalOrders - defCount);
                 isReoptimizedActive = true;
                 const routesMsg = originRoutes.length > 0 ? originRoutes.join(' y ') + ' optimizados' : 'Rutas optimizadas';
-                showReoptBanner(`🟢 RED RE-OPTIMIZADA: ${activeCount} Pedidos Activos • ${defCount} en Backorder (${(totalDefWeightKg/1000).toFixed(2)}t) • Ahorro Neto: -$${totalCostSaved.toLocaleString()} MXN (-${totalKmSaved} km) • ${routesMsg}.`);
+                showReoptBanner(`🟢 RED RE-OPTIMIZADA: ${activeCount} Pedidos Activos • ${defCount} en Backorder (${(totalDefWeightKg/1000).toFixed(2)}t) • Ahorro Neto: +$${totalCostSaved.toLocaleString()} MXN (-${totalKmSaved} km) • ${routesMsg}.`);
                 showToast(`🚀 Red Re-optimizada (Estrategia 1: Backorder). ${activeCount} pedidos activos hoy.`);
 
             } else if (selectedReoptStrategy === 'strategy2') {
@@ -5907,6 +5933,22 @@ body.theme-dark .route-util-track {
             // Si la unidad ya fue intervenida o tiene pedidos diferidos, no volver a marcarla
             if (typeof deferredOrders !== 'undefined' && deferredOrders.some(d => d.routeOrigin === route.emb_id)) return null;
 
+            const maxCap = getVehicleMaxCapacity(route.type);
+            const routeUtil = (route.load || 0) / maxCap;
+            const stopLoad = stop.load || (stop.jobs ? stop.jobs.reduce((sum, j) => sum + (j.demand || 0), 0) : 0);
+
+            // REGLA 1: Una unidad con alta ocupación (FTL >= 70%) y solo 2 paradas principales (>= 3,000 kg)
+            // es una ruta consolidada directa multi-parada estándar de carretera, NO una parada atípica a diferir.
+            if (route.stops.length === 2 && routeUtil >= 0.70 && stopLoad >= 3000) {
+                return null;
+            }
+
+            // REGLA 2: Una entrega de gran volumen (>= 3,500 kg o >= 25% de la carga del camión)
+            // es un destino primario que justifica plenamente el flete, nunca un desvío secundario a diferir.
+            if (stopLoad >= 3500 || (route.load > 0 && (stopLoad / route.load) >= 0.25)) {
+                return null;
+            }
+
             // Distance between coordinates (Haversine km)
             function getDist(lat1, lon1, lat2, lon2) {
                 const R = 6371;
@@ -5927,17 +5969,20 @@ body.theme-dark .route-util-track {
                 if (d < minDistToNeighbors) minDistToNeighbors = d;
             });
 
-            // Umbral de validación para aviso al despachador (>= 125 km para detectar desvíos aislados de corredor)
-            if (minDistToNeighbors >= 125) {
+            // Umbral de validación para aviso al despachador:
+            // Desvío >= 130 km Y carga liviana (< 3,500 kg) donde el costo marginal por kg sea desproporcionado
+            if (minDistToNeighbors >= 130 && stopLoad < 3500) {
                 const kmDesvio = Math.round(minDistToNeighbors * 1.25); // Road winding factor
                 const costoMarginal = Math.round(kmDesvio * 18); // $18 MXN/km for Torton
-                const costoPorKg = (costoMarginal / (stop.load || 1500)).toFixed(2);
-                return {
-                    isOutlier: true,
-                    kmDesvio: kmDesvio,
-                    costoMarginal: costoMarginal,
-                    costoPorKg: costoPorKg
-                };
+                const costoPorKg = (costoMarginal / (stopLoad || 1000)).toFixed(2);
+                if (parseFloat(costoPorKg) >= 1.0) {
+                    return {
+                        isOutlier: true,
+                        kmDesvio: kmDesvio,
+                        costoMarginal: costoMarginal,
+                        costoPorKg: costoPorKg
+                    };
+                }
             }
             return null;
         }
@@ -6049,7 +6094,7 @@ body.theme-dark .route-util-track {
             if (impactSummary) {
                 impactSummary.style.display = 'grid';
                 document.getElementById('defer-km-saved').innerText = `-${outlier.kmDesvio} km`;
-                document.getElementById('defer-cost-saved').innerText = `-$${outlier.costoMarginal.toLocaleString()} MXN`;
+                document.getElementById('defer-cost-saved').innerText = `+$${outlier.costoMarginal.toLocaleString()} MXN`;
                 document.getElementById('defer-hours-saved').innerText = `-${(outlier.kmDesvio/65).toFixed(1)} hrs`;
             }
 
