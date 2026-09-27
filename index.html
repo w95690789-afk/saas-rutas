@@ -3964,8 +3964,8 @@ body.theme-dark .route-util-track {
                         </div>
                         <div class="stat-box">
                             <div class="stat-box-title">CUMPLIMIENTO DE CITAS SAP</div>
-                            <div class="stat-box-val" id="cockpit-sla" style="color:#ec4899;">--</div>
-                            <div class="stat-box-sub">--</div>
+                            <div class="stat-box-val" id="cockpit-sla" style="color:#10b981;">--</div>
+                            <div class="stat-box-sub" id="cockpit-sla-sub">--</div>
                         </div>
                     </div>
 
@@ -7487,6 +7487,7 @@ body.theme-dark .route-util-track {
                 const fleetDescElem = document.getElementById('cockpit-fleet-desc');
                 const activePlanBadge = document.getElementById('active-plan-badge');
                 const slaEl = document.getElementById('cockpit-sla');
+                const slaSubEl = document.getElementById('cockpit-sla-sub');
                 const savingsEl = document.getElementById('cockpit-savings');
 
                 if (weightEl) weightEl.innerText = '0.00 t';
@@ -7494,6 +7495,7 @@ body.theme-dark .route-util-track {
                 if (costEl) costEl.innerText = '$0 MXN';
                 if (fleetDescElem) fleetDescElem.innerText = 'Sin flota asignada';
                 if (slaEl) slaEl.innerText = '--';
+                if (slaSubEl) slaSubEl.innerText = '--';
                 if (savingsEl) savingsEl.innerText = 'En espera de archivo Excel de pedidos';
                 if (activePlanBadge) {
                     activePlanBadge.innerText = 'SIN PLAN ACTIVO';
@@ -7528,6 +7530,51 @@ body.theme-dark .route-util-track {
 
             const costElem = document.getElementById('cockpit-cost');
             if (costElem) costElem.innerText = `$${Math.round(plan.total_cost).toLocaleString()} MXN`;
+
+            const savingsElem = document.getElementById('cockpit-savings');
+            if (savingsElem) {
+                const totalTons = (plan.total_weight || 0) / 1000;
+                const costPerTon = totalTons > 0 ? Math.round((plan.total_cost || 0) / totalTons) : 0;
+                savingsElem.innerText = `Costo promedio: $${costPerTon.toLocaleString()} MXN / ton`;
+            }
+
+            // Cumplimiento de Citas SAP & SLA
+            let totalCitas = 0;
+            let onTimeCitas = 0;
+            let totalStops = 0;
+            let onTimeStops = 0;
+
+            (plan.routes || []).forEach(r => {
+                (r.stops || []).forEach(s => {
+                    totalStops++;
+                    const hasCita = s.windowStatus === 'CITA_PUNTUAL' || (s.cita && String(s.cita).trim() !== '');
+                    if (hasCita) {
+                        totalCitas++;
+                        if (s.windowStatus === 'CITA_PUNTUAL' || s.windowStatus === 'OK_HABIL') {
+                            onTimeCitas++;
+                        }
+                    }
+                    if (s.windowStatus === 'CITA_PUNTUAL' || s.windowStatus === 'OK_HABIL' || s.windowStatus === 'ESPERA_APERTURA') {
+                        onTimeStops++;
+                    }
+                });
+            });
+
+            const slaValElem = document.getElementById('cockpit-sla');
+            const slaSubElem = document.getElementById('cockpit-sla-sub');
+            if (slaValElem) {
+                if (totalCitas > 0) {
+                    const pct = Math.round((onTimeCitas / totalCitas) * 100);
+                    slaValElem.innerText = `${pct}%`;
+                    slaValElem.style.color = pct >= 95 ? '#10b981' : (pct >= 85 ? '#f59e0b' : '#ef4444');
+                    if (slaSubElem) slaSubElem.innerText = `🎯 ${onTimeCitas}/${totalCitas} citas en horario pactado`;
+                } else {
+                    const pct = totalStops > 0 ? Math.round((onTimeStops / totalStops) * 100) : 100;
+                    slaValElem.innerText = `${pct}%`;
+                    slaValElem.style.color = '#10b981';
+                    if (slaSubElem) slaSubElem.innerText = `🟢 100% entregas en ventana comercial hábil`;
+                }
+            }
 
             const activePlanBadge = document.getElementById('active-plan-badge');
             if (activePlanBadge) {
