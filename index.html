@@ -9240,54 +9240,177 @@ function handleExcelUpload(files) {
                 if (!jobsList || jobsList.length === 0) return [];
                 const totalW = jobsList.reduce((a, b) => a + b.demand, 0);
 
-                if (totalW <= maxTortonCap && planType === 1) {
-                    let vT = 'Torton';
-                    if (totalW <= 4000) vT = 'Camioneta 4t';
-                    else if (totalW <= 7000) vT = 'Camioneta 7t';
-                    return [buildShipment(jobsList, cKey, vT, `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
-                }
+                if (planType === 1) {
+                    // PLAN 1: Máxima Consolidación (FTL Pesado NOM-012)
+                    // Minimiza fletes consolidando al máximo legal (hasta 31,800 kg en Tracto y 18,000 kg en Torton)
+                    if (totalW <= maxTortonCap) {
+                        let vT = 'Torton';
+                        if (totalW <= 4000) vT = 'Camioneta 4t';
+                        else if (totalW <= 7000) vT = 'Camioneta 7t';
+                        return [buildShipment(jobsList, cKey, vT, `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
+                    }
 
-                if (totalW <= maxTruckCap && planType === 1) {
-                    return [buildShipment(jobsList, cKey, 'Tracto', `Consolidado FTL (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
-                }
+                    if (totalW <= maxTruckCap) {
+                        return [buildShipment(jobsList, cKey, 'Tracto', `Consolidado FTL (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
+                    }
 
-                // BFD Capacitated Bin Packing
-                const sorted = [...jobsList].sort((a, b) => b.demand - a.demand);
-                const vehicles = [];
-
-                sorted.forEach(j => {
-                    let bestV = null;
-                    let bestRemaining = Infinity;
-                    for (const v of vehicles) {
-                        if (v.load + j.demand <= v.cap) {
-                            const rem = v.cap - (v.load + j.demand);
-                            if (rem < bestRemaining) {
-                                bestRemaining = rem;
-                                bestV = v;
+                    // BFD buscando llenar Tractos al límite de 31,800 kg
+                    const sorted = [...jobsList].sort((a, b) => b.demand - a.demand);
+                    const vehicles = [];
+                    sorted.forEach(j => {
+                        let bestV = null;
+                        let bestRemaining = Infinity;
+                        for (const v of vehicles) {
+                            if (v.load + j.demand <= v.cap) {
+                                const rem = v.cap - (v.load + j.demand);
+                                if (rem < bestRemaining) {
+                                    bestRemaining = rem;
+                                    bestV = v;
+                                }
                             }
                         }
+                        if (bestV) {
+                            bestV.jobs.push(j);
+                            bestV.load += j.demand;
+                        } else {
+                            vehicles.push({
+                                type: 'Tracto',
+                                cap: maxTruckCap,
+                                load: j.demand,
+                                jobs: [j]
+                            });
+                        }
+                    });
+
+                    return vehicles.map((v, idx) => {
+                        let realType = v.type;
+                        if (v.load <= 4000) realType = 'Camioneta 4t';
+                        else if (v.load <= 7000) realType = 'Camioneta 7t';
+                        else if (v.load <= maxTortonCap) realType = 'Torton';
+                        return buildShipment(v.jobs, cKey, realType, realType === 'Tracto' ? `FTL Directo (${CORRIDOR_CONFIG[cKey].name})` : `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx + idx);
+                    });
+
+                } else if (planType === 2) {
+                    // PLAN 2: Flota Balanceada (Mix Tráiler, Torton y Camionetas / Control de Fatiga y Jornadas)
+                    // Caballo de batalla regional: Torton (18t). Control operativo: máx 4 paradas por unidad para evitar jornadas excesivas
+                    const maxStops = 4;
+                    if (totalW <= 4000 && jobsList.length <= maxStops) {
+                        return [buildShipment(jobsList, cKey, 'Camioneta 4t', `Consolidado Express (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
+                    }
+                    if (totalW <= 7000 && jobsList.length <= maxStops) {
+                        return [buildShipment(jobsList, cKey, 'Camioneta 7t', `Consolidado Express (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
+                    }
+                    if (totalW <= maxTortonCap && jobsList.length <= maxStops) {
+                        return [buildShipment(jobsList, cKey, 'Torton', `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx)];
                     }
 
-                    if (bestV) {
-                        bestV.jobs.push(j);
-                        bestV.load += j.demand;
-                    } else {
-                        const targetCap = (planType === 3 || (planType === 2 && j.demand <= 18000)) ? maxTortonCap : maxTruckCap;
-                        vehicles.push({
-                            type: targetCap === maxTruckCap ? 'Tracto' : 'Torton',
-                            cap: targetCap,
-                            load: j.demand,
-                            jobs: [j]
-                        });
-                    }
-                });
+                    const sorted = [...jobsList].sort((a, b) => b.demand - a.demand);
+                    const vehicles = [];
 
-                return vehicles.map((v, idx) => {
-                    let realType = v.type;
-                    if (v.load <= 7000) realType = 'Camioneta 7t';
-                    else if (v.load <= maxTortonCap) realType = 'Torton';
-                    return buildShipment(v.jobs, cKey, realType, realType === 'Tracto' ? `FTL Directo (${CORRIDOR_CONFIG[cKey].name})` : `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx + idx);
-                });
+                    sorted.forEach(j => {
+                        let bestV = null;
+                        let bestRemaining = Infinity;
+                        for (const v of vehicles) {
+                            if (v.jobs.length < maxStops && (v.load + j.demand <= v.cap)) {
+                                const rem = v.cap - (v.load + j.demand);
+                                if (rem < bestRemaining) {
+                                    bestRemaining = rem;
+                                    bestV = v;
+                                }
+                            }
+                        }
+                        if (bestV) {
+                            bestV.jobs.push(j);
+                            bestV.load += j.demand;
+                        } else {
+                            const targetCap = j.demand <= maxTortonCap ? maxTortonCap : maxTruckCap;
+                            vehicles.push({
+                                type: targetCap === maxTruckCap ? 'Tracto' : 'Torton',
+                                cap: targetCap,
+                                load: j.demand,
+                                jobs: [j]
+                            });
+                        }
+                    });
+
+                    return vehicles.map((v, idx) => {
+                        let realType = v.type;
+                        if (v.load <= 4000) realType = 'Camioneta 4t';
+                        else if (v.load <= 7000) realType = 'Camioneta 7t';
+                        else if (v.load <= maxTortonCap) realType = 'Torton';
+                        else realType = 'Tracto';
+                        return buildShipment(v.jobs, cKey, realType, realType === 'Tracto' ? `FTL Directo (${CORRIDOR_CONFIG[cKey].name})` : `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx + idx);
+                    });
+
+                } else {
+                    // PLAN 3: Nivel de Servicio & Citas (Rutas Capilares y Citas Tempranas 07:00 AM - 10:00 AM)
+                    // Reparto capilar ágil en Camionetas (4t y 7t) con máx 3 paradas para garantizar llegada puntual a citas tempranas
+                    const maxStops = 3;
+                    const sorted = [...jobsList].sort((a, b) => b.demand - a.demand);
+                    const vehicles = [];
+
+                    sorted.forEach(j => {
+                        let bestV = null;
+                        let bestRemaining = Infinity;
+
+                        for (const v of vehicles) {
+                            if (v.jobs.length < maxStops) {
+                                if (v.load + j.demand <= v.cap) {
+                                    const rem = v.cap - (v.load + j.demand);
+                                    if (rem < bestRemaining) {
+                                        bestRemaining = rem;
+                                        bestV = v;
+                                    }
+                                } else if (v.cap === 4000 && (v.load + j.demand <= 7000)) {
+                                    const rem = 7000 - (v.load + j.demand);
+                                    if (rem < bestRemaining) {
+                                        bestRemaining = rem;
+                                        bestV = v;
+                                        bestV.cap = 7000;
+                                        bestV.type = 'Camioneta 7t';
+                                    }
+                                }
+                            }
+                        }
+
+                        if (bestV) {
+                            bestV.jobs.push(j);
+                            bestV.load += j.demand;
+                        } else {
+                            let initCap = 7000;
+                            let initType = 'Camioneta 7t';
+                            if (j.demand <= 4000) {
+                                initCap = 4000;
+                                initType = 'Camioneta 4t';
+                            } else if (j.demand <= 7000) {
+                                initCap = 7000;
+                                initType = 'Camioneta 7t';
+                            } else if (j.demand <= maxTortonCap) {
+                                initCap = maxTortonCap;
+                                initType = 'Torton';
+                            } else {
+                                initCap = maxTruckCap;
+                                initType = 'Tracto';
+                            }
+
+                            vehicles.push({
+                                type: initType,
+                                cap: initCap,
+                                load: j.demand,
+                                jobs: [j]
+                            });
+                        }
+                    });
+
+                    return vehicles.map((v, idx) => {
+                        let realType = v.type;
+                        if (v.load <= 4000) realType = 'Camioneta 4t';
+                        else if (v.load <= 7000) realType = 'Camioneta 7t';
+                        else if (v.load <= maxTortonCap) realType = 'Torton';
+                        else realType = 'Tracto';
+                        return buildShipment(v.jobs, cKey, realType, realType.includes('Camioneta') ? `Reparto Capilar Express (${CORRIDOR_CONFIG[cKey].name})` : `Consolidado Regional (${CORRIDOR_CONFIG[cKey].name})`, startIdx + idx);
+                    });
+                }
             }
 
             function generatePlan(planType) {
@@ -9307,8 +9430,8 @@ function handleExcelUpload(files) {
                     if (!jobsInCorr || jobsInCorr.length === 0) return;
                     const totalW = jobsInCorr.reduce((a, b) => a + b.demand, 0);
 
-                    // Special handling for Veracruz Sur: 2 Tortons when ~36-38t
-                    if (cKey === 'VERACRUZ_SUR_COATZA' && totalW >= 25000 && totalW <= 40000) {
+                    // Special handling for Veracruz Sur: 2 Tortons when ~36-38t (Plan 1 y 2)
+                    if (cKey === 'VERACRUZ_SUR_COATZA' && totalW >= 25000 && totalW <= 40000 && planType !== 3) {
                         const sorted = [...jobsInCorr].sort((a, b) => b.demand - a.demand);
                         const t1 = [], t2 = [];
                         let w1 = 0, w2 = 0;
