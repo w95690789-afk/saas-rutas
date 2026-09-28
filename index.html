@@ -3982,6 +3982,9 @@ body.theme-dark .route-util-track {
                         </div>
                     </div>
 
+                    <!-- COPILOTO HORIZONTAL ADVISORY CONTAINER -->
+                    <div id="cockpit-copilot-container" style="width:100%; margin-bottom:16px;"></div>
+
                     <!-- EMBARQUE TABLE / CARDS -->
                     <div class="embarque-table-container" id="cockpit-rows">
                         <!-- Populated dynamically by renderCockpitView() -->
@@ -7513,14 +7516,14 @@ body.theme-dark .route-util-track {
         }
 
         // ==========================================
-        // DISPATCH ADVISORY CO-PILOT FOR ISABEL
+        // DISPATCH ADVISORY CO-PILOT FOR USER
         // ==========================================
         function renderDispatchCopilotAdvisory(plan, currentPlanId) {
             if (!plan || !plan.routes || plan.routes.length === 0) return null;
 
             const card = document.createElement('div');
             card.id = 'dispatch-copilot-card';
-            card.style.cssText = 'background:var(--bg-card); border:1.5px solid rgba(16,185,129,0.35); border-radius:12px; padding:18px 20px; margin-bottom:18px; box-shadow:0 4px 18px rgba(16,185,129,0.08);';
+            card.style.cssText = 'background:var(--bg-card); border:1.5px solid rgba(16,185,129,0.35); border-radius:14px; padding:16px 20px; margin-bottom:16px; box-shadow:0 4px 18px rgba(16,185,129,0.06); width:100%; box-sizing:border-box;';
 
             const p1 = plans && plans.plan1 ? plans.plan1 : null;
             const p2 = plans && plans.plan2 ? plans.plan2 : null;
@@ -7542,11 +7545,11 @@ body.theme-dark .route-util-track {
             if (longRoutes.length > 0) {
                 const sampleRoute = longRoutes[0];
                 longRoutesAlert = `
-                    <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:10px 12px; margin-top:10px; font-size:12px; color:var(--text-main); display:flex; align-items:flex-start; gap:8px;">
-                        <span style="font-size:15px; flex-shrink:0;">⚠️</span>
-                        <div>
-                            <strong>Ojo de Patio en ${sampleRoute.emb_id} (${sampleRoute.type}):</strong> Lleva ${sampleRoute.stops.length} paradas en corredor foráneo (${sampleRoute.corridor}).
-                            <span style="color:var(--text-muted);"> Si la descarga en paradas intermedias se demora, la última parada arribará vespertina. Sugerimos validar tiempos de recibo o descargar con apoyo capilar.</span>
+                    <div style="background:rgba(245,158,11,0.08); border:1px solid rgba(245,158,11,0.25); border-radius:8px; padding:8px 10px; margin-top:8px; font-size:11px; color:var(--text-main); display:flex; align-items:flex-start; gap:6px;">
+                        <span style="font-size:14px; flex-shrink:0;">⚠️</span>
+                        <div style="line-height:1.4;">
+                            <strong>Ojo en ${sampleRoute.emb_id} (${sampleRoute.type}):</strong> ${sampleRoute.stops.length} paradas en ${sampleRoute.corridor}.
+                            <span style="color:var(--text-muted);"> Validar tiempos de recibo o descarga anticipada.</span>
                         </div>
                     </div>
                 `;
@@ -7555,15 +7558,16 @@ body.theme-dark .route-util-track {
             const isPlan2Active = (currentPlanId === 'plan2');
 
             card.innerHTML = `
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px;">
-                    <div style="display:flex; align-items:center; gap:8px;">
+                <!-- TOP HEADER & ACTIONS BAR -->
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px; flex-wrap:wrap; gap:10px; border-bottom:1px solid var(--border-color); padding-bottom:10px;">
+                    <div style="display:flex; align-items:center; gap:10px;">
                         <div style="width:28px; height:28px; border-radius:8px; background:rgba(16,185,129,0.15); display:flex; align-items:center; justify-content:center; font-size:16px;">💡</div>
-                        <div>
-                            <span style="font-size:14px; font-weight:800; color:var(--text-main); letter-spacing:0.2px;">DICTAMEN Y ASESORÍA DE DESPACHO PARA ISABEL</span>
-                            <span style="font-size:11px; color:var(--text-muted); margin-left:8px;">Copiloto Operativo de Transporte</span>
+                        <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+                            <span style="font-size:13.5px; font-weight:800; color:var(--text-main); letter-spacing:0.2px;">DICTAMEN Y ASESORÍA DE DESPACHO PARA EL USUARIO</span>
+                            <span style="font-size:11px; color:var(--text-muted); background:var(--bg-card-inner); padding:2px 8px; border-radius:4px; border:1px solid var(--border-color); font-weight:600;">Copiloto Operativo de Transporte</span>
                         </div>
                     </div>
-                    <div>
+                    <div style="display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                         ${isPlan2Active 
                             ? `<span style="background:rgba(16,185,129,0.15); color:#10b981; border:1.5px solid rgba(16,185,129,0.4); padding:4px 10px; border-radius:6px; font-size:11.5px; font-weight:800; display:inline-flex; align-items:center; gap:5px;">
                                 <span>⭐</span><span>PLAN 2 ACTIVO (RECOMENDADO)</span>
@@ -7572,57 +7576,65 @@ body.theme-dark .route-util-track {
                                 <span>ℹ️</span><span>EXPLORANDO ${currentPlanId.toUpperCase()}</span>
                                </span>`
                         }
+                        ${!isPlan2Active 
+                            ? `<button onclick="changePlan('plan2')" style="background:#10b981; color:#ffffff; border:none; padding:6px 14px; border-radius:6px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 6px rgba(16,185,129,0.35);">
+                                <span>⭐ Activar Plan 2</span>
+                               </button>`
+                            : ''
+                        }
+                        <button onclick="switchViewMode('control')" style="background:var(--bg-card); color:var(--text-main); border:1.5px solid var(--border-color); padding:6px 12px; border-radius:6px; font-size:11.5px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:5px;">
+                            <span>🗺️ Ver Mapa</span>
+                        </button>
+                        <button onclick="exportToExcel()" style="background:var(--primary); color:#ffffff; border:none; padding:6px 14px; border-radius:6px; font-size:11.5px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:5px; box-shadow:0 2px 6px rgba(37,99,235,0.35);">
+                            <span>📊 Exportar Excel</span>
+                        </button>
                     </div>
                 </div>
 
-                <div style="font-size:13px; line-height:1.55; color:var(--text-main); margin-bottom:14px; background:var(--bg-card-inner); padding:12px 14px; border-radius:8px; border:1px solid var(--border-color);">
-                    ${isPlan2Active 
-                        ? `<strong>Hola Isabel:</strong> Analizamos los <strong>${totalOrders} pedidos</strong>. Tu mejor decisión logística para este despacho es confirmar este <strong>PLAN 2 (Flota Balanceada)</strong>: colocas <strong>${p2Trips} fletes</strong> por un costo de <strong>$${p2Cost.toLocaleString()} MXN</strong>, protegiendo tus citas clave de 7:00 AM y asegurando que ninguna unidad sufra atorones físicos en centros urbanos.`
-                        : (currentPlanId === 'plan1' 
-                            ? `<strong>Hola Isabel:</strong> Actualmente estás revisando el <strong>PLAN 1 (Máxima Consolidación)</strong>. Aunque logra el menor flete en papel ($${p1Cost.toLocaleString()} MXN), mete Tráilers a zonas céntricas y clientes urbanos con riesgo de maniobras imposibles y multas. <strong>Te recomendamos operar con el Plan 2</strong> para evitar retrasos de descarga.`
-                            : `<strong>Hola Isabel:</strong> Actualmente estás revisando el <strong>PLAN 3 (Nivel de Servicio)</strong>. Garantiza citas muy temprano pero atomiza la carga en ${p3 ? p3.routes.length : 37} fletes y cuesta $${diffVsP3.toLocaleString()} MXN adicionales, saturando las cortinas de carga de Fortín. <strong>Te recomendamos el Plan 2</strong> como tu balance ideal.`
-                        )
-                    }
-                </div>
+                <!-- HORIZONTAL 3-COLUMN CONTENT -->
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(290px, 1fr)); gap:12px;">
+                    <!-- COL 1: SALUDO & DICTAMEN DIRECTO -->
+                    <div style="background:var(--bg-card-inner); border:1px solid var(--border-color); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div style="font-size:12.5px; line-height:1.5; color:var(--text-main);">
+                            ${isPlan2Active 
+                                ? `<strong>Hola Usuario:</strong> Analizamos los <strong>${totalOrders} pedidos</strong>. Tu mejor decisión logística para este despacho es confirmar este <strong>PLAN 2 (Flota Balanceada)</strong>: colocas <strong>${p2Trips} fletes</strong> por un costo de <strong>$${p2Cost.toLocaleString()} MXN</strong>, protegiendo tus citas clave de 7:00 AM y asegurando que ninguna unidad sufra atorones físicos en centros urbanos.`
+                                : (currentPlanId === 'plan1' 
+                                    ? `<strong>Hola Usuario:</strong> Actualmente estás revisando el <strong>PLAN 1 (Máxima Consolidación)</strong>. Aunque logra el menor flete en papel ($${p1Cost.toLocaleString()} MXN), mete Tráilers a zonas céntricas con riesgo de maniobras imposibles y multas. <strong>Te recomendamos operar con el Plan 2</strong>.`
+                                    : `<strong>Hola Usuario:</strong> Actualmente estás revisando el <strong>PLAN 3 (Nivel de Servicio)</strong>. Garantiza citas muy temprano pero atomiza la carga en ${p3 ? p3.routes.length : 37} fletes y cuesta $${diffVsP3.toLocaleString()} MXN adicionales, saturando patio. <strong>Te recomendamos el Plan 2</strong>.`
+                                )
+                            }
+                        </div>
+                        <div style="margin-top:10px; display:flex; gap:6px; flex-wrap:wrap;">
+                            <span style="font-size:10.5px; font-weight:700; background:rgba(16,185,129,0.12); color:#10b981; padding:2px 7px; border-radius:4px; border:1px solid rgba(16,185,129,0.25);">NOM-012-SCT 100% OK</span>
+                            <span style="font-size:10.5px; font-weight:700; background:rgba(59,130,246,0.12); color:var(--primary); padding:2px 7px; border-radius:4px; border:1px solid rgba(59,130,246,0.25);">${p2Trips} Fletes en Plan 2</span>
+                        </div>
+                    </div>
 
-                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap:12px; margin-bottom:12px;">
-                    <div style="background:rgba(16,185,129,0.05); border:1px solid rgba(16,185,129,0.2); border-radius:8px; padding:12px;">
-                        <div style="font-size:12px; font-weight:800; color:#10b981; margin-bottom:6px; display:flex; align-items:center; gap:6px;">
+                    <!-- COL 2: POR QUÉ EL PLAN 2 ES TU MEJOR DECISIÓN -->
+                    <div style="background:rgba(16,185,129,0.04); border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:12px 14px;">
+                        <div style="font-size:11.5px; font-weight:800; color:#10b981; margin-bottom:6px; display:flex; align-items:center; gap:5px;">
                             <span>🎯</span><span>POR QUÉ EL PLAN 2 ES TU MEJOR DECISIÓN:</span>
                         </div>
-                        <ul style="margin:0; padding-left:16px; font-size:11.5px; line-height:1.5; color:var(--text-main);">
-                            <li><strong>Citas y CEDIS Protegidos:</strong> Walmart Villahermosa (28.7t) y Abarrotes Monterrey (29.8t) van en Tráilers FTL directos a las 7:00 AM con rampa asegurada.</li>
-                            <li><strong>Maniobra Urbana Segura:</strong> Destinos céntricos en Puebla, Cholula, Tehuacán y Cárdenas van en Tortons y Camionetas (cero riesgo de bloqueo de 53ft).</li>
-                            <li><strong>Ahorro Real:</strong> Te ahorras <strong>$${diffVsP3.toLocaleString()} MXN</strong> frente al Plan 3 sin saturar el patio de Fortín con 37 unidades.</li>
+                        <ul style="margin:0; padding-left:14px; font-size:11px; line-height:1.45; color:var(--text-main);">
+                            <li style="margin-bottom:3px;"><strong>Citas y CEDIS Protegidos:</strong> Walmart Villahermosa (28.7t) y Abarrotes Monterrey (29.8t) van en Tráilers FTL a las 7:00 AM con rampa asegurada.</li>
+                            <li style="margin-bottom:3px;"><strong>Maniobra Urbana Segura:</strong> Centros en Puebla, Cholula, Tehuacán y Cárdenas en Tortons y Camionetas (cero riesgo de bloqueo 53ft).</li>
+                            <li><strong>Ahorro Real:</strong> Ahorras <strong>$${diffVsP3.toLocaleString()} MXN</strong> frente al Plan 3 sin saturar patio de Fortín con 37 unidades.</li>
                         </ul>
                     </div>
 
-                    <div style="background:rgba(59,130,246,0.05); border:1px solid rgba(59,130,246,0.2); border-radius:8px; padding:12px;">
-                        <div style="font-size:12px; font-weight:800; color:var(--primary); margin-bottom:6px; display:flex; align-items:center; gap:6px;">
-                            <span>👁️</span><span>OJOS DE PATIO Y BLINDAJE GEOGRÁFICO:</span>
+                    <!-- COL 3: BLINDAJE GEOGRÁFICO Y OJO DE PATIO -->
+                    <div style="background:rgba(59,130,246,0.04); border:1px solid rgba(59,130,246,0.2); border-radius:10px; padding:12px 14px; display:flex; flex-direction:column; justify-content:space-between;">
+                        <div>
+                            <div style="font-size:11.5px; font-weight:800; color:var(--primary); margin-bottom:6px; display:flex; align-items:center; gap:5px;">
+                                <span>👁️</span><span>BLINDAJE GEOGRÁFICO & PATIO:</span>
+                            </div>
+                            <ul style="margin:0; padding-left:14px; font-size:11px; line-height:1.45; color:var(--text-main);">
+                                <li><strong>Georreferenciación 100% Validada:</strong> Destinos satélite exactos (Abarrotes Loo en Anacleto Canabal, Walmart en Hunucmá, Tixcacal) sin desvíos erróneos.</li>
+                                <li style="margin-top:3px;"><strong>Control de Carga:</strong> 100% de unidades dentro de norma de peso legal.</li>
+                            </ul>
                         </div>
-                        <ul style="margin:0; padding-left:16px; font-size:11.5px; line-height:1.5; color:var(--text-main);">
-                            <li><strong>Georreferenciación 100% Validada:</strong> Se corrigieron destinos satélite exactos (Abarrotes Loo en Anacleto Canabal, Walmart en Hunucmá, Tixcacal), ahorrando 70 km de desvíos erróneos.</li>
-                            <li><strong>Control de Carga:</strong> 100% de las unidades operan dentro de los límites de peso de la norma NOM-012-SCT.</li>
-                        </ul>
+                        ${longRoutesAlert}
                     </div>
-                </div>
-
-                ${longRoutesAlert}
-
-                <div style="display:flex; justify-content:flex-end; gap:10px; margin-top:14px; flex-wrap:wrap;">
-                    ${!isPlan2Active 
-                        ? `<button onclick="changePlan('plan2')" style="background:#10b981; color:#ffffff; border:none; padding:8px 18px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(16,185,129,0.35);">
-                            <span>⭐ Activar Plan 2 Recomendado</span>
-                           </button>`
-                        : ''
-                    }
-                    <button onclick="switchViewMode('control')" style="background:var(--bg-card); color:var(--text-main); border:1.5px solid var(--border-color); padding:8px 16px; border-radius:8px; font-size:12px; font-weight:700; cursor:pointer; display:inline-flex; align-items:center; gap:6px;">
-                        <span>🗺️ Inspeccionar Rutas en Mapa Central</span>
-                    </button>
-                    <button onclick="exportToExcel()" style="background:var(--primary); color:#ffffff; border:none; padding:8px 18px; border-radius:8px; font-size:12px; font-weight:800; cursor:pointer; display:inline-flex; align-items:center; gap:6px; box-shadow:0 2px 8px rgba(37,99,235,0.35);">
-                        <span>📊 Exportar Plan a Excel</span>
-                    </button>
                 </div>
             `;
             return card;
@@ -7641,6 +7653,8 @@ body.theme-dark .route-util-track {
             }
             const plan = plans[currentPlanId] || plans.plan1;
             const container = document.getElementById('cockpit-rows');
+            const copilotContainer = document.getElementById('cockpit-copilot-container');
+            if (copilotContainer) copilotContainer.innerHTML = '';
             if (!container) return;
             container.innerHTML = '';
 
@@ -7660,6 +7674,7 @@ body.theme-dark .route-util-track {
             });
 
             if (!plan || !plan.routes || plan.routes.length === 0) {
+                if (copilotContainer) copilotContainer.innerHTML = '';
                 const weightEl = document.getElementById('cockpit-weight');
                 const tripsEl = document.getElementById('cockpit-trips');
                 const costEl = document.getElementById('cockpit-cost');
@@ -7782,10 +7797,10 @@ body.theme-dark .route-util-track {
                 container.appendChild(manualBanner);
             }
 
-            // Render Dispatch Advisory Co-Pilot Card for Isabel
+            // Render Dispatch Advisory Co-Pilot Card for User (Horizontal Banner)
             const copilotCard = renderDispatchCopilotAdvisory(plan, currentPlanId);
-            if (copilotCard) {
-                container.appendChild(copilotCard);
+            if (copilotCard && copilotContainer) {
+                copilotContainer.appendChild(copilotCard);
             }
 
             plan.routes.forEach((r, rIdx) => {
