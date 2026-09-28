@@ -7455,13 +7455,24 @@ body.theme-dark .route-util-track {
 
             if (totalVisibleTrips === 0) {
                 listContainer.innerHTML = `
-                    <div style="text-align: center; padding: 40px 16px; color: var(--text-muted);">
-                        <div style="font-size: 32px; margin-bottom: 8px;">🚚</div>
-                        <div style="font-size: 13px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Sin Rutas Generadas</div>
-                        <div style="font-size: 11px; line-height: 1.4; margin-bottom: 12px;">Carga un archivo Excel de pedidos arriba o carga el caso real con 1 clic:</div>
-                        <button onclick="loadPreloadedDemoData()" style="background: var(--primary); color: white; border: none; padding: 7px 14px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.3);">
-                            ⚡ Cargar 76 Pedidos (Ejercicio 2)
-                        </button>
+                    <div style="text-align: center; padding: 24px 12px; color: var(--text-muted);">
+                        <div style="font-size: 28px; margin-bottom: 6px;">🚚</div>
+                        <div style="font-size: 12.5px; font-weight: 700; color: var(--text-main); margin-bottom: 4px;">Sin Rutas Generadas</div>
+                        <div style="font-size: 11px; line-height: 1.4; margin-bottom: 12px;">Carga un archivo Excel arriba o prueba los casos de reto de Isabel:</div>
+                        <div style="display:flex; flex-direction:column; gap:6px; margin-bottom:8px;">
+                            <button onclick="loadPreloadedDemoData()" style="background: var(--primary); color: white; border: none; padding: 7px 10px; border-radius: 6px; font-weight: 700; font-size: 11px; cursor: pointer; box-shadow: 0 2px 8px rgba(37,99,235,0.3);">
+                                🚀 Caso Real Isabel (76 Pedidos)
+                            </button>
+                            <button onclick="loadRetoDemo(1)" style="background: rgba(59,130,246,0.15); color: var(--primary); border: 1px solid rgba(59,130,246,0.3); padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 10.5px; cursor: pointer;">
+                                ⚡ Reto 1: Citas & Geo (45 Pedidos)
+                            </button>
+                            <button onclick="loadRetoDemo(2)" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.3); padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 10.5px; cursor: pointer;">
+                                ⚡ Reto 2: NOM-012 Pesos (52 Pedidos)
+                            </button>
+                            <button onclick="loadRetoDemo(3)" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); padding: 6px 10px; border-radius: 6px; font-weight: 700; font-size: 10.5px; cursor: pointer;">
+                                ⚡ Reto 3: Red Nacional (85 Pedidos)
+                            </button>
+                        </div>
                     </div>
                 `;
             }
@@ -7560,20 +7571,32 @@ body.theme-dark .route-util-track {
                 }
 
                 container.innerHTML = `
-                    <div style="text-align: center; padding: 60px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 12px; border: 1.5px dashed var(--border-color); margin-top: 10px;">
-                        <div style="font-size: 42px; margin-bottom: 12px; opacity: 0.8;">📋</div>
+                    <div style="text-align: center; padding: 45px 20px; color: var(--text-muted); background: var(--bg-card); border-radius: 12px; border: 1.5px dashed var(--border-color); margin-top: 10px;">
+                        <div style="font-size: 38px; margin-bottom: 10px; opacity: 0.85;">📋</div>
                         <div style="font-size: 15px; font-weight: 800; color: var(--text-main); margin-bottom: 6px;">Consola de Despacho en Espera</div>
-                        <div style="font-size: 12px; max-width: 480px; margin: 0 auto 16px auto; line-height: 1.5;">
-                            No hay fletes programados actualmente. Arrastra o selecciona tu archivo Excel de pedidos en la barra superior, o ejecuta la optimización con los datos de prueba:
+                        <div style="font-size: 12px; max-width: 540px; margin: 0 auto 16px auto; line-height: 1.5;">
+                            No hay fletes programados actualmente. Arrastra o selecciona tu archivo Excel de pedidos en la barra superior, o ejecuta la optimización con 1 clic en cualquiera de los casos de prueba de Isabel:
                         </div>
-                        <div style="display:flex; justify-content:center; gap:10px; flex-wrap:wrap;">
-                            <button onclick="loadPreloadedDemoData()" style="background: var(--primary); color: white; border: none; padding: 10px 20px; border-radius: 8px; font-weight: 800; font-size: 12.5px; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.35); display:inline-flex; align-items:center; gap:8px;">
+                        <div style="display:flex; justify-content:center; gap:8px; flex-wrap:wrap; max-width:700px; margin:0 auto;">
+                            <button onclick="loadPreloadedDemoData()" style="background: var(--primary); color: white; border: none; padding: 9px 16px; border-radius: 8px; font-weight: 800; font-size: 11.5px; cursor: pointer; box-shadow: 0 4px 14px rgba(37,99,235,0.35); display:inline-flex; align-items:center; gap:6px;">
                                 <span>🚀</span>
-                                <span>Cargar Caso Real Isabel (76 Pedidos - Ejercicio 2)</span>
+                                <span>Caso Real (76 Pedidos)</span>
                             </button>
-                            <label for="excel-file-input" style="background: var(--bg-card); color: var(--text-main); border: 1.5px solid var(--border-color); padding: 10px 18px; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; display:inline-flex; align-items:center; gap:6px;">
+                            <button onclick="loadRetoDemo(1)" style="background: rgba(59,130,246,0.15); color: var(--primary); border: 1px solid rgba(59,130,246,0.35); padding: 9px 14px; border-radius: 8px; font-weight: 700; font-size: 11.5px; cursor: pointer; display:inline-flex; align-items:center; gap:6px;">
+                                <span>⚡</span>
+                                <span>Reto 1: Citas & Geo (45 Pedidos)</span>
+                            </button>
+                            <button onclick="loadRetoDemo(2)" style="background: rgba(16,185,129,0.15); color: #10b981; border: 1px solid rgba(16,185,129,0.35); padding: 9px 14px; border-radius: 8px; font-weight: 700; font-size: 11.5px; cursor: pointer; display:inline-flex; align-items:center; gap:6px;">
+                                <span>⚡</span>
+                                <span>Reto 2: NOM-012 Pesos (52 Pedidos)</span>
+                            </button>
+                            <button onclick="loadRetoDemo(3)" style="background: rgba(245,158,11,0.15); color: #f59e0b; border: 1px solid rgba(245,158,11,0.35); padding: 9px 14px; border-radius: 8px; font-weight: 700; font-size: 11.5px; cursor: pointer; display:inline-flex; align-items:center; gap:6px;">
+                                <span>⚡</span>
+                                <span>Reto 3: Red Nacional (85 Pedidos)</span>
+                            </button>
+                            <label for="excel-file-input" style="background: var(--bg-card); color: var(--text-main); border: 1.5px solid var(--border-color); padding: 9px 16px; border-radius: 8px; font-weight: 700; font-size: 11.5px; cursor: pointer; display:inline-flex; align-items:center; gap:6px;">
                                 <span>📂</span>
-                                <span>Seleccionar mi propio archivo Excel</span>
+                                <span>Seleccionar mi propio Excel</span>
                             </label>
                         </div>
                     </div>
@@ -9070,6 +9093,32 @@ body.theme-dark .route-util-track {
             } catch(err) {
                 console.error("Error al cargar demo:", err);
                 alert("Error al cargar datos demo: " + err.message);
+            }
+        }
+
+        async function loadRetoDemo(retoNum) {
+            const files = {
+                1: 'RETO_1_AUDITORIA_GEO_Y_CITAS_CRITICAS.xlsx',
+                2: 'RETO_2_NOM012_CAPACIDAD_Y_CONSOLIDACION_FTL.xlsx',
+                3: 'RETO_3_CASO_MAESTRO_RED_NACIONAL_Y_BACKORDER.xlsx'
+            };
+            const labels = {
+                1: 'Reto 1: Citas & Georreferenciación (45 Pedidos)',
+                2: 'Reto 2: NOM-012 Pesos & FTL (52 Pedidos)',
+                3: 'Reto 3: Red Nacional & Backorder (85 Pedidos)'
+            };
+            const fName = files[retoNum];
+            if (!fName) return;
+            try {
+                showToast(`⏳ Descargando y procesando ${labels[retoNum]}...`);
+                const res = await fetch('./' + fName + '?v=' + Date.now());
+                if (!res.ok) throw new Error(`HTTP ${res.status} al obtener ${fName}`);
+                const blob = await res.blob();
+                const file = new File([blob], fName, { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+                handleExcelUpload([file]);
+            } catch(err) {
+                console.error("Error al cargar " + fName, err);
+                alert("Error al cargar " + fName + ": " + err.message);
             }
         }
 
