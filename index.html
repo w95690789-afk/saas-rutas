@@ -7526,7 +7526,14 @@ body.theme-dark .route-util-track {
         // COCKPIT / SPREADSHEET GRID VIEW RENDERING
         // ==========================================
         function renderCockpitView() {
-            const plan = plans[currentPlanId];
+            if (!plans) {
+                plans = {
+                    plan1: { title: "Plan 1: Máxima Consolidación", routes: [], total_weight: 0, total_trips: 0, total_cost: 0, unassigned: [] },
+                    plan2: { title: "Plan 2: Balance Flota & Servicio", routes: [], total_weight: 0, total_trips: 0, total_cost: 0, unassigned: [] },
+                    plan3: { title: "Plan 3: Reparto Capilar Rápido", routes: [], total_weight: 0, total_trips: 0, total_cost: 0, unassigned: [] }
+                };
+            }
+            const plan = plans[currentPlanId] || plans.plan1;
             const container = document.getElementById('cockpit-rows');
             if (!container) return;
             container.innerHTML = '';
@@ -8094,7 +8101,14 @@ body.theme-dark .route-util-track {
 
         function changePlan(planId) {
             currentPlanId = planId;
-            activeRoutes = plans[planId].routes;
+            if (!plans) {
+                plans = {
+                    plan1: { title: "Plan 1: Máxima Consolidación", routes: [], total_weight: 0, total_trips: 0, total_cost: 0, unassigned: [] },
+                    plan2: { title: "Plan 2: Balance Flota & Servicio", routes: [], total_weight: 0, total_trips: 0, total_cost: 0, unassigned: [] },
+                    plan3: { title: "Plan 3: Reparto Capilar Rápido", routes: [], total_weight: 0, total_trips: 0, total_cost: 0, unassigned: [] }
+                };
+            }
+            activeRoutes = (plans[planId] && plans[planId].routes) ? plans[planId].routes : [];
             activeCategoryFilter = 'all';
             currentBenchmarkFilter = 'all';
             routeVisibility = {};
