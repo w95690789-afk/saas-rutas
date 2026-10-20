@@ -6850,10 +6850,12 @@ body.theme-dark .route-util-track {
             if (pob === 'Destino') pob = '';
 
             if (!dir) {
-                if (ex.observaciones) {
-                    dir = ex.observaciones.split('|')[0].trim();
-                } else if (ex.colonia) {
-                    dir = `Col. ${ex.colonia}`;
+                const obsStr = String(ex.observaciones || '').trim();
+                const colStr = String(ex.colonia || '').trim();
+                if (obsStr) {
+                    dir = obsStr.split('|')[0].trim();
+                } else if (colStr) {
+                    dir = `Col. ${colStr}`;
                 }
             }
 
@@ -8482,6 +8484,11 @@ body.theme-dark .route-util-track {
             "XICOTEPEC": { lat: 20.3862, lng: -97.8814, city: "Xicotepec de Juárez", state: "Puebla" },
 
             // Oaxaca
+            "SAN FRANCISCO TUTLA": { lat: 17.0654, lng: -96.6900, city: "San Francisco Tutla", state: "Oaxaca" },
+            "STA LUCIA DEL CAMINO": { lat: 17.0560, lng: -96.6950, city: "Santa Lucía del Camino", state: "Oaxaca" },
+            "SANTA LUCIA DEL CAMINO": { lat: 17.0560, lng: -96.6950, city: "Santa Lucía del Camino", state: "Oaxaca" },
+            "SANTA LUCÍA DEL CAMINO": { lat: 17.0560, lng: -96.6950, city: "Santa Lucía del Camino", state: "Oaxaca" },
+            "SANTA LUCIA": { lat: 17.0560, lng: -96.6950, city: "Santa Lucía del Camino", state: "Oaxaca" },
             "HUATULCO": { lat: 15.7644, lng: -96.1333, city: "Santa Cruz Huatulco", state: "Oaxaca" },
             "POCHUTLA": { lat: 15.7444, lng: -96.4639, city: "San Pedro Pochutla", state: "Oaxaca" },
             "XOXOCOTLAN": { lat: 17.0311, lng: -96.7328, city: "Santa Cruz Xoxocotlán", state: "Oaxaca" },
@@ -8518,6 +8525,7 @@ body.theme-dark .route-util-track {
             "CACAHOATAN": { lat: 14.9911, lng: -92.1694, city: "Cacahoatán", state: "Chiapas" },
             "CACAHOATÁN": { lat: 14.9911, lng: -92.1694, city: "Cacahoatán", state: "Chiapas" },
             "CD. HIDALGO": { lat: 14.6834, lng: -92.1504, city: "Ciudad Hidalgo / Suchiate", state: "Chiapas" },
+            "CIUDAD HIDALGO": { lat: 14.6834, lng: -92.1504, city: "Ciudad Hidalgo / Suchiate", state: "Chiapas" },
             "SUCHIATE": { lat: 14.6834, lng: -92.1504, city: "Ciudad Hidalgo / Suchiate", state: "Chiapas" },
             "PALENQUE": { lat: 17.5111, lng: -91.9811, city: "Palenque", state: "Chiapas" },
             "SN PEDRO BUENAVBISTA": { lat: 16.1311, lng: -93.1811, city: "San Pedro Buenavista", state: "Chiapas" },
@@ -8544,6 +8552,12 @@ body.theme-dark .route-util-track {
             // Veracruz
             "ACAYUCAN": { lat: 17.9511, lng: -94.9114, city: "Acayucan", state: "Veracruz" },
             "COATZACOALCOS": { lat: 18.1456, lng: -94.5364, city: "Coatzacoalcos", state: "Veracruz" },
+            "MINATITLAN": { lat: 17.9944, lng: -94.5458, city: "Minatitlán", state: "Veracruz" },
+            "MINATITLÁN": { lat: 17.9944, lng: -94.5458, city: "Minatitlán", state: "Veracruz" },
+            "JALTIPAN": { lat: 17.9740, lng: -94.7046, city: "Jáltipan de Morelos", state: "Veracruz" },
+            "JÁLTIPAN": { lat: 17.9740, lng: -94.7046, city: "Jáltipan de Morelos", state: "Veracruz" },
+            "LAS TINAS": { lat: 17.9740, lng: -94.7046, city: "Jáltipan (Las Tinas)", state: "Veracruz" },
+            "NANCHITAL": { lat: 18.0644, lng: -94.3814, city: "Nanchital", state: "Veracruz" },
             "TIHUATLAN": { lat: 20.7211, lng: -97.5311, city: "Tihuatlán / Poza Rica", state: "Veracruz" },
             "TIHUATLÁN": { lat: 20.7211, lng: -97.5311, city: "Tihuatlán / Poza Rica", state: "Veracruz" },
             "POZA RICA": { lat: 20.5682, lng: -97.4341, city: "Poza Rica de Hidalgo", state: "Veracruz" },
@@ -8569,20 +8583,20 @@ body.theme-dark .route-util-track {
         function resolveOrderLocationJS(ctx) {
             // Priority 1: Destination-specific fields (Delivery store, observations, specific branch)
             const destBundle = [
-                ctx.obs1 || "",
-                ctx.obs2 || "",
-                ctx.nombreSuc || "",
-                ctx.ref || "",
-                ctx.poblacion || ""
+                String(ctx.obs1 || ""),
+                String(ctx.obs2 || ""),
+                String(ctx.nombreSuc || ""),
+                String(ctx.ref || ""),
+                String(ctx.poblacion || "")
             ].join(" | ").toUpperCase();
 
             // Priority 2: General billing / routing fields
             const genBundle = [
-                ctx.nombreCli || "",
-                ctx.ruta || "",
-                ctx.alm || "",
-                ctx.estado || "",
-                ctx.sucursal || ""
+                String(ctx.nombreCli || ""),
+                String(ctx.ruta || ""),
+                String(ctx.alm || ""),
+                String(ctx.estado || ""),
+                String(ctx.sucursal || "")
             ].join(" | ").toUpperCase();
 
             // Sort keys by descending length so specific terms (e.g. 'ANACLETO CBAL', 'HUNUCMA', 'VILLAS DEL PEDREGAL')
@@ -9085,26 +9099,26 @@ body.theme-dark .route-util-track {
                             pedIdStr = 'Pedido ' + pedIdStr;
                         }
 
-                        const cliente = r[idxCli !== -1 ? idxCli : 2] || '';
-                        const nombreCli = (idxNomCli !== -1 ? r[idxNomCli] : r[3]) || '';
-                        const sucursal = idxSuc !== -1 ? r[idxSuc] : '';
-                        const nombreSuc = idxNomSuc !== -1 ? r[idxNomSuc] : '';
+                        const cliente = String(r[idxCli !== -1 ? idxCli : 2] ?? '').trim();
+                        const nombreCli = String((idxNomCli !== -1 ? r[idxNomCli] : r[3]) ?? '').trim();
+                        const sucursal = String(idxSuc !== -1 ? (r[idxSuc] ?? '') : '').trim();
+                        const nombreSuc = String(idxNomSuc !== -1 ? (r[idxNomSuc] ?? '') : '').trim();
                         const nombre = nombreSuc || nombreCli || '';
                         const rawPeso = String(r[idxPeso !== -1 ? idxPeso : 11] ?? '').replace(/,/g, '').replace(/[^\d.]/g, '');
                         const peso = parseFloat(rawPeso) || 1000;
-                        const poblacion = idxPob !== -1 ? r[idxPob] : '';
-                        const estado = idxEdo !== -1 ? r[idxEdo] : '';
-                        const direccion = idxDir !== -1 ? r[idxDir] : '';
-                        const agente = idxAge !== -1 ? r[idxAge] : '';
-                        const obs1 = idxObs1 !== -1 ? r[idxObs1] : '';
-                        const obs2 = idxObs2 !== -1 ? r[idxObs2] : '';
-                        const obs = obs1 || obs2 || (r[20] || '');
-                        const ruta = idxRuta !== -1 ? r[idxRuta] : (r[21] || '');
-                        const almacen = idxAlm !== -1 ? r[idxAlm] : '';
-                        const referencia = idxRef !== -1 ? r[idxRef] : '';
-                        const corredor = idxCorredor !== -1 ? r[idxCorredor] : '';
-                        const horaCita = idxCitaHora !== -1 ? r[idxCitaHora] : '';
-                        const fechaCita = idxCitaFecha !== -1 ? r[idxCitaFecha] : '';
+                        const poblacion = String(idxPob !== -1 ? (r[idxPob] ?? '') : '').trim();
+                        const estado = String(idxEdo !== -1 ? (r[idxEdo] ?? '') : '').trim();
+                        const direccion = String(idxDir !== -1 ? (r[idxDir] ?? '') : '').trim();
+                        const agente = String(idxAge !== -1 ? (r[idxAge] ?? '') : '').trim();
+                        const obs1 = String(idxObs1 !== -1 ? (r[idxObs1] ?? '') : '').trim();
+                        const obs2 = String(idxObs2 !== -1 ? (r[idxObs2] ?? '') : '').trim();
+                        const obs = obs1 || obs2 || '';
+                        const ruta = String(idxRuta !== -1 ? (r[idxRuta] ?? '') : '').trim();
+                        const almacen = String(idxAlm !== -1 ? (r[idxAlm] ?? '') : '').trim();
+                        const referencia = String(idxRef !== -1 ? (r[idxRef] ?? '') : '').trim();
+                        const corredor = String(idxCorredor !== -1 ? (r[idxCorredor] ?? '') : '').trim();
+                        const horaCita = String(idxCitaHora !== -1 ? (r[idxCitaHora] ?? '') : '').trim();
+                        const fechaCita = String(idxCitaFecha !== -1 ? (r[idxCitaFecha] ?? '') : '').trim();
 
                         let rawLat = null, rawLng = null;
                         if (idxLat !== -1 && idxLng !== -1) {
@@ -9299,9 +9313,9 @@ body.theme-dark .route-util-track {
                 if (pobU.includes('TUXTLA')) return 'CHIAPAS_TUXTLA';
                 if (pobU.includes('VILLAHERMOSA') || edoU.includes('TABASCO')) return 'TABASCO_VILLAHERMOSA';
                 if (pobU.includes('MERIDA') || pobU.includes('KANASIN') || edoU.includes('YUCAT')) return 'PENINSULA_MERIDA';
-                if (pobU.includes('COATZA') || pobU.includes('JALTIPAN') || pobU.includes('MINATITLAN')) return 'VERACRUZ_SUR_COATZA';
+                if (pobU.includes('COATZA') || pobU.includes('JALTIPAN') || pobU.includes('MINATITLAN') || pobU.includes('NANCHITAL')) return 'VERACRUZ_SUR_COATZA';
                 if (pobU.includes('JUCHIT') || pobU.includes('SALINA') || pobU.includes('TEHUANTEPEC')) return 'OAXACA_ISTMO';
-                if (pobU.includes('OAXACA') || pobU.includes('OCOTLAN') || pobU.includes('MIAHUATLAN')) return 'OAXACA_VALLES';
+                if (pobU.includes('OAXACA') || pobU.includes('OCOTLAN') || pobU.includes('MIAHUATLAN') || pobU.includes('TUTLA') || pobU.includes('LUCIA') || pobU.includes('XOXO')) return 'OAXACA_VALLES';
                 if (pobU.includes('POZA') || pobU.includes('PAPANTLA') || pobU.includes('SAN RAFAEL') || pobU.includes('MARTINEZ') || pobU.includes('XICOTEPEC')) return 'VERACRUZ_NORTE_SIERRA';
                 if (pobU.includes('PUEBLA') || edoU.includes('PUEBLA')) return 'PUEBLA_ALTIPLANO';
 
